@@ -79,6 +79,23 @@ public class GroupService {
             UUID groupId,
             UUID userId
     ) {
+        return GroupResponse.from(
+                getAccessibleGroup(groupId, userId)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public void validateMemberAccess(
+            UUID groupId,
+            UUID userId
+    ) {
+        getAccessibleGroup(groupId, userId);
+    }
+
+    private RestaurantGroup getAccessibleGroup(
+            UUID groupId,
+            UUID userId
+    ) {
         validateUserExists(userId);
 
         RestaurantGroup restaurantGroup = restaurantGroupRepository
@@ -97,7 +114,7 @@ public class GroupService {
             throw new GroupAccessDeniedException(groupId);
         }
 
-        return GroupResponse.from(restaurantGroup);
+        return restaurantGroup;
     }
 
     private void validateUserExists(UUID userId) {

@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.pauluna.mesa.auth.application.InvalidCredentialsException;
 import com.pauluna.mesa.group.application.GroupAccessDeniedException;
 import com.pauluna.mesa.group.application.GroupNotFoundException;
+import com.pauluna.mesa.restaurant.application.GroupRestaurantNotFoundException;
+import com.pauluna.mesa.restaurant.application.InvalidRestaurantDataException;
+import com.pauluna.mesa.restaurant.application.RestaurantAlreadyInGroupException;
+import com.pauluna.mesa.restaurant.application.RestaurantNotFoundException;
 import com.pauluna.mesa.user.application.DuplicateUserException;
 import com.pauluna.mesa.user.application.UserNotFoundException;
 
@@ -86,19 +90,74 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(GroupRestaurantNotFoundException.class)
+    public ResponseEntity<ApiError> handleGroupRestaurantNotFound(
+            GroupRestaurantNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(RestaurantNotFoundException.class)
+    public ResponseEntity<ApiError> handleRestaurantNotFound(
+            RestaurantNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(RestaurantAlreadyInGroupException.class)
+    public ResponseEntity<ApiError> handleRestaurantAlreadyInGroup(
+            RestaurantAlreadyInGroupException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(InvalidRestaurantDataException.class)
+    public ResponseEntity<ApiError> handleInvalidRestaurantData(
+            InvalidRestaurantDataException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException exception,
             HttpServletRequest request
     ) {
-        Map<String, String> validationErrors = new LinkedHashMap<>();
+        Map<String, String> validationErrors =
+                new LinkedHashMap<>();
 
         exception.getBindingResult()
                 .getFieldErrors()
-                .forEach(fieldError -> validationErrors.putIfAbsent(
-                        fieldError.getField(),
-                        fieldError.getDefaultMessage()
-                ));
+                .forEach(fieldError ->
+                        validationErrors.putIfAbsent(
+                                fieldError.getField(),
+                                fieldError.getDefaultMessage()
+                        )
+                );
 
         return buildResponse(
                 HttpStatus.BAD_REQUEST,

@@ -1,11 +1,16 @@
 import {
   router,
+  useFocusEffect,
   useLocalSearchParams,
 } from 'expo-router';
-import { useEffect, useState } from 'react';
+import {
+  useCallback,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,11 +18,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PrimaryButton } from '../../../components/PrimaryButton';
+import { RestaurantCard } from '../../../components/RestaurantCard';
 import { useAuth } from '../../../contexts/auth-context';
 import { getErrorMessage } from '../../../lib/api';
 import { getGroup } from '../../../services/group-service';
+import { getGroupRestaurants } from '../../../services/restaurant-service';
 import { colors } from '../../../theme/colors';
 import { RestaurantGroup } from '../../../types/group';
+import { GroupRestaurant } from '../../../types/restaurant';
 
 export default function GroupDetailScreen() {
   const { groupId } = useLocalSearchParams<{
@@ -28,35 +37,65 @@ export default function GroupDetailScreen() {
 
   const [group, setGroup] =
     useState<RestaurantGroup | null>(null);
+  const [restaurants, setRestaurants] =
+    useState<GroupRestaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] =
+    useState(false);
   const [loadError, setLoadError] =
     useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadGroup() {
+  const loadGroupData = useCallback(
+    async (refreshing = false) => {
       if (!accessToken || !groupId) {
+        setIsLoading(false);
         return;
       }
 
       try {
         setLoadError(null);
-        setIsLoading(true);
 
-        const response = await getGroup(
-          groupId,
-          accessToken,
-        );
+        if (refreshing) {
+          setIsRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
 
-        setGroup(response);
+        const [
+          groupResponse,
+          restaurantsResponse,
+        ] = await Promise.all([
+          getGroup(groupId, accessToken),
+          getGroupRestaurants(groupId, accessToken),
+        ]);
+
+        setGroup(groupResponse);
+        setRestaurants(restaurantsResponse);
       } catch (error) {
         setLoadError(getErrorMessage(error));
       } finally {
         setIsLoading(false);
+        setIsRefreshing(false);
       }
-    }
+    },
+    [accessToken, groupId],
+  );
 
-    void loadGroup();
-  }, [accessToken, groupId]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadGroupData();
+    }, [loadGroupData]),
+  );
+
+  function openCreateRestaurant() {
+    router.push({
+      pathname:
+        '/groups/[groupId]/restaurants/create',
+      params: {
+        groupId,
+      },
+    });
+  }
 
   return (
     <SafeAreaView
@@ -65,6 +104,13 @@ export default function GroupDetailScreen() {
     >
       <ScrollView
         contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            onRefresh={() => loadGroupData(true)}
+            refreshing={isRefreshing}
+            tintColor={colors.primary}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
@@ -101,10 +147,18 @@ export default function GroupDetailScreen() {
             <Text style={styles.errorText}>
               {loadError}
             </Text>
+
+            <Pressable
+              onPress={() => loadGroupData()}
+            >
+              <Text style={styles.retryText}>
+                Volver a intentar
+              </Text>
+            </Pressable>
           </View>
         ) : null}
 
-        {!isLoading && group ? (
+        {!isLoading && !loadError && group ? (
           <>
             <View style={styles.groupHeader}>
               <View style={styles.groupIcon}>
@@ -128,6 +182,7 @@ export default function GroupDetailScreen() {
                   <Text style={styles.metadataLabel}>
                     Ciudad
                   </Text>
+
                   <Text style={styles.metadataValue}>
                     {group.city ?? 'Sin ubicación'}
                   </Text>
@@ -137,6 +192,7 @@ export default function GroupDetailScreen() {
                   <Text style={styles.metadataLabel}>
                     Privacidad
                   </Text>
+
                   <Text style={styles.metadataValue}>
                     {group.privacy === 'PRIVATE'
                       ? 'Privado'
@@ -148,25 +204,68 @@ export default function GroupDetailScreen() {
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>
-                  Restaurantes
-                </Text>
+                <View style={styles.sectionTitleRow}>
+                  <Text style={styles.sectionTitle}>
+                    Restaurantes
+                  </Text>
 
-                <Text style={styles.sectionCount}>0</Text>
+                  <Text style={styles.sectionCount}>
+                    {restaurants.length}
+                  </Text>
+                </View>
+
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={openCreateRestaurant}
+                  style={({ pressed }) => [
+                    styles.addButton,
+                    pressed
+                      ? styles.addButtonPressed
+                      : null,
+                  ]}
+                >
+                  <Text style={styles.addButtonText}>
+                    + Añadir
+                  </Text>
+                </Pressable>
               </View>
 
-              <View style={styles.emptyRestaurants}>
-                <Text style={styles.emptyEmoji}>📍</Text>
+              {restaurants.length === 0 ? (
+                <View style={styles.emptyRestaurants}>
+                  <Text style={styles.emptyEmoji}>
+                    📍
+                  </Text>
 
-                <Text style={styles.emptyTitle}>
-                  Todavía no hay restaurantes
-                </Text>
+                  <Text style={styles.emptyTitle}>
+                    Todavía no hay restaurantes
+                  </Text>
 
-                <Text style={styles.emptyText}>
-                  El siguiente paso será buscar sitios y
-                  añadirlos a este grupo.
-                </Text>
-              </View>
+                  <Text style={styles.emptyText}>
+                    Añade el primer sitio pendiente
+                    del grupo.
+                  </Text>
+
+                  <View style={styles.emptyButton}>
+                    <PrimaryButton
+                      onPress={openCreateRestaurant}
+                      title="Añadir restaurante"
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.restaurantList}>
+                  {restaurants.map(
+                    (groupRestaurant) => (
+                      <RestaurantCard
+                        groupRestaurant={
+                          groupRestaurant
+                        }
+                        key={groupRestaurant.id}
+                      />
+                    ),
+                  )}
+                </View>
+              )}
             </View>
           </>
         ) : null}
@@ -278,6 +377,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
   },
   sectionTitle: {
     color: colors.text,
@@ -289,9 +394,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  addButton: {
+    borderRadius: 999,
+    backgroundColor: '#F7D9CF',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  addButtonPressed: {
+    opacity: 0.7,
+  },
+  addButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  restaurantList: {
+    gap: 12,
+  },
   emptyRestaurants: {
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 22,
@@ -305,12 +427,17 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     fontWeight: '800',
+    textAlign: 'center',
   },
   emptyText: {
     color: colors.muted,
     fontSize: 14,
     lineHeight: 21,
     textAlign: 'center',
+  },
+  emptyButton: {
+    width: '100%',
+    marginTop: 4,
   },
   errorCard: {
     gap: 10,
@@ -329,5 +456,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 14,
     lineHeight: 20,
+  },
+  retryText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '800',
   },
 });
