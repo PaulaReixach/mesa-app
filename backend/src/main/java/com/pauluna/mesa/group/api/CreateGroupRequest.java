@@ -1,7 +1,5 @@
 package com.pauluna.mesa.group.api;
 
-import java.util.UUID;
-
 import com.pauluna.mesa.group.domain.GroupPrivacy;
 
 import jakarta.validation.constraints.NotBlank;
@@ -36,9 +34,6 @@ public record CreateGroupRequest(
         String city,
 
         @NotNull(message = "La privacidad del grupo es obligatoria.")
-        GroupPrivacy privacy,
-
-        @NotNull(message = "El usuario propietario es obligatorio.")
-        UUID ownerUserId
+        GroupPrivacy privacy
 ) {
 }
