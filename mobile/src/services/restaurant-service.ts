@@ -2,6 +2,7 @@ import { apiRequest } from '../lib/api';
 import {
   CreateGroupRestaurantPayload,
   GroupRestaurant,
+  RestaurantSearchResult,
 } from '../types/restaurant';
 
 export function getGroupRestaurants(
@@ -41,6 +42,27 @@ export function createGroupRestaurant(
     {
       method: 'POST',
       body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export function searchRestaurants(
+  query: string,
+  city: string,
+  accessToken: string,
+): Promise<RestaurantSearchResult[]> {
+  const queryParameter = encodeURIComponent(query.trim());
+  const normalizedCity = city.trim();
+
+  const cityParameter = normalizedCity
+    ? `&city=${encodeURIComponent(normalizedCity)}`
+    : '';
+
+  return apiRequest<RestaurantSearchResult[]>(
+    `/restaurants/search?query=${queryParameter}${cityParameter}`,
+    {
+      method: 'GET',
     },
     accessToken,
   );

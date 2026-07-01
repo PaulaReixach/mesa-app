@@ -30,3 +30,7 @@ app:
       secret: ${JWT_SECRET:mesa-local-jwt-secret-change-me-minimum-32-characters}
       issuer: mesa-api
       access-token-ttl: 1h
+
+  restaurant-search:
+    base-url: "${NOMINATIM_BASE_URL:https://nominatim.openstreetmap.org}"
+    user-agent: "${NOMINATIM_USER_AGENT:Mesa/0.1}"
