@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.pauluna.mesa.auth.application.InvalidCredentialsException;
 import com.pauluna.mesa.group.application.GroupAccessDeniedException;
 import com.pauluna.mesa.group.application.GroupNotFoundException;
 import com.pauluna.mesa.user.application.DuplicateUserException;
@@ -27,6 +28,19 @@ public class GlobalExceptionHandler {
     ) {
         return buildResponse(
                 HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(
+            InvalidCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.UNAUTHORIZED,
                 exception.getMessage(),
                 request.getRequestURI(),
                 Map.of()

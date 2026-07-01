@@ -34,8 +34,11 @@ public class GroupService {
         this.userRepository = userRepository;
     }
 
-    public GroupResponse createGroup(CreateGroupRequest request) {
-        validateUserExists(request.ownerUserId());
+    public GroupResponse createGroup(
+            CreateGroupRequest request,
+            UUID ownerUserId
+    ) {
+        validateUserExists(ownerUserId);
 
         RestaurantGroup restaurantGroup = new RestaurantGroup(
                 request.name().trim(),
@@ -43,7 +46,7 @@ public class GroupService {
                 normalizeOptionalValue(request.imageUrl()),
                 normalizeOptionalValue(request.city()),
                 request.privacy(),
-                request.ownerUserId()
+                ownerUserId
         );
 
         RestaurantGroup savedGroup =
@@ -51,7 +54,7 @@ public class GroupService {
 
         GroupMember ownerMembership = new GroupMember(
                 savedGroup.getId(),
-                request.ownerUserId(),
+                ownerUserId,
                 GroupRole.OWNER
         );
 
@@ -80,7 +83,9 @@ public class GroupService {
 
         RestaurantGroup restaurantGroup = restaurantGroupRepository
                 .findById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException(groupId));
+                .orElseThrow(() ->
+                        new GroupNotFoundException(groupId)
+                );
 
         boolean belongsToGroup =
                 groupMemberRepository.existsByGroupIdAndUserId(

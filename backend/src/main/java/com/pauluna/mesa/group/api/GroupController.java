@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -30,9 +31,15 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<GroupResponse> createGroup(
-            @Valid @RequestBody CreateGroupRequest request
+            @Valid @RequestBody CreateGroupRequest request,
+            @AuthenticationPrincipal Jwt jwt
     ) {
-        GroupResponse createdGroup = groupService.createGroup(request);
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        GroupResponse createdGroup = groupService.createGroup(
+                request,
+                userId
+        );
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -47,8 +54,10 @@ public class GroupController {
 
     @GetMapping
     public ResponseEntity<List<GroupResponse>> getGroups(
-            @RequestParam UUID userId
+            @AuthenticationPrincipal Jwt jwt
     ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+
         return ResponseEntity.ok(
                 groupService.getGroups(userId)
         );
@@ -57,8 +66,10 @@ public class GroupController {
     @GetMapping("/{groupId}")
     public ResponseEntity<GroupResponse> getGroup(
             @PathVariable UUID groupId,
-            @RequestParam UUID userId
+            @AuthenticationPrincipal Jwt jwt
     ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+
         return ResponseEntity.ok(
                 groupService.getGroup(groupId, userId)
         );
