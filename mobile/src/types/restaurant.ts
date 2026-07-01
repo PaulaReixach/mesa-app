@@ -44,3 +44,15 @@ export type CreateGroupRestaurantPayload = {
   category: string | null;
   groupNotes: string | null;
 };
+
+export type RestaurantSearchResult = {
+  provider: string;
+  externalPlaceId: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  latitude: number;
+  longitude: number;
+  category: string | null;
+};

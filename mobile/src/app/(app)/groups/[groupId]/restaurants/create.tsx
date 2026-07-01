@@ -5,6 +5,7 @@ import {
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -16,10 +17,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FormField } from '../../../../../components/FormField';
 import { PrimaryButton } from '../../../../../components/PrimaryButton';
+import { RestaurantSearchResultCard } from '../../../../../components/RestaurantSearchResultCard';
 import { useAuth } from '../../../../../contexts/auth-context';
 import { getErrorMessage } from '../../../../../lib/api';
-import { createGroupRestaurant } from '../../../../../services/restaurant-service';
+import {
+  createGroupRestaurant,
+  searchRestaurants,
+} from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
+import { RestaurantSearchResult } from '../../../../../types/restaurant';
+
+type CreationMode = 'SEARCH' | 'MANUAL';
 
 export default function CreateRestaurantScreen() {
   const { groupId } = useLocalSearchParams<{
@@ -28,25 +36,82 @@ export default function CreateRestaurantScreen() {
 
   const { accessToken } = useAuth();
 
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [category, setCategory] = useState('');
+  const [creationMode, setCreationMode] =
+    useState<CreationMode>('SEARCH');
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCity, setSearchCity] = useState('');
+  const [searchResults, setSearchResults] = useState<
+    RestaurantSearchResult[]
+  >([]);
+  const [selectedResult, setSelectedResult] =
+    useState<RestaurantSearchResult | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] =
+    useState<string | null>(null);
+
+  const [manualName, setManualName] = useState('');
+  const [manualAddress, setManualAddress] = useState('');
+  const [manualCity, setManualCity] = useState('');
+  const [manualCountry, setManualCountry] = useState('');
+  const [manualCategory, setManualCategory] =
+    useState('');
+
   const [groupNotes, setGroupNotes] = useState('');
+
   const [requestError, setRequestError] =
     useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  async function handleCreateRestaurant() {
+  function changeCreationMode(mode: CreationMode) {
+    setCreationMode(mode);
     setRequestError(null);
+  }
 
-    if (!name.trim()) {
-      setRequestError(
-        'Introduce el nombre del restaurante.',
+  async function handleSearch() {
+    setSearchError(null);
+    setRequestError(null);
+    setSelectedResult(null);
+
+    const normalizedQuery = searchQuery.trim();
+
+    if (normalizedQuery.length < 2) {
+      setSearchError(
+        'Introduce al menos dos caracteres para buscar.',
       );
       return;
     }
+
+    if (!accessToken) {
+      setSearchError(
+        'No se ha podido recuperar tu sesión.',
+      );
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      setHasSearched(true);
+
+      const results = await searchRestaurants(
+        normalizedQuery,
+        searchCity,
+        accessToken,
+      );
+
+      setSearchResults(results);
+    } catch (error) {
+      setSearchResults([]);
+      setSearchError(getErrorMessage(error));
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
+  async function handleSaveRestaurant() {
+    setRequestError(null);
 
     if (!accessToken || !groupId) {
       setRequestError(
@@ -55,25 +120,71 @@ export default function CreateRestaurantScreen() {
       return;
     }
 
+    if (
+      creationMode === 'SEARCH'
+      && !selectedResult
+    ) {
+      setRequestError(
+        'Selecciona uno de los restaurantes encontrados.',
+      );
+      return;
+    }
+
+    if (
+      creationMode === 'MANUAL'
+      && !manualName.trim()
+    ) {
+      setRequestError(
+        'Introduce el nombre del restaurante.',
+      );
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
-      await createGroupRestaurant(
-        groupId,
-        {
-          provider: null,
-          externalPlaceId: null,
-          name: name.trim(),
-          address: address.trim() || null,
-          city: city.trim() || null,
-          country: null,
-          latitude: null,
-          longitude: null,
-          category: category.trim() || null,
-          groupNotes: groupNotes.trim() || null,
-        },
-        accessToken,
-      );
+      if (
+        creationMode === 'SEARCH'
+        && selectedResult
+      ) {
+        await createGroupRestaurant(
+          groupId,
+          {
+            provider: selectedResult.provider,
+            externalPlaceId:
+              selectedResult.externalPlaceId,
+            name: selectedResult.name,
+            address: selectedResult.address,
+            city: selectedResult.city,
+            country: selectedResult.country,
+            latitude: selectedResult.latitude,
+            longitude: selectedResult.longitude,
+            category: selectedResult.category,
+            groupNotes: groupNotes.trim() || null,
+          },
+          accessToken,
+        );
+      }
+
+      if (creationMode === 'MANUAL') {
+        await createGroupRestaurant(
+          groupId,
+          {
+            provider: null,
+            externalPlaceId: null,
+            name: manualName.trim(),
+            address: manualAddress.trim() || null,
+            city: manualCity.trim() || null,
+            country: manualCountry.trim() || null,
+            latitude: null,
+            longitude: null,
+            category:
+              manualCategory.trim() || null,
+            groupNotes: groupNotes.trim() || null,
+          },
+          accessToken,
+        );
+      }
 
       router.replace({
         pathname: '/groups/[groupId]',
@@ -87,6 +198,11 @@ export default function CreateRestaurantScreen() {
       setIsSubmitting(false);
     }
   }
+
+  const saveDisabled =
+    creationMode === 'SEARCH'
+      ? selectedResult === null
+      : !manualName.trim();
 
   return (
     <SafeAreaView
@@ -126,50 +242,229 @@ export default function CreateRestaurantScreen() {
             </Text>
 
             <Text style={styles.subtitle}>
-              Por ahora puedes añadirlo manualmente.
-              Después conectaremos la búsqueda por mapa.
+              Busca un restaurante real o añádelo
+              manualmente si todavía no aparece.
             </Text>
           </View>
 
-          <View style={styles.form}>
-            <FormField
-              autoCapitalize="words"
-              label="Nombre del restaurante"
-              maxLength={150}
-              onChangeText={setName}
-              placeholder="Kaizen Sushi"
-              value={name}
-            />
+          <View style={styles.modeSelector}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                changeCreationMode('SEARCH')
+              }
+              style={[
+                styles.modeButton,
+                creationMode === 'SEARCH'
+                  ? styles.activeModeButton
+                  : null,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.modeButtonText,
+                  creationMode === 'SEARCH'
+                    ? styles.activeModeButtonText
+                    : null,
+                ]}
+              >
+                Buscar
+              </Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                changeCreationMode('MANUAL')
+              }
+              style={[
+                styles.modeButton,
+                creationMode === 'MANUAL'
+                  ? styles.activeModeButton
+                  : null,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.modeButtonText,
+                  creationMode === 'MANUAL'
+                    ? styles.activeModeButtonText
+                    : null,
+                ]}
+              >
+                Manual
+              </Text>
+            </Pressable>
+          </View>
+
+          {creationMode === 'SEARCH' ? (
+            <View style={styles.section}>
+              <View style={styles.searchForm}>
+                <FormField
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  label="Nombre del restaurante"
+                  maxLength={150}
+                  onChangeText={setSearchQuery}
+                  placeholder="Kaizen Sushi"
+                  returnKeyType="search"
+                  value={searchQuery}
+                />
+
+                <FormField
+                  autoCapitalize="words"
+                  label="Ciudad"
+                  maxLength={100}
+                  onChangeText={setSearchCity}
+                  placeholder="Palma de Mallorca"
+                  returnKeyType="search"
+                  value={searchCity}
+                />
+
+                {searchError ? (
+                  <Text style={styles.error}>
+                    {searchError}
+                  </Text>
+                ) : null}
+
+                <PrimaryButton
+                  disabled={searchQuery.trim().length < 2}
+                  loading={isSearching}
+                  onPress={handleSearch}
+                  title="Buscar restaurantes"
+                />
+              </View>
+
+              {hasSearched
+              && !isSearching
+              && !searchError
+              && searchResults.length === 0 ? (
+                <View style={styles.emptySearch}>
+                  <Text style={styles.emptyEmoji}>
+                    🔎
+                  </Text>
+
+                  <Text style={styles.emptyTitle}>
+                    No encontramos resultados
+                  </Text>
+
+                  <Text style={styles.emptyText}>
+                    Prueba con otro nombre o cambia
+                    temporalmente al modo manual.
+                  </Text>
+                </View>
+              ) : null}
+
+              {searchResults.length > 0 ? (
+                <View style={styles.resultsSection}>
+                  <View style={styles.resultsHeader}>
+                    <Text style={styles.resultsTitle}>
+                      Resultados
+                    </Text>
+
+                    <Text style={styles.resultsCount}>
+                      {searchResults.length}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.resultsHelp}>
+                    Pulsa un restaurante para seleccionarlo.
+                  </Text>
+
+                  <View style={styles.resultsList}>
+                    {searchResults.map((result) => (
+                      <RestaurantSearchResultCard
+                        key={`${result.provider}-${result.externalPlaceId}`}
+                        onPress={() =>
+                          setSelectedResult(result)
+                        }
+                        result={result}
+                        selected={
+                          selectedResult?.provider
+                            === result.provider
+                          && selectedResult
+                            ?.externalPlaceId
+                            === result.externalPlaceId
+                        }
+                      />
+                    ))}
+                  </View>
+
+                  <Pressable
+                    accessibilityRole="link"
+                    onPress={() => {
+                      void Linking.openURL(
+                        'https://www.openstreetmap.org/copyright',
+                      );
+                    }}
+                  >
+                    <Text style={styles.attribution}>
+                      Datos © colaboradores de OpenStreetMap
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
+            </View>
+          ) : (
+            <View style={styles.manualForm}>
+              <FormField
+                autoCapitalize="words"
+                label="Nombre del restaurante"
+                maxLength={150}
+                onChangeText={setManualName}
+                placeholder="Kaizen Sushi"
+                value={manualName}
+              />
+
+              <FormField
+                autoCapitalize="sentences"
+                label="Dirección"
+                maxLength={300}
+                onChangeText={setManualAddress}
+                placeholder="Carrer de Exemple, 10"
+                value={manualAddress}
+              />
+
+              <FormField
+                autoCapitalize="words"
+                label="Ciudad"
+                maxLength={100}
+                onChangeText={setManualCity}
+                placeholder="Palma"
+                value={manualCity}
+              />
+
+              <FormField
+                autoCapitalize="words"
+                label="País"
+                maxLength={100}
+                onChangeText={setManualCountry}
+                placeholder="España"
+                value={manualCountry}
+              />
+
+              <FormField
+                autoCapitalize="words"
+                label="Categoría"
+                maxLength={100}
+                onChangeText={setManualCategory}
+                placeholder="Japonés"
+                value={manualCategory}
+              />
+            </View>
+          )}
+
+          <View style={styles.notesSection}>
+            <Text style={styles.notesTitle}>
+              Notas del grupo
+            </Text>
+
+            <Text style={styles.notesDescription}>
+              Estas notas solo pertenecen a este grupo.
+            </Text>
 
             <FormField
-              autoCapitalize="sentences"
-              label="Dirección"
-              maxLength={300}
-              onChangeText={setAddress}
-              placeholder="Carrer de Exemple, 10"
-              value={address}
-            />
-
-            <FormField
-              autoCapitalize="words"
-              label="Ciudad"
-              maxLength={100}
-              onChangeText={setCity}
-              placeholder="Girona"
-              value={city}
-            />
-
-            <FormField
-              autoCapitalize="words"
-              label="Categoría"
-              maxLength={100}
-              onChangeText={setCategory}
-              placeholder="Japonés"
-              value={category}
-            />
-
-            <FormField
-              label="Notas para el grupo"
+              label="Notas"
               maxLength={1000}
               multiline
               onChangeText={setGroupNotes}
@@ -178,19 +473,22 @@ export default function CreateRestaurantScreen() {
               textAlignVertical="top"
               value={groupNotes}
             />
+          </View>
 
-            {requestError ? (
-              <Text style={styles.error}>
+          {requestError ? (
+            <View style={styles.requestErrorCard}>
+              <Text style={styles.requestErrorText}>
                 {requestError}
               </Text>
-            ) : null}
+            </View>
+          ) : null}
 
-            <PrimaryButton
-              loading={isSubmitting}
-              onPress={handleCreateRestaurant}
-              title="Guardar restaurante"
-            />
-          </View>
+          <PrimaryButton
+            disabled={saveDisabled}
+            loading={isSubmitting}
+            onPress={handleSaveRestaurant}
+            title="Guardar restaurante"
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -209,7 +507,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 12,
-    paddingBottom: 32,
+    paddingBottom: 36,
   },
   header: {
     flexDirection: 'row',
@@ -240,7 +538,7 @@ const styles = StyleSheet.create({
   heading: {
     gap: 8,
     marginTop: 36,
-    marginBottom: 28,
+    marginBottom: 24,
   },
   title: {
     color: colors.text,
@@ -253,14 +551,129 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 23,
   },
-  form: {
-    gap: 20,
+  modeSelector: {
+    flexDirection: 'row',
+    gap: 6,
+    borderRadius: 17,
+    backgroundColor: '#F0E8E3',
+    padding: 5,
+    marginBottom: 24,
+  },
+  modeButton: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+  },
+  activeModeButton: {
+    backgroundColor: colors.surface,
+  },
+  modeButtonText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  activeModeButtonText: {
+    color: colors.primary,
+  },
+  section: {
+    gap: 24,
+  },
+  searchForm: {
+    gap: 18,
+  },
+  manualForm: {
+    gap: 18,
+  },
+  error: {
+    color: colors.danger,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  emptySearch: {
+    alignItems: 'center',
+    gap: 9,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    padding: 24,
+  },
+  emptyEmoji: {
+    fontSize: 30,
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  emptyText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  resultsSection: {
+    gap: 12,
+  },
+  resultsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  resultsTitle: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  resultsCount: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  resultsHelp: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  resultsList: {
+    gap: 11,
+  },
+  attribution: {
+    color: colors.muted,
+    fontSize: 11,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+  },
+  notesSection: {
+    gap: 8,
+    marginTop: 28,
+    marginBottom: 22,
+  },
+  notesTitle: {
+    color: colors.text,
+    fontSize: 19,
+    fontWeight: '800',
+  },
+  notesDescription: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 8,
   },
   notesInput: {
     minHeight: 105,
     paddingTop: 15,
   },
-  error: {
+  requestErrorCard: {
+    borderWidth: 1,
+    borderColor: '#F3C5BC',
+    borderRadius: 15,
+    backgroundColor: '#FFF1EE',
+    padding: 14,
+    marginBottom: 18,
+  },
+  requestErrorText: {
     color: colors.danger,
     fontSize: 14,
     lineHeight: 20,
