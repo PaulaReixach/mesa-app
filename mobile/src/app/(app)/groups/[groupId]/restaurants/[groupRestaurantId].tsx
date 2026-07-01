@@ -9,7 +9,6 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,96 +17,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { RestaurantRatingsSection } from '../../../../../components/RestaurantRatingsSection';
+import {
+  RestaurantStatusSection,
+  restaurantStatusPresentation,
+} from '../../../../../components/RestaurantStatusSection';
 import { useAuth } from '../../../../../contexts/auth-context';
 import { getErrorMessage } from '../../../../../lib/api';
-import {
-  getGroupRestaurant,
-  updateGroupRestaurantStatus,
-} from '../../../../../services/restaurant-service';
+import { getGroupRestaurant } from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
-import {
-  GroupRestaurant,
-  GroupRestaurantStatus,
-} from '../../../../../types/restaurant';
-
-type StatusOption = {
-  status: GroupRestaurantStatus;
-  label: string;
-  description: string;
-};
-
-const statusOptions: StatusOption[] = [
-  {
-    status: 'WANT_TO_GO',
-    label: 'Queremos ir',
-    description: 'El grupo todavía tiene pendiente probarlo.',
-  },
-  {
-    status: 'VISITED',
-    label: 'Visitado',
-    description: 'Ya habéis ido al restaurante.',
-  },
-  {
-    status: 'FAVORITE',
-    label: 'Favorito',
-    description: 'Uno de los restaurantes favoritos del grupo.',
-  },
-  {
-    status: 'WANT_TO_REPEAT',
-    label: 'Queremos repetir',
-    description: 'Os gustó y queréis volver.',
-  },
-  {
-    status: 'DO_NOT_REPEAT',
-    label: 'No repetir',
-    description: 'No queréis volver a este restaurante.',
-  },
-];
-
-const statusLabels: Record<
-  GroupRestaurantStatus,
-  string
-> = {
-  WANT_TO_GO: 'Queremos ir',
-  VISITED: 'Visitado',
-  FAVORITE: 'Favorito',
-  WANT_TO_REPEAT: 'Queremos repetir',
-  DO_NOT_REPEAT: 'No repetir',
-  ARCHIVED: 'Archivado',
-};
-
-const statusColors: Record<
-  GroupRestaurantStatus,
-  {
-    backgroundColor: string;
-    textColor: string;
-  }
-> = {
-  WANT_TO_GO: {
-    backgroundColor: '#F7E8D2',
-    textColor: '#8A5B17',
-  },
-  VISITED: {
-    backgroundColor: '#E5EDF7',
-    textColor: '#365F91',
-  },
-  FAVORITE: {
-    backgroundColor: '#FBE4E7',
-    textColor: '#A33B4A',
-  },
-  WANT_TO_REPEAT: {
-    backgroundColor: '#E8F1EB',
-    textColor: colors.success,
-  },
-  DO_NOT_REPEAT: {
-    backgroundColor: '#FBE9E5',
-    textColor: colors.danger,
-  },
-  ARCHIVED: {
-    backgroundColor: '#ECE8E6',
-    textColor: colors.muted,
-  },
-};
+import { GroupRestaurant } from '../../../../../types/restaurant';
 
 export default function RestaurantDetailScreen() {
   const {
@@ -125,17 +44,10 @@ export default function RestaurantDetailScreen() {
     setGroupRestaurant,
   ] = useState<GroupRestaurant | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] =
+    useState(true);
 
   const [loadError, setLoadError] =
-    useState<string | null>(null);
-
-  const [
-    updatingStatus,
-    setUpdatingStatus,
-  ] = useState<GroupRestaurantStatus | null>(null);
-
-  const [updateError, setUpdateError] =
     useState<string | null>(null);
 
   const loadRestaurant = useCallback(async () => {
@@ -177,66 +89,6 @@ export default function RestaurantDetailScreen() {
     void loadRestaurant();
   }, [loadRestaurant]);
 
-  async function handleStatusChange(
-    status: GroupRestaurantStatus,
-  ) {
-    if (
-      !accessToken
-      || !groupId
-      || !groupRestaurantId
-    ) {
-      setUpdateError(
-        'No se ha podido recuperar tu sesión o el restaurante.',
-      );
-      return;
-    }
-
-    if (groupRestaurant?.status === status) {
-      return;
-    }
-
-    try {
-      setUpdateError(null);
-      setUpdatingStatus(status);
-
-      const updatedRestaurant =
-        await updateGroupRestaurantStatus(
-          groupId,
-          groupRestaurantId,
-          {
-            status,
-          },
-          accessToken,
-        );
-
-      setGroupRestaurant(updatedRestaurant);
-    } catch (error) {
-      setUpdateError(getErrorMessage(error));
-    } finally {
-      setUpdatingStatus(null);
-    }
-  }
-
-  function confirmArchive() {
-    Alert.alert(
-      'Archivar restaurante',
-      'El restaurante seguirá guardado, pero quedará marcado como archivado.',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Archivar',
-          style: 'destructive',
-          onPress: () => {
-            void handleStatusChange('ARCHIVED');
-          },
-        },
-      ],
-    );
-  }
-
   const restaurant = groupRestaurant?.restaurant;
 
   const location = restaurant
@@ -250,7 +102,9 @@ export default function RestaurantDetailScreen() {
     : '';
 
   const currentStatus = groupRestaurant
-    ? statusColors[groupRestaurant.status]
+    ? restaurantStatusPresentation[
+        groupRestaurant.status
+      ]
     : null;
 
   return (
@@ -314,7 +168,8 @@ export default function RestaurantDetailScreen() {
         && !loadError
         && groupRestaurant
         && restaurant
-        && currentStatus ? (
+        && currentStatus
+        && accessToken ? (
           <>
             <View style={styles.hero}>
               <View style={styles.restaurantIcon}>
@@ -352,7 +207,7 @@ export default function RestaurantDetailScreen() {
                     },
                   ]}
                 >
-                  {statusLabels[groupRestaurant.status]}
+                  {currentStatus.label}
                 </Text>
               </View>
             </View>
@@ -378,140 +233,18 @@ export default function RestaurantDetailScreen() {
               </Text>
             </View>
 
-            <View style={styles.statusSection}>
-              <View style={styles.statusHeading}>
-                <Text style={styles.sectionTitle}>
-                  Estado
-                </Text>
+            <RestaurantRatingsSection
+              accessToken={accessToken}
+              groupId={groupId}
+              groupRestaurantId={groupRestaurantId}
+            />
 
-                <Text style={styles.sectionDescription}>
-                  Cualquier miembro del grupo puede cambiarlo.
-                </Text>
-              </View>
-
-              <View style={styles.statusList}>
-                {statusOptions.map((option) => {
-                  const isSelected =
-                    groupRestaurant.status
-                    === option.status;
-
-                  const isUpdating =
-                    updatingStatus === option.status;
-
-                  return (
-                    <Pressable
-                      accessibilityRole="button"
-                      disabled={
-                        updatingStatus !== null
-                      }
-                      key={option.status}
-                      onPress={() => {
-                        void handleStatusChange(
-                          option.status,
-                        );
-                      }}
-                      style={({ pressed }) => [
-                        styles.statusOption,
-                        isSelected
-                          ? styles.selectedStatusOption
-                          : null,
-                        pressed && !isSelected
-                          ? styles.statusOptionPressed
-                          : null,
-                      ]}
-                    >
-                      <View style={styles.statusOptionText}>
-                        <Text
-                          style={[
-                            styles.statusOptionTitle,
-                            isSelected
-                              ? styles.selectedStatusOptionTitle
-                              : null,
-                          ]}
-                        >
-                          {option.label}
-                        </Text>
-
-                        <Text style={styles.statusOptionDescription}>
-                          {option.description}
-                        </Text>
-                      </View>
-
-                      {isUpdating ? (
-                        <ActivityIndicator
-                          color={colors.primary}
-                          size="small"
-                        />
-                      ) : null}
-
-                      {!isUpdating && isSelected ? (
-                        <Text style={styles.checkmark}>
-                          ✓
-                        </Text>
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-
-            {updateError ? (
-              <View style={styles.updateError}>
-                <Text style={styles.updateErrorText}>
-                  {updateError}
-                </Text>
-              </View>
-            ) : null}
-
-            {groupRestaurant.status === 'ARCHIVED' ? (
-              <Pressable
-                accessibilityRole="button"
-                disabled={updatingStatus !== null}
-                onPress={() => {
-                  void handleStatusChange('WANT_TO_GO');
-                }}
-                style={({ pressed }) => [
-                  styles.restoreButton,
-                  pressed
-                    ? styles.secondaryButtonPressed
-                    : null,
-                ]}
-              >
-                {updatingStatus === 'WANT_TO_GO' ? (
-                  <ActivityIndicator
-                    color={colors.primary}
-                    size="small"
-                  />
-                ) : (
-                  <Text style={styles.restoreButtonText}>
-                    Restaurar como “Queremos ir”
-                  </Text>
-                )}
-              </Pressable>
-            ) : (
-              <Pressable
-                accessibilityRole="button"
-                disabled={updatingStatus !== null}
-                onPress={confirmArchive}
-                style={({ pressed }) => [
-                  styles.archiveButton,
-                  pressed
-                    ? styles.secondaryButtonPressed
-                    : null,
-                ]}
-              >
-                {updatingStatus === 'ARCHIVED' ? (
-                  <ActivityIndicator
-                    color={colors.danger}
-                    size="small"
-                  />
-                ) : (
-                  <Text style={styles.archiveButtonText}>
-                    Archivar restaurante
-                  </Text>
-                )}
-              </Pressable>
-            )}
+            <RestaurantStatusSection
+              accessToken={accessToken}
+              groupId={groupId}
+              groupRestaurant={groupRestaurant}
+              onUpdated={setGroupRestaurant}
+            />
           </>
         ) : null}
       </ScrollView>
@@ -618,112 +351,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
     lineHeight: 22,
-  },
-  statusSection: {
-    gap: 14,
-  },
-  statusHeading: {
-    gap: 5,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 21,
-    fontWeight: '800',
-  },
-  sectionDescription: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  statusList: {
-    gap: 10,
-  },
-  statusOption: {
-    minHeight: 76,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-    padding: 15,
-  },
-  selectedStatusOption: {
-    borderWidth: 2,
-    borderColor: colors.primary,
-    backgroundColor: '#FFF3EE',
-    padding: 14,
-  },
-  statusOptionPressed: {
-    opacity: 0.72,
-  },
-  statusOptionText: {
-    flex: 1,
-    gap: 4,
-  },
-  statusOptionTitle: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  selectedStatusOptionTitle: {
-    color: colors.primary,
-  },
-  statusOptionDescription: {
-    color: colors.muted,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  checkmark: {
-    color: colors.primary,
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  updateError: {
-    borderWidth: 1,
-    borderColor: '#F3C5BC',
-    borderRadius: 16,
-    backgroundColor: '#FFF1EE',
-    padding: 14,
-  },
-  updateErrorText: {
-    color: colors.danger,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  archiveButton: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2B6AE',
-    borderRadius: 15,
-    backgroundColor: '#FFF1EE',
-    paddingHorizontal: 16,
-  },
-  archiveButtonText: {
-    color: colors.danger,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  restoreButton: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: 15,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 16,
-  },
-  restoreButtonText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  secondaryButtonPressed: {
-    opacity: 0.7,
   },
   errorCard: {
     gap: 10,
