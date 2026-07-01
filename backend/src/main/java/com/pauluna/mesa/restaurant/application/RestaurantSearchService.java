@@ -1,8 +1,10 @@
 package com.pauluna.mesa.restaurant.application;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -20,8 +22,9 @@ public class RestaurantSearchService {
 
     private static final int MAX_QUERY_LENGTH = 150;
     private static final int MAX_CITY_LENGTH = 100;
+    private static final int MAX_RESULTS = 10;
 
-    private static final Set<String> FOOD_PLACE_TYPES =
+    private static final Set<String> AMENITY_TYPES =
             Set.of(
                     "restaurant",
                     "cafe",
@@ -31,9 +34,31 @@ public class RestaurantSearchService {
                     "food_court",
                     "ice_cream",
                     "biergarten",
+                    "canteen",
+                    "cafeteria",
+                    "juice_bar"
+            );
+
+    private static final Set<String> SHOP_TYPES =
+            Set.of(
                     "bakery",
                     "deli",
-                    "pastry"
+                    "pastry",
+                    "confectionery",
+                    "coffee",
+                    "tea",
+                    "chocolate",
+                    "cheese",
+                    "seafood",
+                    "food"
+            );
+
+    private static final Set<String> TOURISM_TYPES =
+            Set.of(
+                    "hotel",
+                    "guest_house",
+                    "hostel",
+                    "resort"
             );
 
     private final NominatimRestaurantSearchClient searchClient;
@@ -60,15 +85,79 @@ public class RestaurantSearchService {
                         + ", "
                         + normalizedCity;
 
-        return searchClient
-                .search(searchTerm)
+        List<RestaurantSearchResponse> primaryResults =
+                mapSearchResults(
+                        searchClient.searchPointsOfInterest(
+                                searchTerm
+                        )
+                );
+
+        if (primaryResults.size() >= MAX_RESULTS) {
+            return primaryResults
+                    .stream()
+                    .limit(MAX_RESULTS)
+                    .toList();
+        }
+
+        List<RestaurantSearchResponse> flexibleResults =
+                mapSearchResults(
+                        searchClient.searchFlexible(
+                                normalizedQuery,
+                                normalizedCity
+                        )
+                );
+
+        return mergeResults(
+                primaryResults,
+                flexibleResults
+        );
+    }
+
+    private List<RestaurantSearchResponse> mapSearchResults(
+            List<NominatimPlaceResponse> places
+    ) {
+        return places
                 .stream()
                 .filter(this::isFoodPlace)
                 .map(this::toResponse)
                 .filter(Objects::nonNull)
-                .distinct()
-                .limit(8)
                 .toList();
+    }
+
+    private List<RestaurantSearchResponse> mergeResults(
+            List<RestaurantSearchResponse> primaryResults,
+            List<RestaurantSearchResponse> flexibleResults
+    ) {
+        Map<String, RestaurantSearchResponse> uniqueResults =
+                new LinkedHashMap<>();
+
+        primaryResults.forEach(result ->
+                uniqueResults.putIfAbsent(
+                        buildResultKey(result),
+                        result
+                )
+        );
+
+        flexibleResults.forEach(result ->
+                uniqueResults.putIfAbsent(
+                        buildResultKey(result),
+                        result
+                )
+        );
+
+        return uniqueResults
+                .values()
+                .stream()
+                .limit(MAX_RESULTS)
+                .toList();
+    }
+
+    private String buildResultKey(
+            RestaurantSearchResponse result
+    ) {
+        return result.provider()
+                + ":"
+                + result.externalPlaceId();
     }
 
     private RestaurantSearchResponse toResponse(
@@ -149,12 +238,31 @@ public class RestaurantSearchService {
     private boolean isFoodPlace(
             NominatimPlaceResponse place
     ) {
-        String type = normalizeOptional(place.type());
+        String type =
+                normalizeLowerCase(place.type());
 
-        return type != null
-                && FOOD_PLACE_TYPES.contains(
-                        type.toLowerCase(Locale.ROOT)
-                );
+        if (type == null) {
+            return false;
+        }
+
+        String category =
+                normalizeLowerCase(place.category());
+
+        if ("amenity".equals(category)) {
+            return AMENITY_TYPES.contains(type);
+        }
+
+        if ("shop".equals(category)) {
+            return SHOP_TYPES.contains(type);
+        }
+
+        if ("tourism".equals(category)) {
+            return TOURISM_TYPES.contains(type);
+        }
+
+        return AMENITY_TYPES.contains(type)
+                || SHOP_TYPES.contains(type)
+                || TOURISM_TYPES.contains(type);
     }
 
     private String buildExternalPlaceId(
@@ -194,24 +302,38 @@ public class RestaurantSearchService {
     }
 
     private String categoryLabel(String type) {
-        if (type == null) {
+        String normalizedType =
+                normalizeLowerCase(type);
+
+        if (normalizedType == null) {
             return null;
         }
 
-        return switch (
-                type.toLowerCase(Locale.ROOT)
-        ) {
+        return switch (normalizedType) {
             case "restaurant" -> "Restaurante";
-            case "cafe" -> "Cafetería";
+            case "cafe", "cafeteria" -> "Cafetería";
             case "fast_food" -> "Comida rápida";
             case "bar" -> "Bar";
             case "pub" -> "Pub";
             case "food_court" -> "Zona de restauración";
             case "ice_cream" -> "Heladería";
             case "biergarten" -> "Cervecería";
+            case "canteen" -> "Comedor";
+            case "juice_bar" -> "Bar de zumos";
             case "bakery" -> "Panadería";
             case "deli" -> "Delicatessen";
             case "pastry" -> "Pastelería";
+            case "confectionery" -> "Confitería";
+            case "coffee" -> "Café";
+            case "tea" -> "Tienda de té";
+            case "chocolate" -> "Chocolatería";
+            case "cheese" -> "Quesería";
+            case "seafood" -> "Marisquería";
+            case "food" -> "Alimentación";
+            case "hotel" -> "Hotel";
+            case "guest_house" -> "Alojamiento";
+            case "hostel" -> "Hostal";
+            case "resort" -> "Resort";
             default -> "Restauración";
         };
     }
@@ -267,6 +389,19 @@ public class RestaurantSearchService {
         }
 
         return value.trim();
+    }
+
+    private String normalizeLowerCase(String value) {
+        String normalizedValue =
+                normalizeOptional(value);
+
+        if (normalizedValue == null) {
+            return null;
+        }
+
+        return normalizedValue.toLowerCase(
+                Locale.ROOT
+        );
     }
 
     private String firstNonBlank(String... values) {

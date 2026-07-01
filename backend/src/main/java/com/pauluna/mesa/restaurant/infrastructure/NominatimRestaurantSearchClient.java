@@ -1,5 +1,6 @@
 package com.pauluna.mesa.restaurant.infrastructure;
 
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -8,12 +9,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.util.UriBuilder;
 
 import com.pauluna.mesa.restaurant.application.RestaurantSearchUnavailableException;
 
@@ -27,6 +30,8 @@ public class NominatimRestaurantSearchClient {
             Duration.ofSeconds(1).toNanos();
 
     private static final int MAX_CACHE_ENTRIES = 100;
+
+    private static final int NOMINATIM_RESULT_LIMIT = 40;
 
     private final RestClient restClient;
 
@@ -57,13 +62,118 @@ public class NominatimRestaurantSearchClient {
                 .build();
     }
 
-    public List<NominatimPlaceResponse> search(
-            String searchTerm
-    ) {
-        String cacheKey = searchTerm
-                .trim()
-                .toLowerCase(Locale.ROOT);
+    public List<NominatimPlaceResponse>
+    searchPointsOfInterest(String searchTerm) {
+        String cacheKey =
+                "poi:" + normalizeCacheValue(searchTerm);
 
+        return search(
+                cacheKey,
+                uriBuilder ->
+                        uriBuilder
+                                .path("/search")
+                                .queryParam(
+                                        "q",
+                                        searchTerm
+                                )
+                                .queryParam(
+                                        "format",
+                                        "jsonv2"
+                                )
+                                .queryParam(
+                                        "addressdetails",
+                                        1
+                                )
+                                .queryParam(
+                                        "layer",
+                                        "poi"
+                                )
+                                .queryParam(
+                                        "limit",
+                                        NOMINATIM_RESULT_LIMIT
+                                )
+                                .queryParam(
+                                        "dedupe",
+                                        1
+                                )
+                                .build()
+        );
+    }
+
+    public List<NominatimPlaceResponse> searchFlexible(
+            String query,
+            String city
+    ) {
+        String normalizedQuery = query.trim();
+
+        String normalizedCity =
+                normalizeOptionalValue(city);
+
+        String cacheKey =
+                "flexible:"
+                        + normalizeCacheValue(normalizedQuery)
+                        + ":"
+                        + normalizeCacheValue(normalizedCity);
+
+        return search(
+                cacheKey,
+                uriBuilder ->
+                        buildFlexibleSearchUri(
+                                uriBuilder,
+                                normalizedQuery,
+                                normalizedCity
+                        )
+        );
+    }
+
+    private URI buildFlexibleSearchUri(
+            UriBuilder uriBuilder,
+            String query,
+            String city
+    ) {
+        UriBuilder searchUriBuilder = uriBuilder
+                .path("/search")
+                .queryParam(
+                        "format",
+                        "jsonv2"
+                )
+                .queryParam(
+                        "addressdetails",
+                        1
+                )
+                .queryParam(
+                        "limit",
+                        NOMINATIM_RESULT_LIMIT
+                )
+                .queryParam(
+                        "dedupe",
+                        1
+                );
+
+        if (city == null) {
+            searchUriBuilder.queryParam(
+                    "q",
+                    query
+            );
+        } else {
+            searchUriBuilder
+                    .queryParam(
+                            "amenity",
+                            query
+                    )
+                    .queryParam(
+                            "city",
+                            city
+                    );
+        }
+
+        return searchUriBuilder.build();
+    }
+
+    private List<NominatimPlaceResponse> search(
+            String cacheKey,
+            Function<UriBuilder, URI> uriFunction
+    ) {
         CachedSearch cachedSearch = cache.get(cacheKey);
 
         if (cachedSearch != null
@@ -78,35 +188,7 @@ public class NominatimRestaurantSearchClient {
         try {
             NominatimPlaceResponse[] response = restClient
                     .get()
-                    .uri(uriBuilder ->
-                            uriBuilder
-                                    .path("/search")
-                                    .queryParam(
-                                            "q",
-                                            searchTerm
-                                    )
-                                    .queryParam(
-                                            "format",
-                                            "jsonv2"
-                                    )
-                                    .queryParam(
-                                            "addressdetails",
-                                            1
-                                    )
-                                    .queryParam(
-                                            "layer",
-                                            "poi"
-                                    )
-                                    .queryParam(
-                                            "limit",
-                                            10
-                                    )
-                                    .queryParam(
-                                            "dedupe",
-                                            1
-                                    )
-                                    .build()
-                    )
+                    .uri(uriFunction)
                     .retrieve()
                     .body(NominatimPlaceResponse[].class);
 
@@ -178,6 +260,24 @@ public class NominatimRestaurantSearchClient {
         if (cache.size() >= MAX_CACHE_ENTRIES) {
             cache.clear();
         }
+    }
+
+    private String normalizeCacheValue(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return value
+                .trim()
+                .toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeOptionalValue(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
     }
 
     private record CachedSearch(
