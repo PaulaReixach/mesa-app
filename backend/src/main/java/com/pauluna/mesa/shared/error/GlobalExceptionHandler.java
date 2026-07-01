@@ -12,12 +12,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.pauluna.mesa.auth.application.InvalidCredentialsException;
 import com.pauluna.mesa.group.application.GroupAccessDeniedException;
+import com.pauluna.mesa.group.application.GroupMemberAlreadyExistsException;
+import com.pauluna.mesa.group.application.GroupMemberNotFoundException;
 import com.pauluna.mesa.group.application.GroupNotFoundException;
+import com.pauluna.mesa.group.application.GroupOwnerAccessRequiredException;
+import com.pauluna.mesa.group.application.GroupOwnerCannotBeRemovedException;
 import com.pauluna.mesa.restaurant.application.GroupRestaurantNotFoundException;
 import com.pauluna.mesa.restaurant.application.InvalidRestaurantDataException;
 import com.pauluna.mesa.restaurant.application.RestaurantAlreadyInGroupException;
 import com.pauluna.mesa.restaurant.application.RestaurantNotFoundException;
 import com.pauluna.mesa.user.application.DuplicateUserException;
+import com.pauluna.mesa.user.application.UserNotFoundByUsernameException;
 import com.pauluna.mesa.user.application.UserNotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,6 +69,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UserNotFoundByUsernameException.class)
+    public ResponseEntity<ApiError> handleUserNotFoundByUsername(
+            UserNotFoundByUsernameException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
     @ExceptionHandler(GroupNotFoundException.class)
     public ResponseEntity<ApiError> handleGroupNotFound(
             GroupNotFoundException exception,
@@ -84,6 +102,58 @@ public class GlobalExceptionHandler {
     ) {
         return buildResponse(
                 HttpStatus.FORBIDDEN,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(GroupOwnerAccessRequiredException.class)
+    public ResponseEntity<ApiError> handleGroupOwnerAccessRequired(
+            GroupOwnerAccessRequiredException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(GroupMemberNotFoundException.class)
+    public ResponseEntity<ApiError> handleGroupMemberNotFound(
+            GroupMemberNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(GroupMemberAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleGroupMemberAlreadyExists(
+            GroupMemberAlreadyExistsException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(GroupOwnerCannotBeRemovedException.class)
+    public ResponseEntity<ApiError> handleGroupOwnerCannotBeRemoved(
+            GroupOwnerCannotBeRemovedException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.CONFLICT,
                 exception.getMessage(),
                 request.getRequestURI(),
                 Map.of()

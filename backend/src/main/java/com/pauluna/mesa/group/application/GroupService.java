@@ -92,6 +92,24 @@ public class GroupService {
         getAccessibleGroup(groupId, userId);
     }
 
+    @Transactional(readOnly = true)
+    public void validateOwnerAccess(
+            UUID groupId,
+            UUID userId
+    ) {
+        getAccessibleGroup(groupId, userId);
+
+        GroupMember membership = groupMemberRepository
+                .findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(() ->
+                        new GroupAccessDeniedException(groupId)
+                );
+
+        if (membership.getRole() != GroupRole.OWNER) {
+            throw new GroupOwnerAccessRequiredException(groupId);
+        }
+    }
+
     private RestaurantGroup getAccessibleGroup(
             UUID groupId,
             UUID userId
