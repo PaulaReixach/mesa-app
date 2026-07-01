@@ -10,6 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.pauluna.mesa.group.application.GroupAccessDeniedException;
+import com.pauluna.mesa.group.application.GroupNotFoundException;
 import com.pauluna.mesa.user.application.DuplicateUserException;
 import com.pauluna.mesa.user.application.UserNotFoundException;
 
@@ -38,6 +40,32 @@ public class GlobalExceptionHandler {
     ) {
         return buildResponse(
                 HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(GroupNotFoundException.class)
+    public ResponseEntity<ApiError> handleGroupNotFound(
+            GroupNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request.getRequestURI(),
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(GroupAccessDeniedException.class)
+    public ResponseEntity<ApiError> handleGroupAccessDenied(
+            GroupAccessDeniedException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
                 exception.getMessage(),
                 request.getRequestURI(),
                 Map.of()
