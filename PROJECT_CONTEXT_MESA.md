@@ -8,7 +8,7 @@ No pretende sustituir a Google Maps, Tripadvisor o TheFork. Su valor está en or
 
 Ejemplos de grupos:
 
-- Paula y Alex
+- Paula y Angel
 - Restaurantes con las amigas
 - Viaje a Japón
 - Brunch pendientes
