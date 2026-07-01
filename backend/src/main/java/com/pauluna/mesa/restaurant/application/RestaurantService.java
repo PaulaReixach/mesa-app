@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.pauluna.mesa.group.application.GroupService;
 import com.pauluna.mesa.restaurant.api.CreateGroupRestaurantRequest;
 import com.pauluna.mesa.restaurant.api.GroupRestaurantResponse;
+import com.pauluna.mesa.restaurant.api.UpdateGroupRestaurantStatusRequest;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurantStatus;
 import com.pauluna.mesa.restaurant.domain.Restaurant;
@@ -46,17 +47,24 @@ public class RestaurantService {
 
         String provider =
                 normalizeOptionalValue(request.provider());
+
         String externalPlaceId =
                 normalizeOptionalValue(request.externalPlaceId());
+
         String name = request.name().trim();
+
         String address =
                 normalizeOptionalValue(request.address());
+
         String city =
                 normalizeOptionalValue(request.city());
+
         String country =
                 normalizeOptionalValue(request.country());
+
         String category =
                 normalizeOptionalValue(request.category());
+
         String groupNotes =
                 normalizeOptionalValue(request.groupNotes());
 
@@ -182,29 +190,85 @@ public class RestaurantService {
         groupService.validateMemberAccess(groupId, userId);
 
         GroupRestaurant groupRestaurant =
-                groupRestaurantRepository
-                        .findByIdAndGroupId(
-                                groupRestaurantId,
-                                groupId
-                        )
-                        .orElseThrow(() ->
-                                new GroupRestaurantNotFoundException(
-                                        groupRestaurantId
-                                )
-                        );
+                findGroupRestaurant(
+                        groupId,
+                        groupRestaurantId
+                );
 
-        Restaurant restaurant = restaurantRepository
-                .findById(groupRestaurant.getRestaurantId())
-                .orElseThrow(() ->
-                        new RestaurantNotFoundException(
-                                groupRestaurant.getRestaurantId()
-                        )
+        Restaurant restaurant =
+                findRestaurant(
+                        groupRestaurant.getRestaurantId()
                 );
 
         return GroupRestaurantResponse.from(
                 groupRestaurant,
                 restaurant
         );
+    }
+
+    public GroupRestaurantResponse updateStatus(
+            UUID groupId,
+            UUID groupRestaurantId,
+            UpdateGroupRestaurantStatusRequest request,
+            UUID userId
+    ) {
+        groupService.validateMemberAccess(groupId, userId);
+
+        GroupRestaurant groupRestaurant =
+                findGroupRestaurant(
+                        groupId,
+                        groupRestaurantId
+                );
+
+        Restaurant restaurant =
+                findRestaurant(
+                        groupRestaurant.getRestaurantId()
+                );
+
+        if (groupRestaurant.getStatus() == request.status()) {
+            return GroupRestaurantResponse.from(
+                    groupRestaurant,
+                    restaurant
+            );
+        }
+
+        groupRestaurant.changeStatus(request.status());
+
+        GroupRestaurant updatedGroupRestaurant =
+                groupRestaurantRepository.saveAndFlush(
+                        groupRestaurant
+                );
+
+        return GroupRestaurantResponse.from(
+                updatedGroupRestaurant,
+                restaurant
+        );
+    }
+
+    private GroupRestaurant findGroupRestaurant(
+            UUID groupId,
+            UUID groupRestaurantId
+    ) {
+        return groupRestaurantRepository
+                .findByIdAndGroupId(
+                        groupRestaurantId,
+                        groupId
+                )
+                .orElseThrow(() ->
+                        new GroupRestaurantNotFoundException(
+                                groupRestaurantId
+                        )
+                );
+    }
+
+    private Restaurant findRestaurant(UUID restaurantId) {
+        return restaurantRepository
+                .findById(restaurantId)
+                .orElseThrow(() ->
+                        new RestaurantNotFoundException(
+                                restaurantId
+                        )
+                );
     }
 
     private Restaurant findOrCreateExternalRestaurant(

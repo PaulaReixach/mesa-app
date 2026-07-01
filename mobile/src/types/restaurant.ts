@@ -56,3 +56,7 @@ export type RestaurantSearchResult = {
   longitude: number;
   category: string | null;
 };
+
+export type UpdateGroupRestaurantStatusPayload = {
+  status: GroupRestaurantStatus;
+};
