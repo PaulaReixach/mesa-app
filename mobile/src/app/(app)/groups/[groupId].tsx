@@ -9,6 +9,7 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -18,13 +19,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GroupMemberCard } from '../../../components/GroupMemberCard';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { RestaurantCard } from '../../../components/RestaurantCard';
 import { useAuth } from '../../../contexts/auth-context';
 import { getErrorMessage } from '../../../lib/api';
+import {
+  getGroupMembers,
+  removeGroupMember,
+} from '../../../services/group-member-service';
 import { getGroup } from '../../../services/group-service';
 import { getGroupRestaurants } from '../../../services/restaurant-service';
 import { colors } from '../../../theme/colors';
+import { GroupMember } from '../../../types/group-member';
 import { RestaurantGroup } from '../../../types/group';
 import { GroupRestaurant } from '../../../types/restaurant';
 
@@ -33,12 +40,16 @@ export default function GroupDetailScreen() {
     groupId: string;
   }>();
 
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
 
   const [group, setGroup] =
     useState<RestaurantGroup | null>(null);
+  const [members, setMembers] =
+    useState<GroupMember[]>([]);
   const [restaurants, setRestaurants] =
     useState<GroupRestaurant[]>([]);
+  const [removingUserId, setRemovingUserId] =
+    useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] =
     useState(false);
@@ -63,13 +74,16 @@ export default function GroupDetailScreen() {
 
         const [
           groupResponse,
+          membersResponse,
           restaurantsResponse,
         ] = await Promise.all([
           getGroup(groupId, accessToken),
+          getGroupMembers(groupId, accessToken),
           getGroupRestaurants(groupId, accessToken),
         ]);
 
         setGroup(groupResponse);
+        setMembers(membersResponse);
         setRestaurants(restaurantsResponse);
       } catch (error) {
         setLoadError(getErrorMessage(error));
@@ -87,6 +101,13 @@ export default function GroupDetailScreen() {
     }, [loadGroupData]),
   );
 
+  const currentMember = members.find(
+    (member) => member.userId === user?.id,
+  );
+
+  const canManageMembers =
+    currentMember?.role === 'OWNER';
+
   function openCreateRestaurant() {
     router.push({
       pathname:
@@ -95,6 +116,67 @@ export default function GroupDetailScreen() {
         groupId,
       },
     });
+  }
+
+  function openAddMember() {
+    router.push({
+      pathname: '/groups/[groupId]/members/add',
+      params: {
+        groupId,
+      },
+    });
+  }
+
+  function confirmRemoveMember(member: GroupMember) {
+    Alert.alert(
+      'Eliminar miembro',
+      `¿Quieres eliminar a ${member.name} del grupo?`,
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            void handleRemoveMember(member);
+          },
+        },
+      ],
+    );
+  }
+
+  async function handleRemoveMember(
+    member: GroupMember,
+  ) {
+    if (!accessToken || !groupId) {
+      return;
+    }
+
+    try {
+      setRemovingUserId(member.userId);
+
+      await removeGroupMember(
+        groupId,
+        member.userId,
+        accessToken,
+      );
+
+      setMembers((currentMembers) =>
+        currentMembers.filter(
+          (currentMemberItem) =>
+            currentMemberItem.userId !== member.userId,
+        ),
+      );
+    } catch (error) {
+      Alert.alert(
+        'No se ha podido eliminar',
+        getErrorMessage(error),
+      );
+    } finally {
+      setRemovingUserId(null);
+    }
   }
 
   return (
@@ -199,6 +281,56 @@ export default function GroupDetailScreen() {
                       : 'Público'}
                   </Text>
                 </View>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleRow}>
+                  <Text style={styles.sectionTitle}>
+                    Miembros
+                  </Text>
+
+                  <Text style={styles.sectionCount}>
+                    {members.length}
+                  </Text>
+                </View>
+
+                {canManageMembers ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={openAddMember}
+                    style={({ pressed }) => [
+                      styles.addButton,
+                      pressed
+                        ? styles.addButtonPressed
+                        : null,
+                    ]}
+                  >
+                    <Text style={styles.addButtonText}>
+                      + Añadir
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
+
+              <View style={styles.memberList}>
+                {members.map((member) => (
+                  <GroupMemberCard
+                    canRemove={
+                      canManageMembers
+                      && member.role !== 'OWNER'
+                    }
+                    isRemoving={
+                      removingUserId === member.userId
+                    }
+                    key={member.id}
+                    member={member}
+                    onRemove={() =>
+                      confirmRemoveMember(member)
+                    }
+                  />
+                ))}
               </View>
             </View>
 
@@ -407,6 +539,9 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 14,
     fontWeight: '800',
+  },
+  memberList: {
+    gap: 10,
   },
   restaurantList: {
     gap: 12,
