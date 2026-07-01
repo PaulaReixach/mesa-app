@@ -70,10 +70,23 @@ export default function CreateRestaurantScreen() {
     setRequestError(null);
   }
 
+  function openManualModeFromSearch() {
+    setManualName((currentName) =>
+      currentName || searchQuery.trim()
+    );
+
+    setManualCity((currentCity) =>
+      currentCity || searchCity.trim()
+    );
+
+    changeCreationMode('MANUAL');
+  }
+
   async function handleSearch() {
     setSearchError(null);
     setRequestError(null);
     setSelectedResult(null);
+    setSearchResults([]);
 
     const normalizedQuery = searchQuery.trim();
 
@@ -103,7 +116,6 @@ export default function CreateRestaurantScreen() {
 
       setSearchResults(results);
     } catch (error) {
-      setSearchResults([]);
       setSearchError(getErrorMessage(error));
     } finally {
       setIsSearching(false);
@@ -349,8 +361,8 @@ export default function CreateRestaurantScreen() {
                   </Text>
 
                   <Text style={styles.emptyText}>
-                    Prueba con otro nombre o cambia
-                    temporalmente al modo manual.
+                    Prueba con otro nombre o añádelo
+                    manualmente.
                   </Text>
                 </View>
               ) : null}
@@ -368,7 +380,8 @@ export default function CreateRestaurantScreen() {
                   </View>
 
                   <Text style={styles.resultsHelp}>
-                    Pulsa un restaurante para seleccionarlo.
+                    Mostramos hasta 10 resultados. Pulsa uno
+                    para seleccionarlo.
                   </Text>
 
                   <View style={styles.resultsList}>
@@ -404,6 +417,36 @@ export default function CreateRestaurantScreen() {
                   </Pressable>
                 </View>
               ) : null}
+
+              <View style={styles.manualShortcut}>
+                <View style={styles.manualShortcutContent}>
+                  <Text style={styles.manualShortcutTitle}>
+                    ¿No aparece?
+                  </Text>
+
+                  <Text style={styles.manualShortcutText}>
+                    Puedes guardar el restaurante aunque no
+                    esté disponible en OpenStreetMap.
+                  </Text>
+                </View>
+
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={openManualModeFromSearch}
+                  style={({ pressed }) => [
+                    styles.manualShortcutButton,
+                    pressed
+                      ? styles.manualShortcutButtonPressed
+                      : null,
+                  ]}
+                >
+                  <Text
+                    style={styles.manualShortcutButtonText}
+                  >
+                    Añádelo manualmente
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           ) : (
             <View style={styles.manualForm}>
@@ -635,6 +678,7 @@ const styles = StyleSheet.create({
   resultsHelp: {
     color: colors.muted,
     fontSize: 13,
+    lineHeight: 18,
   },
   resultsList: {
     gap: 11,
@@ -644,6 +688,44 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: 'center',
     textDecorationLine: 'underline',
+  },
+  manualShortcut: {
+    gap: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    padding: 18,
+  },
+  manualShortcutContent: {
+    gap: 5,
+  },
+  manualShortcutTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  manualShortcutText: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  manualShortcutButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+  },
+  manualShortcutButtonPressed: {
+    backgroundColor: '#FFF1EC',
+  },
+  manualShortcutButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '800',
   },
   notesSection: {
     gap: 8,
