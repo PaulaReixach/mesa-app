@@ -1,22 +1,90 @@
-import { router } from 'expo-router';
 import {
+  router,
+  useFocusEffect,
+} from 'expo-router';
+import {
+  ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  useCallback,
+  useState,
+} from 'react';
 
+import { GroupCard } from '../../components/GroupCard';
+import { PrimaryButton } from '../../components/PrimaryButton';
 import { useAuth } from '../../contexts/auth-context';
+import { getErrorMessage } from '../../lib/api';
+import { getGroups } from '../../services/group-service';
 import { colors } from '../../theme/colors';
+import { RestaurantGroup } from '../../types/group';
 
 export default function HomeScreen() {
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    accessToken,
+    signOut,
+  } = useAuth();
+
+  const [groups, setGroups] = useState<RestaurantGroup[]>(
+    [],
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] =
+    useState<string | null>(null);
+
+  const loadGroups = useCallback(
+    async (refreshing = false) => {
+      if (!accessToken) {
+        return;
+      }
+
+      try {
+        setLoadError(null);
+
+        if (refreshing) {
+          setIsRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
+
+        const response = await getGroups(accessToken);
+        setGroups(response);
+      } catch (error) {
+        setLoadError(getErrorMessage(error));
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [accessToken],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadGroups();
+    }, [loadGroups]),
+  );
 
   async function handleSignOut() {
     await signOut();
     router.replace('/login');
+  }
+
+  function openGroup(groupId: string) {
+    router.push({
+      pathname: '/groups/[groupId]',
+      params: {
+        groupId,
+      },
+    });
   }
 
   const userInitial =
@@ -29,6 +97,13 @@ export default function HomeScreen() {
     >
       <ScrollView
         contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            onRefresh={() => loadGroups(true)}
+            refreshing={isRefreshing}
+            tintColor={colors.primary}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
@@ -51,29 +126,102 @@ export default function HomeScreen() {
 
         <View style={styles.hero}>
           <Text style={styles.heroEyebrow}>
-            TU PRÓXIMO PLAN
+            VUESTROS PLANES
           </Text>
 
           <Text style={styles.heroTitle}>
-            Empieza creando vuestro primer grupo
+            {groups.length === 0
+              ? 'Cread vuestro primer grupo'
+              : `${groups.length} ${
+                  groups.length === 1 ? 'grupo' : 'grupos'
+                } para seguir comiendo bien`}
           </Text>
 
           <Text style={styles.heroDescription}>
-            Después podréis guardar restaurantes,
-            puntuarlos y decidir dónde ir.
+            Guarda restaurantes, comparte recomendaciones y
+            decidid juntos dónde será la próxima comida.
           </Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>
-            Sesión conectada correctamente
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>
+            Mis grupos
           </Text>
 
-          <Text style={styles.cardText}>
-            El registro, el login y la recuperación de tu
-            perfil ya funcionan contra Spring Boot.
-          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/groups/create')}
+            style={({ pressed }) => [
+              styles.addButton,
+              pressed ? styles.addButtonPressed : null,
+            ]}
+          >
+            <Text style={styles.addButtonText}>+ Crear</Text>
+          </Pressable>
         </View>
+
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator
+              color={colors.primary}
+              size="large"
+            />
+          </View>
+        ) : null}
+
+        {!isLoading && loadError ? (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorTitle}>
+              No hemos podido cargar los grupos
+            </Text>
+
+            <Text style={styles.errorText}>
+              {loadError}
+            </Text>
+
+            <Pressable onPress={() => loadGroups()}>
+              <Text style={styles.retryText}>
+                Volver a intentar
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {!isLoading &&
+        !loadError &&
+        groups.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIcon}>
+              <Text style={styles.emptyIconText}>🍽️</Text>
+            </View>
+
+            <Text style={styles.emptyTitle}>
+              Todavía no tienes ningún grupo
+            </Text>
+
+            <Text style={styles.emptyText}>
+              Crea uno para empezar a guardar restaurantes
+              con tu pareja, amigos o familia.
+            </Text>
+
+            <PrimaryButton
+              onPress={() => router.push('/groups/create')}
+              title="Crear mi primer grupo"
+            />
+          </View>
+        ) : null}
+
+        {!isLoading && !loadError && groups.length > 0 ? (
+          <View style={styles.groups}>
+            {groups.map((group) => (
+              <GroupCard
+                group={group}
+                key={group.id}
+                onPress={() => openGroup(group.id)}
+              />
+            ))}
+          </View>
+        ) : null}
 
         <Pressable
           accessibilityRole="button"
@@ -150,7 +298,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     color: colors.white,
-    fontSize: 26,
+    fontSize: 25,
     fontWeight: '800',
     lineHeight: 32,
   },
@@ -159,23 +307,91 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  card: {
-    gap: 8,
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 21,
+    fontWeight: '800',
+  },
+  addButton: {
+    borderRadius: 999,
+    backgroundColor: '#F7D9CF',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  addButtonPressed: {
+    opacity: 0.7,
+  },
+  addButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  groups: {
+    gap: 12,
+  },
+  emptyCard: {
+    alignItems: 'center',
+    gap: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: 22,
     backgroundColor: colors.surface,
-    padding: 20,
+    padding: 24,
   },
-  cardTitle: {
-    color: colors.success,
-    fontSize: 17,
-    fontWeight: '700',
+  emptyIcon: {
+    width: 62,
+    height: 62,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    backgroundColor: '#FFF0EA',
   },
-  cardText: {
+  emptyIconText: {
+    fontSize: 28,
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 19,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  emptyText: {
     color: colors.muted,
     fontSize: 15,
     lineHeight: 22,
+    textAlign: 'center',
+  },
+  errorCard: {
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#F3C5BC',
+    borderRadius: 20,
+    backgroundColor: '#FFF1EE',
+    padding: 20,
+  },
+  errorTitle: {
+    color: colors.danger,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  errorText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  retryText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '800',
   },
   logoutButton: {
     alignItems: 'center',
