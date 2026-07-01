@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -85,6 +86,26 @@ public class RestaurantController {
                 restaurantService.getRestaurant(
                         groupId,
                         groupRestaurantId,
+                        userId
+                )
+        );
+    }
+
+    @PatchMapping("/{groupRestaurantId}/status")
+    public ResponseEntity<GroupRestaurantResponse> updateStatus(
+            @PathVariable UUID groupId,
+            @PathVariable UUID groupRestaurantId,
+            @Valid @RequestBody
+            UpdateGroupRestaurantStatusRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        return ResponseEntity.ok(
+                restaurantService.updateStatus(
+                        groupId,
+                        groupRestaurantId,
+                        request,
                         userId
                 )
         );

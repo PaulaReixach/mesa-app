@@ -1,4 +1,6 @@
+import { router } from 'expo-router';
 import {
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -14,16 +16,44 @@ type RestaurantCardProps = {
   groupRestaurant: GroupRestaurant;
 };
 
-const statusLabels: Record<
+const statusPresentation: Record<
   GroupRestaurantStatus,
-  string
+  {
+    label: string;
+    backgroundColor: string;
+    textColor: string;
+  }
 > = {
-  WANT_TO_GO: 'Queremos ir',
-  VISITED: 'Visitado',
-  FAVORITE: 'Favorito',
-  WANT_TO_REPEAT: 'Queremos repetir',
-  DO_NOT_REPEAT: 'No repetir',
-  ARCHIVED: 'Archivado',
+  WANT_TO_GO: {
+    label: 'Queremos ir',
+    backgroundColor: '#F7E8D2',
+    textColor: '#8A5B17',
+  },
+  VISITED: {
+    label: 'Visitado',
+    backgroundColor: '#E5EDF7',
+    textColor: '#365F91',
+  },
+  FAVORITE: {
+    label: 'Favorito',
+    backgroundColor: '#FBE4E7',
+    textColor: '#A33B4A',
+  },
+  WANT_TO_REPEAT: {
+    label: 'Queremos repetir',
+    backgroundColor: '#E8F1EB',
+    textColor: colors.success,
+  },
+  DO_NOT_REPEAT: {
+    label: 'No repetir',
+    backgroundColor: '#FBE9E5',
+    textColor: colors.danger,
+  },
+  ARCHIVED: {
+    label: 'Archivado',
+    backgroundColor: '#ECE8E6',
+    textColor: colors.muted,
+  },
 };
 
 export function RestaurantCard({
@@ -38,8 +68,29 @@ export function RestaurantCard({
     .filter(Boolean)
     .join(' · ');
 
+  const status =
+    statusPresentation[groupRestaurant.status];
+
+  function openRestaurant() {
+    router.push({
+      pathname:
+        '/groups/[groupId]/restaurants/[groupRestaurantId]',
+      params: {
+        groupId: groupRestaurant.groupId,
+        groupRestaurantId: groupRestaurant.id,
+      },
+    });
+  }
+
   return (
-    <View style={styles.card}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={openRestaurant}
+      style={({ pressed }) => [
+        styles.card,
+        pressed ? styles.cardPressed : null,
+      ]}
+    >
       <View style={styles.icon}>
         <Text style={styles.iconText}>
           {restaurant.name.charAt(0).toUpperCase()}
@@ -48,13 +99,31 @@ export function RestaurantCard({
 
       <View style={styles.content}>
         <View style={styles.titleRow}>
-          <Text numberOfLines={1} style={styles.title}>
+          <Text
+            numberOfLines={1}
+            style={styles.title}
+          >
             {restaurant.name}
           </Text>
 
-          <View style={styles.status}>
-            <Text style={styles.statusText}>
-              {statusLabels[groupRestaurant.status]}
+          <View
+            style={[
+              styles.status,
+              {
+                backgroundColor:
+                  status.backgroundColor,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+                {
+                  color: status.textColor,
+                },
+              ]}
+            >
+              {status.label}
             </Text>
           </View>
         </View>
@@ -65,15 +134,12 @@ export function RestaurantCard({
           </Text>
         ) : null}
 
-        {location ? (
-          <Text numberOfLines={2} style={styles.location}>
-            {location}
-          </Text>
-        ) : (
-          <Text style={styles.location}>
-            Sin ubicación
-          </Text>
-        )}
+        <Text
+          numberOfLines={2}
+          style={styles.location}
+        >
+          {location || 'Sin ubicación'}
+        </Text>
 
         {groupRestaurant.groupNotes ? (
           <Text
@@ -84,7 +150,9 @@ export function RestaurantCard({
           </Text>
         ) : null}
       </View>
-    </View>
+
+      <Text style={styles.chevron}>›</Text>
+    </Pressable>
   );
 }
 
@@ -98,6 +166,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: colors.surface,
     padding: 16,
+  },
+  cardPressed: {
+    opacity: 0.72,
   },
   icon: {
     width: 52,
@@ -129,12 +200,10 @@ const styles = StyleSheet.create({
   },
   status: {
     borderRadius: 999,
-    backgroundColor: '#E8F1EB',
     paddingHorizontal: 9,
     paddingVertical: 4,
   },
   statusText: {
-    color: colors.success,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -154,5 +223,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontStyle: 'italic',
     lineHeight: 18,
+  },
+  chevron: {
+    alignSelf: 'center',
+    color: colors.muted,
+    fontSize: 28,
+    lineHeight: 30,
   },
 });

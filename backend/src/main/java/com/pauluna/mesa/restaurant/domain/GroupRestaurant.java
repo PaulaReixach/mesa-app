@@ -1,6 +1,7 @@
 package com.pauluna.mesa.restaurant.domain;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -69,6 +70,13 @@ public class GroupRestaurant {
         this.status = status;
         this.proposedByUserId = proposedByUserId;
         this.groupNotes = groupNotes;
+    }
+
+    public void changeStatus(GroupRestaurantStatus status) {
+        this.status = Objects.requireNonNull(
+                status,
+                "El estado del restaurante es obligatorio."
+        );
     }
 
     @PrePersist
