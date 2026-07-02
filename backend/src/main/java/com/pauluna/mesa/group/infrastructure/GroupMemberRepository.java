@@ -24,4 +24,12 @@ public interface GroupMemberRepository
     List<GroupMember> findAllByGroupIdOrderByJoinedAtAsc(
             UUID groupId
     );
+
+    long countByUserId(
+            UUID userId
+    );
+
+    long deleteAllByUserId(
+            UUID userId
+    );
 }

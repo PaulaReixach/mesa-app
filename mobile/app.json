@@ -34,7 +34,14 @@
           "resizeMode": "contain"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Mesa necesita acceder a tus fotos para cambiar tu imagen de perfil.",
+          "cameraPermission": "Mesa necesita usar la cámara para cambiar tu imagen de perfil."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

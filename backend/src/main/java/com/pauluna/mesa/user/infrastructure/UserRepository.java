@@ -7,13 +7,32 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.pauluna.mesa.user.domain.User;
 
-public interface UserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository
+        extends JpaRepository<User, UUID> {
 
-    boolean existsByUsernameIgnoreCase(String username);
+    boolean existsByUsernameIgnoreCase(
+            String username
+    );
 
-    boolean existsByEmailIgnoreCase(String email);
+    boolean existsByEmailIgnoreCase(
+            String email
+    );
 
-    Optional<User> findByUsernameIgnoreCase(String username);
+    boolean existsByUsernameIgnoreCaseAndIdNot(
+            String username,
+            UUID id
+    );
 
-    Optional<User> findByEmailIgnoreCase(String email);
+    boolean existsByEmailIgnoreCaseAndIdNot(
+            String email,
+            UUID id
+    );
+
+    Optional<User> findByUsernameIgnoreCase(
+            String username
+    );
+
+    Optional<User> findByEmailIgnoreCase(
+            String email
+    );
 }

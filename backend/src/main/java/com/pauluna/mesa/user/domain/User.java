@@ -116,4 +116,8 @@ public class User {
     public void updatePasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
     }
+
+    public void updateAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
 }

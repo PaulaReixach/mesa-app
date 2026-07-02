@@ -13,7 +13,8 @@ import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
 public interface GroupRestaurantRepository
         extends JpaRepository<GroupRestaurant, UUID> {
 
-    List<GroupRestaurant> findAllByGroupIdOrderByCreatedAtDesc(
+    List<GroupRestaurant>
+    findAllByGroupIdOrderByCreatedAtDesc(
             UUID groupId
     );
 
@@ -25,6 +26,14 @@ public interface GroupRestaurantRepository
     boolean existsByGroupIdAndRestaurantId(
             UUID groupId,
             UUID restaurantId
+    );
+
+    long countByProposedByUserId(
+            UUID proposedByUserId
+    );
+
+    List<GroupRestaurant> findAllByProposedByUserId(
+            UUID proposedByUserId
     );
 
     @Query("""

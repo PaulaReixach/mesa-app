@@ -23,12 +23,21 @@ type AuthContextValue = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+
   signIn: (
     payload: LoginPayload,
     rememberSession?: boolean,
   ) => Promise<void>;
-  signUp: (payload: RegisterPayload) => Promise<void>;
+
+  signUp: (
+    payload: RegisterPayload,
+  ) => Promise<void>;
+
   signOut: () => Promise<void>;
+
+  updateCurrentUser: (
+    updatedUser: User,
+  ) => void;
 };
 
 const AuthContext =
@@ -158,16 +167,28 @@ export function AuthProvider({
     [],
   );
 
+  const updateCurrentUser = useCallback(
+    (updatedUser: User): void => {
+      setUser(updatedUser);
+    },
+    [],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       accessToken,
       user,
+
       isAuthenticated:
-        accessToken !== null && user !== null,
+        accessToken !== null
+        && user !== null,
+
       isLoading,
+
       signIn,
       signUp,
       signOut,
+      updateCurrentUser,
     }),
     [
       accessToken,
@@ -176,6 +197,7 @@ export function AuthProvider({
       signIn,
       signUp,
       signOut,
+      updateCurrentUser,
     ],
   );
 

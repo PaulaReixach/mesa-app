@@ -21,4 +21,12 @@ public interface RestaurantRatingRepository
             UUID groupRestaurantId,
             UUID userId
     );
+
+    long countByUserId(
+            UUID userId
+    );
+
+    long deleteAllByUserId(
+            UUID userId
+    );
 }

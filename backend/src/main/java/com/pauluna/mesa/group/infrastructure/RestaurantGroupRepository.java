@@ -26,4 +26,12 @@ public interface RestaurantGroupRepository
     List<RestaurantGroup> findAllByMemberUserId(
             @Param("userId") UUID userId
     );
+
+    List<RestaurantGroup> findAllByOwnerUserId(
+            UUID ownerUserId
+    );
+
+    long deleteAllByOwnerUserId(
+            UUID ownerUserId
+    );
 }

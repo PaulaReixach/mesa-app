@@ -1,9 +1,16 @@
 import { SymbolView } from 'expo-symbols';
-import { router } from 'expo-router';
+import {
+  router,
+  useFocusEffect,
+} from 'expo-router';
 import {
   ComponentProps,
+  useCallback,
+  useMemo,
+  useState,
 } from 'react';
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,41 +20,97 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../contexts/auth-context';
+import { resolveApiUrl } from '../../lib/api';
+import { getCurrentUserProfileStats } from '../../services/profile-service';
 import { colors } from '../../theme/colors';
+import { UserProfileStats } from '../../types/profile';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
 
-type ProfileOptionProps = {
+type MenuRowProps = {
   icon: SymbolName;
   label: string;
+  isLast?: boolean;
+  onPress?: () => void;
 };
 
-function ProfileOption({
+type StatProps = {
+  value: number | string;
+  label: string;
+  showDivider?: boolean;
+};
+
+const profilePalette = {
+  line: '#E9DFD9',
+  subtleText: '#7E746E',
+  accent: '#D85C3F',
+  logoutBorder: '#F0C8BE',
+  logoutBackground: '#FFF9F7',
+};
+
+function StatItem({
+  value,
+  label,
+  showDivider = true,
+}: StatProps) {
+  return (
+    <View style={styles.statItem}>
+      <Text
+        allowFontScaling={false}
+        style={styles.statValue}
+      >
+        {value}
+      </Text>
+
+      <Text
+        allowFontScaling={false}
+        style={styles.statLabel}
+      >
+        {label}
+      </Text>
+
+      {showDivider ? (
+        <View style={styles.statDivider} />
+      ) : null}
+    </View>
+  );
+}
+
+function MenuRow({
   icon,
   label,
-}: ProfileOptionProps) {
+  isLast = false,
+  onPress,
+}: MenuRowProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      onPress={onPress}
       style={({ pressed }) => [
-        styles.option,
+        styles.menuRow,
+        !isLast
+          ? styles.menuRowBorder
+          : null,
         pressed
-          ? styles.optionPressed
+          ? styles.menuRowPressed
           : null,
       ]}
     >
-      <View style={styles.optionIcon}>
+      <View style={styles.menuLeft}>
         <SymbolView
           name={icon}
-          size={21}
+          size={18}
           tintColor={colors.text}
         />
-      </View>
 
-      <Text style={styles.optionLabel}>
-        {label}
-      </Text>
+        <Text
+          allowFontScaling={false}
+          style={styles.menuLabel}
+        >
+          {label}
+        </Text>
+      </View>
 
       <SymbolView
         name={{
@@ -55,7 +118,7 @@ function ProfileOption({
           android: 'chevron_right',
           web: 'chevron_right',
         }}
-        size={19}
+        size={17}
         tintColor={colors.muted}
       />
     </Pressable>
@@ -66,86 +129,303 @@ export default function ProfileScreen() {
   const {
     user,
     signOut,
+    accessToken,
   } = useAuth();
 
-  const userInitial =
-    user?.name?.charAt(0).toUpperCase() ?? '?';
+  const [
+    stats,
+    setStats,
+  ] = useState<UserProfileStats | null>(null);
+
+  const [
+    statsError,
+    setStatsError,
+  ] = useState(false);
+
+  const loadStats = useCallback(async () => {
+    if (!accessToken) {
+      setStats(null);
+      return;
+    }
+
+    try {
+      setStatsError(false);
+
+      const response =
+        await getCurrentUserProfileStats(
+          accessToken,
+        );
+
+      setStats(response);
+    } catch {
+      setStats(null);
+      setStatsError(true);
+    }
+  }, [accessToken]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadStats();
+    }, [loadStats]),
+  );
+
+  const displayName = useMemo(() => {
+    return user?.name?.trim() || 'Tu perfil';
+  }, [user?.name]);
+
+  const displayUsername = useMemo(() => {
+    if (user?.username?.trim()) {
+      return `@${user.username}`;
+    }
+
+    return '@usuario';
+  }, [user?.username]);
+
+  const userInitial = useMemo(() => {
+    return displayName
+      .charAt(0)
+      .toUpperCase();
+  }, [displayName]);
+
+  const avatarUri = useMemo(() => {
+    if (!user?.avatarUrl) {
+      return null;
+    }
+
+    return resolveApiUrl(user.avatarUrl);
+  }, [user?.avatarUrl]);
 
   async function handleSignOut() {
     await signOut();
     router.replace('/login');
   }
 
+  function handleBack() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/home');
+  }
+
+  function handleEditProfile() {
+    router.push('/profile-edit');
+  }
+
   return (
     <SafeAreaView
-      edges={['top', 'right', 'left']}
+      edges={[
+        'top',
+        'right',
+        'left',
+      ]}
       style={styles.safeArea}
     >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>
-          Perfil
-        </Text>
+        <View style={styles.header}>
+          <Pressable
+            accessibilityLabel="Volver"
+            accessibilityRole="button"
+            onPress={handleBack}
+            style={({ pressed }) => [
+              styles.iconButton,
+              pressed
+                ? styles.iconButtonPressed
+                : null,
+            ]}
+          >
+            <SymbolView
+              name={{
+                ios: 'chevron.left',
+                android: 'arrow_back',
+                web: 'arrow_back',
+              }}
+              size={19}
+              tintColor={colors.text}
+            />
+          </Pressable>
 
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {userInitial}
-            </Text>
-          </View>
+          <Text
+            allowFontScaling={false}
+            style={styles.headerTitle}
+          >
+            Mi perfil
+          </Text>
 
-          <View style={styles.userData}>
-            <Text style={styles.userName}>
-              {user?.name}
-            </Text>
-
-            <Text style={styles.username}>
-              @{user?.username}
-            </Text>
-
-            <Text style={styles.email}>
-              {user?.email}
-            </Text>
-          </View>
+          <Pressable
+            accessibilityLabel="Editar perfil"
+            accessibilityRole="button"
+            onPress={handleEditProfile}
+            style={({ pressed }) => [
+              styles.iconButton,
+              pressed
+                ? styles.iconButtonPressed
+                : null,
+            ]}
+          >
+            <SymbolView
+              name={{
+                ios: 'square.and.pencil',
+                android: 'edit',
+                web: 'edit',
+              }}
+              size={18}
+              tintColor={colors.text}
+            />
+          </Pressable>
         </View>
 
-        <View style={styles.options}>
-          <ProfileOption
+        <View style={styles.profileSection}>
+          <View style={styles.profileTop}>
+            {avatarUri ? (
+              <Image
+                source={{
+                  uri: avatarUri,
+                }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={styles.avatarFallback}>
+                <Text
+                  allowFontScaling={false}
+                  style={styles.avatarFallbackText}
+                >
+                  {userInitial}
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.profileInfo}>
+              <Text
+                allowFontScaling={false}
+                numberOfLines={1}
+                style={styles.name}
+              >
+                {displayName}
+              </Text>
+
+              <Text
+                allowFontScaling={false}
+                numberOfLines={1}
+                style={styles.username}
+              >
+                {displayUsername}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.statsRow}>
+            <StatItem
+              label="Restaurantes"
+              value={
+                stats?.restaurantsCount
+                ?? '—'
+              }
+            />
+
+            <StatItem
+              label="Grupos"
+              value={
+                stats?.groupsCount
+                ?? '—'
+              }
+            />
+
+            <StatItem
+              label="Valoraciones"
+              showDivider={false}
+              value={
+                stats?.ratingsCount
+                ?? '—'
+              }
+            />
+          </View>
+
+          {statsError ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                void loadStats();
+              }}
+              style={styles.statsError}
+            >
+              <Text
+                allowFontScaling={false}
+                style={styles.statsErrorText}
+              >
+                No se han podido actualizar las estadísticas.
+                Pulsa para reintentar.
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        <View style={styles.menuSection}>
+          <MenuRow
             icon={{
-              ios: 'person.crop.circle',
-              android: 'manage_accounts',
-              web: 'manage_accounts',
+              ios: 'square.and.pencil',
+              android: 'edit',
+              web: 'edit',
             }}
             label="Editar perfil"
+            onPress={handleEditProfile}
           />
 
-          <ProfileOption
+          <MenuRow
+            icon={{
+              ios: 'gearshape',
+              android: 'settings',
+              web: 'settings',
+            }}
+              label="Ajustes de cuenta"
+              onPress={() => {
+                router.push('/account-settings');
+            }}
+          />
+
+          <MenuRow
             icon={{
               ios: 'bell',
               android: 'notifications',
               web: 'notifications',
             }}
             label="Notificaciones"
+            onPress={() => {}}
           />
 
-          <ProfileOption
+          <MenuRow
             icon={{
-              ios: 'gearshape',
-              android: 'settings',
-              web: 'settings',
+              ios: 'lock',
+              android: 'lock',
+              web: 'lock',
             }}
-            label="Ajustes"
+            label="Privacidad"
+            onPress={() => {}}
           />
 
-          <ProfileOption
+          <MenuRow
             icon={{
               ios: 'questionmark.circle',
               android: 'help',
               web: 'help',
             }}
-            label="Ayuda"
+            label="Ayuda y soporte"
+            onPress={() => {}}
+          />
+
+          <MenuRow
+            icon={{
+              ios: 'info.circle',
+              android: 'info',
+              web: 'info',
+            }}
+            isLast
+            label="Acerca de Mesa"
+            onPress={() => {}}
           />
         </View>
 
@@ -161,17 +441,10 @@ export default function ProfileScreen() {
               : null,
           ]}
         >
-          <SymbolView
-            name={{
-              ios: 'rectangle.portrait.and.arrow.right',
-              android: 'logout',
-              web: 'logout',
-            }}
-            size={21}
-            tintColor={colors.danger}
-          />
-
-          <Text style={styles.logoutText}>
+          <Text
+            allowFontScaling={false}
+            style={styles.logoutText}
+          >
             Cerrar sesión
           </Text>
         </Pressable>
@@ -185,110 +458,191 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+
   content: {
-    flexGrow: 1,
-    gap: 25,
-    paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingHorizontal: 22,
+    paddingTop: 8,
     paddingBottom: 34,
   },
-  title: {
-    color: colors.text,
-    fontSize: 30,
-    fontWeight: '800',
-  },
-  profileHeader: {
+
+  header: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 17,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 24,
-    backgroundColor: colors.surface,
-    padding: 19,
+    justifyContent: 'space-between',
+    marginBottom: 28,
   },
-  avatar: {
-    width: 72,
-    height: 72,
+
+  iconButton: {
+    width: 34,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 24,
+    borderRadius: 17,
+  },
+
+  iconButtonPressed: {
+    backgroundColor: '#F6EFE9',
+  },
+
+  headerTitle: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+
+  profileSection: {
+    marginBottom: 24,
+  },
+
+  profileTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 22,
+  },
+
+  avatar: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    backgroundColor: '#E8DDD6',
+  },
+
+  avatarFallback: {
+    width: 74,
+    height: 74,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 37,
     backgroundColor: colors.primary,
   },
-  avatarText: {
+
+  avatarFallbackText: {
     color: colors.white,
     fontSize: 29,
     fontWeight: '800',
   },
-  userData: {
+
+  profileInfo: {
     flex: 1,
-    gap: 3,
+    gap: 4,
   },
-  userName: {
+
+  name: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
+    letterSpacing: -0.2,
   },
+
   username: {
-    color: colors.primary,
+    color: profilePalette.subtleText,
     fontSize: 14,
-    fontWeight: '700',
-  },
-  email: {
-    color: colors.muted,
-    fontSize: 13,
-  },
-  options: {
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-  },
-  option: {
-    minHeight: 62,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    paddingHorizontal: 16,
-  },
-  optionPressed: {
-    backgroundColor: '#FFF2ED',
-  },
-  optionIcon: {
-    width: 37,
-    height: 37,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 13,
-    backgroundColor: '#F7EEE9',
-  },
-  optionLabel: {
-    flex: 1,
-    color: colors.text,
-    fontSize: 15,
     fontWeight: '600',
   },
-  logoutButton: {
-    minHeight: 54,
+
+  statsRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+  },
+
+  statItem: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 9,
-    marginTop: 'auto',
-    borderWidth: 1,
-    borderColor: '#F0C7BE',
-    borderRadius: 27,
-    backgroundColor: '#FFF1EE',
+    paddingVertical: 2,
   },
-  logoutButtonPressed: {
-    opacity: 0.7,
+
+  statValue: {
+    color: colors.text,
+    fontSize: 28,
+    fontWeight: '800',
+    lineHeight: 32,
+    marginBottom: 2,
   },
-  logoutText: {
+
+  statLabel: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
+  statDivider: {
+    position: 'absolute',
+    right: 0,
+    top: 4,
+    bottom: 4,
+    width: 1,
+    backgroundColor: profilePalette.line,
+  },
+
+  statsError: {
+    marginTop: 14,
+  },
+
+  statsErrorText: {
     color: colors.danger,
-    fontSize: 15,
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: 'center',
+  },
+
+  menuSection: {
+    borderTopWidth: 1,
+    borderTopColor: profilePalette.line,
+    marginBottom: 26,
+  },
+
+  menuRow: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  menuRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: profilePalette.line,
+  },
+
+  menuRowPressed: {
+    backgroundColor: '#FBF6F2',
+  },
+
+  menuLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+
+  menuLabel: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
+  logoutButton: {
+    minHeight: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: profilePalette.logoutBorder,
+    borderRadius: 26,
+    backgroundColor: profilePalette.logoutBackground,
+  },
+
+  logoutButtonPressed: {
+    backgroundColor: '#FFF3F0',
+  },
+
+  logoutText: {
+    color: profilePalette.accent,
+    fontSize: 16,
     fontWeight: '700',
   },
 });

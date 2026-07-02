@@ -16,6 +16,13 @@ const navigationColors = {
   background: '#FFFFFF',
 };
 
+const hiddenScreenOptions = {
+  href: null,
+  tabBarStyle: {
+    display: 'none' as const,
+  },
+};
+
 export default function AppLayout() {
   const insets = useSafeAreaInsets();
 
@@ -29,47 +36,36 @@ export default function AppLayout() {
       initialRouteName="home"
       screenOptions={{
         headerShown: false,
-
         tabBarActiveTintColor:
           navigationColors.active,
-
         tabBarInactiveTintColor:
           navigationColors.inactive,
-
         tabBarHideOnKeyboard: true,
-
         tabBarLabelPosition: 'below-icon',
-
         tabBarItemStyle: {
           justifyContent: 'center',
           paddingTop: 3,
         },
-
         tabBarIconStyle: {
           width: 24,
           height: 22,
           marginBottom: 0,
         },
-
         tabBarLabelStyle: {
           marginTop: 0,
           fontSize: 10,
           fontWeight: '500',
           lineHeight: 13,
         },
-
         tabBarStyle: {
           height: 56 + bottomPadding,
           paddingTop: 4,
           paddingBottom: bottomPadding,
-
           borderTopWidth: 1,
           borderTopColor:
             navigationColors.border,
-
           backgroundColor:
             navigationColors.background,
-
           shadowColor: '#2B2421',
           shadowOffset: {
             width: 0,
@@ -77,7 +73,6 @@ export default function AppLayout() {
           },
           shadowOpacity: 0.04,
           shadowRadius: 5,
-
           elevation: 6,
         },
       }}
@@ -87,7 +82,6 @@ export default function AppLayout() {
         options={{
           title: 'Inicio',
           tabBarAccessibilityLabel: 'Inicio',
-
           tabBarIcon: ({
             focused,
             color,
@@ -112,7 +106,6 @@ export default function AppLayout() {
         options={{
           title: 'Mapa',
           tabBarAccessibilityLabel: 'Mapa',
-
           tabBarIcon: ({
             focused,
             color,
@@ -137,9 +130,7 @@ export default function AppLayout() {
         options={{
           title: 'Añadir',
           tabBarAccessibilityLabel: 'Añadir',
-
           tabBarLabel: () => null,
-
           tabBarButton: ({
             accessibilityState,
             accessibilityLabel,
@@ -187,7 +178,6 @@ export default function AppLayout() {
         options={{
           title: 'Grupos',
           tabBarAccessibilityLabel: 'Grupos',
-
           tabBarIcon: ({
             focused,
             color,
@@ -212,7 +202,6 @@ export default function AppLayout() {
         options={{
           title: 'Perfil',
           tabBarAccessibilityLabel: 'Perfil',
-
           tabBarIcon: ({
             focused,
             color,
@@ -231,6 +220,26 @@ export default function AppLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="profile-edit"
+        options={hiddenScreenOptions}
+      />
+
+      <Tabs.Screen
+        name="account-settings"
+        options={hiddenScreenOptions}
+      />
+
+      <Tabs.Screen
+        name="change-password"
+        options={hiddenScreenOptions}
+      />
+
+      <Tabs.Screen
+        name="delete-account"
+        options={hiddenScreenOptions}
+      />
     </Tabs>
   );
 }
@@ -241,28 +250,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   addTabButtonPressed: {
     opacity: 0.78,
   },
-
   addCircle: {
     width: 44,
     height: 44,
-
     alignItems: 'center',
     justifyContent: 'center',
-
     marginTop: -5,
-
     borderWidth: 3,
     borderColor:
       navigationColors.background,
-
     borderRadius: 22,
-
     backgroundColor: colors.primary,
-
     shadowColor: '#7E3B2A',
     shadowOffset: {
       width: 0,
@@ -270,7 +271,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.14,
     shadowRadius: 4,
-
     elevation: 4,
   },
 });
