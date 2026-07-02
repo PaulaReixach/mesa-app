@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,30 +12,58 @@ import { colors } from '../theme/colors';
 type FormFieldProps = TextInputProps & {
   label: string;
   error?: string | null;
+  rightAccessory?: ReactNode;
 };
 
 export function FormField({
   label,
   error,
+  rightAccessory,
   style,
   ...textInputProps
 }: FormFieldProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <Text
+        maxFontSizeMultiplier={1.15}
+        style={styles.label}
+      >
+        {label}
+      </Text>
 
-      <TextInput
-        {...textInputProps}
-        placeholderTextColor={colors.muted}
+      <View
         style={[
-          styles.input,
+          styles.inputContainer,
           error ? styles.inputError : null,
-          style,
         ]}
-      />
+      >
+        <TextInput
+          {...textInputProps}
+          maxFontSizeMultiplier={1.15}
+          placeholderTextColor={colors.muted}
+          style={[
+            styles.input,
+            rightAccessory
+              ? styles.inputWithAccessory
+              : null,
+            style,
+          ]}
+        />
+
+        {rightAccessory ? (
+          <View style={styles.accessory}>
+            {rightAccessory}
+          </View>
+        ) : null}
+      </View>
 
       {error ? (
-        <Text style={styles.error}>{error}</Text>
+        <Text
+          maxFontSizeMultiplier={1.15}
+          style={styles.error}
+        >
+          {error}
+        </Text>
       ) : null}
     </View>
   );
@@ -46,24 +75,40 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
   },
-  input: {
+  inputContainer: {
     minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 14,
+    borderRadius: 13,
     backgroundColor: colors.inputBackground,
-    paddingHorizontal: 16,
-    color: colors.text,
-    fontSize: 16,
   },
   inputError: {
     borderColor: colors.danger,
   },
+  input: {
+    flex: 1,
+    minHeight: 50,
+    paddingHorizontal: 15,
+    color: colors.text,
+    fontSize: 14,
+  },
+  inputWithAccessory: {
+    paddingRight: 4,
+  },
+  accessory: {
+    width: 48,
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   error: {
     color: colors.danger,
-    fontSize: 13,
+    fontSize: 12,
+    lineHeight: 17,
   },
 });
