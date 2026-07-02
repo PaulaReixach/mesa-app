@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.pauluna.mesa.user.api.CreateUserRequest;
+import com.pauluna.mesa.user.api.UpdateUserProfileRequest;
 import com.pauluna.mesa.user.api.UserResponse;
 import com.pauluna.mesa.user.domain.User;
 import com.pauluna.mesa.user.infrastructure.UserRepository;
@@ -28,45 +29,127 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserResponse createUser(CreateUserRequest request) {
-        String normalizedUsername = request.username()
-                .trim()
-                .toLowerCase(Locale.ROOT);
+    public UserResponse createUser(
+            CreateUserRequest request
+    ) {
+        String normalizedUsername =
+                request.username()
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
 
-        String normalizedEmail = request.email()
-                .trim()
-                .toLowerCase(Locale.ROOT);
+        String normalizedEmail =
+                request.email()
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
 
-        if (userRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
+        if (
+                userRepository
+                        .existsByUsernameIgnoreCase(
+                                normalizedUsername
+                        )
+        ) {
             throw new DuplicateUserException(
                     "El nombre de usuario ya está en uso."
             );
         }
 
-        if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+        if (
+                userRepository
+                        .existsByEmailIgnoreCase(
+                                normalizedEmail
+                        )
+        ) {
             throw new DuplicateUserException(
                     "El email ya está registrado."
             );
         }
 
-        String avatarUrl = normalizeOptionalValue(request.avatarUrl());
+        String avatarUrl =
+                normalizeOptionalValue(
+                        request.avatarUrl()
+                );
 
         User user = new User(
                 request.name().trim(),
                 normalizedUsername,
                 normalizedEmail,
-                passwordEncoder.encode(request.password()),
+                passwordEncoder.encode(
+                        request.password()
+                ),
                 avatarUrl
         );
 
-        User savedUser = userRepository.save(user);
+        User savedUser =
+                userRepository.save(user);
 
         return UserResponse.from(savedUser);
     }
 
+    public UserResponse updateProfile(
+            UUID userId,
+            UpdateUserProfileRequest request
+    ) {
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(userId)
+                );
+
+        String normalizedName =
+                request.name().trim();
+
+        String normalizedUsername =
+                request.username()
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+
+        String normalizedEmail =
+                request.email()
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+
+        if (
+                userRepository
+                        .existsByUsernameIgnoreCaseAndIdNot(
+                                normalizedUsername,
+                                userId
+                        )
+        ) {
+            throw new DuplicateUserException(
+                    "El nombre de usuario ya está en uso."
+            );
+        }
+
+        if (
+                userRepository
+                        .existsByEmailIgnoreCaseAndIdNot(
+                                normalizedEmail,
+                                userId
+                        )
+        ) {
+            throw new DuplicateUserException(
+                    "El email ya está registrado."
+            );
+        }
+
+        user.updateProfile(
+                normalizedName,
+                normalizedUsername,
+                user.getAvatarUrl()
+        );
+
+        user.updateEmail(normalizedEmail);
+
+        User updatedUser =
+                userRepository.saveAndFlush(user);
+
+        return UserResponse.from(updatedUser);
+    }
+
     @Transactional(readOnly = true)
     public List<UserResponse> getUsers() {
-        return userRepository.findAll()
+        return userRepository
+                .findAll()
                 .stream()
                 .map(UserResponse::from)
                 .toList();
@@ -74,12 +157,17 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponse getUser(UUID userId) {
-        return userRepository.findById(userId)
+        return userRepository
+                .findById(userId)
                 .map(UserResponse::from)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+                .orElseThrow(() ->
+                        new UserNotFoundException(userId)
+                );
     }
 
-    private String normalizeOptionalValue(String value) {
+    private String normalizeOptionalValue(
+            String value
+    ) {
         if (value == null || value.isBlank()) {
             return null;
         }

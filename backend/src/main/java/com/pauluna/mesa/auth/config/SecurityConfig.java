@@ -84,7 +84,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/health"
+                                "/health",
+                                "/users/*/avatar"
                         ).permitAll()
                         .requestMatchers(
                                 HttpMethod.POST,
