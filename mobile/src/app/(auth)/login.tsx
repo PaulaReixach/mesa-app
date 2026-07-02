@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontFamily: fonts.medium,
-    fontSize: 27,
+    fontSize: 30,
     fontWeight: '700',
     letterSpacing: -0.7,
     lineHeight: 33,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 25,
-    borderRadius: 18,
+    borderRadius: 28,
     backgroundColor: loginColors.primary,
     paddingHorizontal: 20,
   },
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   loginButtonText: {
     color: colors.white,
     fontFamily: fonts.medium,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     lineHeight: 20,
   },
