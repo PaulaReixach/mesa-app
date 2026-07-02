@@ -56,17 +56,11 @@ function StatItem({
 }: StatProps) {
   return (
     <View style={styles.statItem}>
-      <Text
-        allowFontScaling={false}
-        style={styles.statValue}
-      >
+      <Text style={styles.statValue}>
         {value}
       </Text>
 
-      <Text
-        allowFontScaling={false}
-        style={styles.statLabel}
-      >
+      <Text style={styles.statLabel}>
         {label}
       </Text>
 
@@ -89,9 +83,11 @@ function MenuRow({
       onPress={onPress}
       style={({ pressed }) => [
         styles.menuRow,
+
         !isLast
           ? styles.menuRowBorder
           : null,
+
         pressed
           ? styles.menuRowPressed
           : null,
@@ -104,10 +100,7 @@ function MenuRow({
           tintColor={colors.text}
         />
 
-        <Text
-          allowFontScaling={false}
-          style={styles.menuLabel}
-        >
+        <Text style={styles.menuLabel}>
           {label}
         </Text>
       </View>
@@ -135,33 +128,37 @@ export default function ProfileScreen() {
   const [
     stats,
     setStats,
-  ] = useState<UserProfileStats | null>(null);
+  ] =
+    useState<UserProfileStats | null>(
+      null,
+    );
 
   const [
     statsError,
     setStatsError,
   ] = useState(false);
 
-  const loadStats = useCallback(async () => {
-    if (!accessToken) {
-      setStats(null);
-      return;
-    }
+  const loadStats =
+    useCallback(async () => {
+      if (!accessToken) {
+        setStats(null);
+        return;
+      }
 
-    try {
-      setStatsError(false);
+      try {
+        setStatsError(false);
 
-      const response =
-        await getCurrentUserProfileStats(
-          accessToken,
-        );
+        const response =
+          await getCurrentUserProfileStats(
+            accessToken,
+          );
 
-      setStats(response);
-    } catch {
-      setStats(null);
-      setStatsError(true);
-    }
-  }, [accessToken]);
+        setStats(response);
+      } catch {
+        setStats(null);
+        setStatsError(true);
+      }
+    }, [accessToken]);
 
   useFocusEffect(
     useCallback(() => {
@@ -170,16 +167,18 @@ export default function ProfileScreen() {
   );
 
   const displayName = useMemo(() => {
-    return user?.name?.trim() || 'Tu perfil';
+    return user?.name?.trim()
+      || 'Tu perfil';
   }, [user?.name]);
 
-  const displayUsername = useMemo(() => {
-    if (user?.username?.trim()) {
-      return `@${user.username}`;
-    }
+  const displayUsername =
+    useMemo(() => {
+      if (user?.username?.trim()) {
+        return `@${user.username}`;
+      }
 
-    return '@usuario';
-  }, [user?.username]);
+      return '@usuario';
+    }, [user?.username]);
 
   const userInitial = useMemo(() => {
     return displayName
@@ -192,7 +191,9 @@ export default function ProfileScreen() {
       return null;
     }
 
-    return resolveApiUrl(user.avatarUrl);
+    return resolveApiUrl(
+      user.avatarUrl,
+    );
   }, [user?.avatarUrl]);
 
   async function handleSignOut() {
@@ -223,8 +224,12 @@ export default function ProfileScreen() {
       style={styles.safeArea}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+        contentContainerStyle={
+          styles.content
+        }
+        showsVerticalScrollIndicator={
+          false
+        }
       >
         <View style={styles.header}>
           <Pressable
@@ -249,10 +254,7 @@ export default function ProfileScreen() {
             />
           </Pressable>
 
-          <Text
-            allowFontScaling={false}
-            style={styles.headerTitle}
-          >
+          <Text style={styles.headerTitle}>
             Mi perfil
           </Text>
 
@@ -289,10 +291,15 @@ export default function ProfileScreen() {
                 style={styles.avatar}
               />
             ) : (
-              <View style={styles.avatarFallback}>
+              <View
+                style={
+                  styles.avatarFallback
+                }
+              >
                 <Text
-                  allowFontScaling={false}
-                  style={styles.avatarFallbackText}
+                  style={
+                    styles.avatarFallbackText
+                  }
                 >
                   {userInitial}
                 </Text>
@@ -301,7 +308,6 @@ export default function ProfileScreen() {
 
             <View style={styles.profileInfo}>
               <Text
-                allowFontScaling={false}
                 numberOfLines={1}
                 style={styles.name}
               >
@@ -309,7 +315,6 @@ export default function ProfileScreen() {
               </Text>
 
               <Text
-                allowFontScaling={false}
                 numberOfLines={1}
                 style={styles.username}
               >
@@ -322,7 +327,8 @@ export default function ProfileScreen() {
             <StatItem
               label="Restaurantes"
               value={
-                stats?.restaurantsCount
+                stats
+                  ?.restaurantsCount
                 ?? '—'
               }
             />
@@ -354,11 +360,13 @@ export default function ProfileScreen() {
               style={styles.statsError}
             >
               <Text
-                allowFontScaling={false}
-                style={styles.statsErrorText}
+                style={
+                  styles.statsErrorText
+                }
               >
-                No se han podido actualizar las estadísticas.
-                Pulsa para reintentar.
+                No se han podido actualizar
+                las estadísticas. Pulsa para
+                reintentar.
               </Text>
             </Pressable>
           ) : null}
@@ -381,9 +389,11 @@ export default function ProfileScreen() {
               android: 'settings',
               web: 'settings',
             }}
-              label="Ajustes de cuenta"
-              onPress={() => {
-                router.push('/account-settings');
+            label="Ajustes de cuenta"
+            onPress={() => {
+              router.push(
+                '/account-settings',
+              );
             }}
           />
 
@@ -394,7 +404,11 @@ export default function ProfileScreen() {
               web: 'notifications',
             }}
             label="Notificaciones"
-            onPress={() => {}}
+            onPress={() => {
+              router.push(
+                '/notifications',
+              );
+            }}
           />
 
           <MenuRow
@@ -436,15 +450,13 @@ export default function ProfileScreen() {
           }}
           style={({ pressed }) => [
             styles.logoutButton,
+
             pressed
               ? styles.logoutButtonPressed
               : null,
           ]}
         >
-          <Text
-            allowFontScaling={false}
-            style={styles.logoutText}
-          >
+          <Text style={styles.logoutText}>
             Cerrar sesión
           </Text>
         </Pressable>
@@ -538,7 +550,8 @@ const styles = StyleSheet.create({
   },
 
   username: {
-    color: profilePalette.subtleText,
+    color:
+      profilePalette.subtleText,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -576,7 +589,8 @@ const styles = StyleSheet.create({
     top: 4,
     bottom: 4,
     width: 1,
-    backgroundColor: profilePalette.line,
+    backgroundColor:
+      profilePalette.line,
   },
 
   statsError: {
@@ -592,7 +606,8 @@ const styles = StyleSheet.create({
 
   menuSection: {
     borderTopWidth: 1,
-    borderTopColor: profilePalette.line,
+    borderTopColor:
+      profilePalette.line,
     marginBottom: 26,
   },
 
@@ -605,7 +620,8 @@ const styles = StyleSheet.create({
 
   menuRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: profilePalette.line,
+    borderBottomColor:
+      profilePalette.line,
   },
 
   menuRowPressed: {
@@ -631,9 +647,11 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginBottom: 12,
     borderWidth: 1.5,
-    borderColor: profilePalette.logoutBorder,
+    borderColor:
+      profilePalette.logoutBorder,
     borderRadius: 26,
-    backgroundColor: profilePalette.logoutBackground,
+    backgroundColor:
+      profilePalette.logoutBackground,
   },
 
   logoutButtonPressed: {
