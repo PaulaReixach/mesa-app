@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pauluna.mesa.notification.application.NotificationService;
 import com.pauluna.mesa.restaurant.application.RestaurantRatingService;
 
 import jakarta.validation.Valid;
@@ -27,11 +28,18 @@ public class RestaurantRatingController {
     private final RestaurantRatingService
             restaurantRatingService;
 
+    private final NotificationService
+            notificationService;
+
     public RestaurantRatingController(
-            RestaurantRatingService restaurantRatingService
+            RestaurantRatingService restaurantRatingService,
+            NotificationService notificationService
     ) {
         this.restaurantRatingService =
                 restaurantRatingService;
+
+        this.notificationService =
+                notificationService;
     }
 
     @GetMapping
@@ -41,7 +49,10 @@ public class RestaurantRatingController {
             @PathVariable UUID groupRestaurantId,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
 
         return ResponseEntity.ok(
                 restaurantRatingService.getRatings(
@@ -57,20 +68,35 @@ public class RestaurantRatingController {
     saveMyRating(
             @PathVariable UUID groupId,
             @PathVariable UUID groupRestaurantId,
-            @Valid @RequestBody
+
+            @Valid
+            @RequestBody
             UpdateRestaurantRatingRequest request,
+
             @AuthenticationPrincipal Jwt jwt
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
 
-        return ResponseEntity.ok(
+        RestaurantRatingsResponse response =
                 restaurantRatingService.saveRating(
                         groupId,
                         groupRestaurantId,
                         request,
                         userId
-                )
-        );
+                );
+
+        notificationService
+                .notifyRestaurantRated(
+                        groupId,
+                        groupRestaurantId,
+                        request.score(),
+                        userId
+                );
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/me")
@@ -80,7 +106,10 @@ public class RestaurantRatingController {
             @PathVariable UUID groupRestaurantId,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
 
         return ResponseEntity.ok(
                 restaurantRatingService.deleteRating(

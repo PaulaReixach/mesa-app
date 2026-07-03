@@ -1,176 +1,367 @@
 import { SymbolView } from 'expo-symbols';
 import {
+  Href,
   router,
   useFocusEffect,
 } from 'expo-router';
 import {
   ComponentProps,
-  ReactNode,
   useCallback,
+  useMemo,
   useState,
 } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../contexts/auth-context';
-import { getErrorMessage } from '../../lib/api';
+import { useNotifications } from '../../contexts/notification-context';
 import {
-  getCurrentUserNotificationPreferences,
-  updateCurrentUserNotificationPreferences,
-} from '../../services/notification-service';
+  getErrorMessage,
+  resolveApiUrl,
+} from '../../lib/api';
+import {
+  getNotifications,
+  markNotificationAsRead,
+} from '../../services/notification-center-service';
 import { colors } from '../../theme/colors';
-import { NotificationPreferences } from '../../types/notification';
+import {
+  AppNotification,
+  NotificationFilter,
+  NotificationType,
+} from '../../types/notification-center';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
 
-type PreferenceKey =
-  | 'notificationsEnabled'
-  | 'newRestaurantsEnabled'
-  | 'restaurantStatusEnabled'
-  | 'ratingsEnabled'
-  | 'groupActivityEnabled';
+type FilterOption = {
+  value: NotificationFilter;
+  label: string;
+};
 
-type SectionProps = {
+type NotificationSection = {
   title: string;
-  children: ReactNode;
+  items: AppNotification[];
 };
 
-type NotificationRowProps = {
-  icon: SymbolName;
-  title: string;
-  subtitle: string;
-  value: boolean;
-  disabled?: boolean;
-  isLast?: boolean;
-  onValueChange: (value: boolean) => void;
-};
+const PAGE_SIZE = 8;
 
-const switchColors = {
-  disabledTrack: '#DDD4CE',
-  enabledTrack: '#E8A18C',
-  disabledThumb: '#F9F6F3',
-  enabledThumb: colors.primary,
-};
+const filters: FilterOption[] = [
+  {
+    value: 'ALL',
+    label: 'Todas',
+  },
+  {
+    value: 'INVITATIONS',
+    label: 'Invitaciones',
+  },
+  {
+    value: 'ACTIVITY',
+    label: 'Actividad',
+  },
+];
 
-function Section({
-  title,
-  children,
-}: SectionProps) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>
-        {title}
-      </Text>
+function getNotificationIcon(
+  type: NotificationType,
+): SymbolName {
+  switch (type) {
+    case 'GROUP_INVITATION':
+      return {
+        ios: 'person.2.fill',
+        android: 'group_add',
+        web: 'group_add',
+      };
 
-      <View style={styles.sectionContent}>
-        {children}
-      </View>
-    </View>
+    case 'NEW_RESTAURANT':
+      return {
+        ios: 'fork.knife',
+        android: 'restaurant',
+        web: 'restaurant',
+      };
+
+    case 'RESTAURANT_STATUS_CHANGED':
+      return {
+        ios: 'arrow.triangle.2.circlepath',
+        android: 'sync',
+        web: 'sync',
+      };
+
+    case 'RESTAURANT_RATED':
+      return {
+        ios: 'star.fill',
+        android: 'star',
+        web: 'star',
+      };
+
+    case 'GROUP_ACTIVITY':
+      return {
+        ios: 'bell.fill',
+        android: 'notifications',
+        web: 'notifications',
+      };
+  }
+}
+
+function getSectionKey(
+  dateValue: string,
+): string {
+  const date = new Date(dateValue);
+
+  return [
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  ].join('-');
+}
+
+function getSectionTitle(
+  dateValue: string,
+): string {
+  const date = new Date(dateValue);
+
+  const today = new Date();
+
+  const yesterday =
+    new Date(today);
+
+  yesterday.setDate(
+    today.getDate() - 1,
+  );
+
+  const sameDay = (
+    first: Date,
+    second: Date,
+  ) => {
+    return (
+      first.getFullYear()
+        === second.getFullYear()
+      && first.getMonth()
+        === second.getMonth()
+      && first.getDate()
+        === second.getDate()
+    );
+  };
+
+  if (sameDay(date, today)) {
+    return 'Hoy';
+  }
+
+  if (sameDay(date, yesterday)) {
+    return 'Ayer';
+  }
+
+  return date.toLocaleDateString(
+    'es-ES',
+    {
+      day: 'numeric',
+      month: 'long',
+    },
   );
 }
 
-function NotificationRow({
-  icon,
-  title,
-  subtitle,
-  value,
-  disabled = false,
-  isLast = false,
-  onValueChange,
-}: NotificationRowProps) {
+function formatRelativeTime(
+  dateValue: string,
+): string {
+  const date =
+    new Date(dateValue);
+
+  const differenceMs =
+    Date.now() - date.getTime();
+
+  const minutes =
+    Math.max(
+      Math.floor(
+        differenceMs / 60000,
+      ),
+      0,
+    );
+
+  if (minutes < 1) {
+    return 'Ahora';
+  }
+
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+
+  const hours =
+    Math.floor(minutes / 60);
+
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+
+  return date.toLocaleDateString(
+    'es-ES',
+    {
+      day: 'numeric',
+      month: 'short',
+    },
+  );
+}
+
+function buildSections(
+  notifications: AppNotification[],
+): NotificationSection[] {
+  const sections =
+    new Map<string, NotificationSection>();
+
+  notifications.forEach(notification => {
+    const key =
+      getSectionKey(
+        notification.createdAt,
+      );
+
+    const existingSection =
+      sections.get(key);
+
+    if (existingSection) {
+      existingSection.items.push(
+        notification,
+      );
+      return;
+    }
+
+    sections.set(
+      key,
+      {
+        title: getSectionTitle(
+          notification.createdAt,
+        ),
+        items: [notification],
+      },
+    );
+  });
+
+  return Array.from(
+    sections.values(),
+  );
+}
+
+type NotificationCardProps = {
+  notification: AppNotification;
+  onPress: () => void;
+};
+
+function NotificationCard({
+  notification,
+  onPress,
+}: NotificationCardProps) {
+  const avatarUri =
+    notification.actorAvatarUrl
+      ? resolveApiUrl(
+          notification.actorAvatarUrl,
+        )
+      : null;
+
   return (
-    <View
-      style={[
-        styles.notificationRow,
-        !isLast
-          ? styles.notificationRowBorder
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.notificationCard,
+        !notification.read
+          ? styles.notificationCardUnread
           : null,
-        disabled
-          ? styles.notificationRowDisabled
+        pressed
+          ? styles.notificationCardPressed
           : null,
       ]}
     >
-      <View style={styles.notificationIcon}>
-        <SymbolView
-          name={icon}
-          size={19}
-          tintColor={
-            disabled
-              ? colors.muted
-              : colors.text
-          }
-        />
+      <View style={styles.notificationAvatar}>
+        {avatarUri ? (
+          <Image
+            source={{
+              uri: avatarUri,
+            }}
+            style={styles.avatarImage}
+          />
+        ) : (
+          <SymbolView
+            name={getNotificationIcon(
+              notification.type,
+            )}
+            size={21}
+            tintColor={colors.primary}
+          />
+        )}
+
+        {!notification.read ? (
+          <View style={styles.unreadAvatarDot} />
+        ) : null}
       </View>
 
-      <View style={styles.notificationText}>
+      <View style={styles.notificationContent}>
         <Text
-          style={[
-            styles.notificationTitle,
-            disabled
-              ? styles.disabledText
-              : null,
-          ]}
+          numberOfLines={2}
+          style={styles.notificationTitle}
         >
-          {title}
+          {notification.title}
         </Text>
 
         <Text
-          style={[
-            styles.notificationSubtitle,
-            disabled
-              ? styles.disabledText
-              : null,
-          ]}
+          numberOfLines={2}
+          style={styles.notificationMessage}
         >
-          {subtitle}
+          {notification.message}
         </Text>
       </View>
 
-      <Switch
-        accessibilityLabel={title}
-        disabled={disabled}
-        ios_backgroundColor={
-          switchColors.disabledTrack
-        }
-        onValueChange={onValueChange}
-        thumbColor={
-          value
-            ? switchColors.enabledThumb
-            : switchColors.disabledThumb
-        }
-        trackColor={{
-          false:
-            switchColors.disabledTrack,
-          true:
-            switchColors.enabledTrack,
-        }}
-        value={value}
-      />
-    </View>
+      <View style={styles.notificationMeta}>
+        <Text style={styles.notificationTime}>
+          {formatRelativeTime(
+            notification.createdAt,
+          )}
+        </Text>
+
+        {!notification.read ? (
+          <View style={styles.unreadDot} />
+        ) : null}
+      </View>
+    </Pressable>
   );
 }
 
 export default function NotificationsScreen() {
+  const { accessToken } = useAuth();
+
   const {
-    accessToken,
-  } = useAuth();
+    refreshUnreadCount,
+  } = useNotifications();
 
   const [
-    preferences,
-    setPreferences,
+    selectedFilter,
+    setSelectedFilter,
   ] =
-    useState<NotificationPreferences | null>(
-      null,
+    useState<NotificationFilter>(
+      'ALL',
     );
+
+  const [
+    notifications,
+    setNotifications,
+  ] =
+    useState<AppNotification[]>(
+      [],
+    );
+
+  const [
+    currentPage,
+    setCurrentPage,
+  ] = useState(0);
+
+  const [
+    hasMore,
+    setHasMore,
+  ] = useState(false);
 
   const [
     isLoading,
@@ -178,8 +369,13 @@ export default function NotificationsScreen() {
   ] = useState(true);
 
   const [
-    isSaving,
-    setIsSaving,
+    isRefreshing,
+    setIsRefreshing,
+  ] = useState(false);
+
+  const [
+    isLoadingMore,
+    setIsLoadingMore,
   ] = useState(false);
 
   const [
@@ -187,123 +383,203 @@ export default function NotificationsScreen() {
     setErrorMessage,
   ] = useState<string | null>(null);
 
-  const loadPreferences =
-    useCallback(async () => {
-      if (!accessToken) {
-        setPreferences(null);
-        setErrorMessage(
-          'No se ha podido recuperar tu sesión.',
-        );
-        setIsLoading(false);
-        return;
-      }
+  const sections = useMemo(
+    () =>
+      buildSections(
+        notifications,
+      ),
+    [notifications],
+  );
 
-      try {
-        setIsLoading(true);
-        setErrorMessage(null);
+  const loadFirstPage =
+    useCallback(
+      async (
+        filter:
+          NotificationFilter,
+        refreshing = false,
+      ) => {
+        if (!accessToken) {
+          return;
+        }
 
-        const response =
-          await getCurrentUserNotificationPreferences(
-            accessToken,
+        try {
+          setErrorMessage(null);
+
+          if (refreshing) {
+            setIsRefreshing(true);
+          } else {
+            setIsLoading(true);
+          }
+
+          const response =
+            await getNotifications(
+              filter,
+              0,
+              PAGE_SIZE,
+              accessToken,
+            );
+
+          setNotifications(
+            response.items,
           );
 
-        setPreferences(response);
-      } catch (error) {
-        setErrorMessage(
-          getErrorMessage(error),
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    }, [accessToken]);
+          setCurrentPage(0);
+          setHasMore(
+            response.hasMore,
+          );
+
+          await refreshUnreadCount();
+        } catch (error) {
+          setErrorMessage(
+            getErrorMessage(error),
+          );
+        } finally {
+          setIsLoading(false);
+          setIsRefreshing(false);
+        }
+      },
+      [
+        accessToken,
+        refreshUnreadCount,
+      ],
+    );
 
   useFocusEffect(
     useCallback(() => {
-      void loadPreferences();
-    }, [loadPreferences]),
+      void loadFirstPage(
+        selectedFilter,
+      );
+    }, [
+      loadFirstPage,
+      selectedFilter,
+    ]),
   );
 
-  async function updatePreference(
-    key: PreferenceKey,
-    value: boolean,
+  async function handleFilterChange(
+    filter: NotificationFilter,
   ) {
     if (
-      !preferences
-      || !accessToken
-      || isSaving
+      filter === selectedFilter
     ) {
       return;
     }
 
-    const previousPreferences =
-      preferences;
+    setSelectedFilter(filter);
+    setNotifications([]);
+    setCurrentPage(0);
+    setHasMore(false);
 
-    const nextPreferences = {
-      ...preferences,
-      [key]: value,
-    };
+    await loadFirstPage(filter);
+  }
 
-    setPreferences(nextPreferences);
-    setErrorMessage(null);
-    setIsSaving(true);
+  async function handleLoadMore() {
+    if (
+      !accessToken
+      || !hasMore
+      || isLoadingMore
+    ) {
+      return;
+    }
+
+    const nextPage =
+      currentPage + 1;
 
     try {
+      setIsLoadingMore(true);
+      setErrorMessage(null);
+
       const response =
-        await updateCurrentUserNotificationPreferences(
-          {
-            notificationsEnabled:
-              nextPreferences
-                .notificationsEnabled,
-
-            newRestaurantsEnabled:
-              nextPreferences
-                .newRestaurantsEnabled,
-
-            restaurantStatusEnabled:
-              nextPreferences
-                .restaurantStatusEnabled,
-
-            ratingsEnabled:
-              nextPreferences
-                .ratingsEnabled,
-
-            groupActivityEnabled:
-              nextPreferences
-                .groupActivityEnabled,
-          },
+        await getNotifications(
+          selectedFilter,
+          nextPage,
+          PAGE_SIZE,
           accessToken,
         );
 
-      setPreferences(response);
-    } catch (error) {
-      setPreferences(
-        previousPreferences,
+      setNotifications(
+        current => [
+          ...current,
+          ...response.items,
+        ],
       );
 
+      setCurrentPage(nextPage);
+      setHasMore(
+        response.hasMore,
+      );
+    } catch (error) {
       setErrorMessage(
         getErrorMessage(error),
       );
     } finally {
-      setIsSaving(false);
+      setIsLoadingMore(false);
     }
   }
 
-  const secondaryOptionsDisabled =
-    isSaving
-    || !preferences?.notificationsEnabled;
+  async function openNotification(
+    notification: AppNotification,
+    ) {
+    if (!accessToken) {
+        return;
+    }
+
+    if (!notification.read) {
+        try {
+        await markNotificationAsRead(
+            notification.id,
+            accessToken,
+        );
+
+        setNotifications(current =>
+            current.map(item =>
+            item.id === notification.id
+                ? {
+                    ...item,
+                    read: true,
+                    readAt: new Date().toISOString(),
+                }
+                : item,
+            ),
+        );
+
+        await refreshUnreadCount();
+        } catch (error) {
+        setErrorMessage(
+            getErrorMessage(error),
+        );
+        }
+    }
+
+    if (notification.targetUrl) {
+        router.push(
+        notification.targetUrl as Href,
+        );
+    }
+    }
 
   return (
     <SafeAreaView
       edges={[
         'top',
         'right',
-        'bottom',
         'left',
       ]}
       style={styles.safeArea}
     >
       <ScrollView
         contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            onRefresh={() => {
+              void loadFirstPage(
+                selectedFilter,
+                true,
+              );
+            }}
+            refreshing={isRefreshing}
+            tintColor={colors.primary}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
@@ -333,230 +609,204 @@ export default function NotificationsScreen() {
             Notificaciones
           </Text>
 
-          <View style={styles.headerPlaceholder} />
-        </View>
-
-        <View style={styles.intro}>
-          <View style={styles.introIcon}>
+          <Pressable
+            accessibilityLabel="Ajustes de notificaciones"
+            accessibilityRole="button"
+            onPress={() => {
+              router.push(
+                '/notification-settings',
+              );
+            }}
+            style={({ pressed }) => [
+              styles.headerButton,
+              pressed
+                ? styles.headerButtonPressed
+                : null,
+            ]}
+          >
             <SymbolView
               name={{
-                ios: 'bell.fill',
-                android: 'notifications',
-                web: 'notifications',
+                ios: 'gearshape',
+                android: 'settings',
+                web: 'settings',
               }}
-              size={27}
-              tintColor={colors.primary}
+              size={20}
+              tintColor={colors.text}
             />
-          </View>
+          </Pressable>
+        </View>
 
-          <Text style={styles.introTitle}>
-            Mantente al día
-          </Text>
+        <View style={styles.filters}>
+          {filters.map(filter => {
+            const selected =
+              selectedFilter
+              === filter.value;
 
-          <Text style={styles.introDescription}>
-            Elige qué novedades quieres recibir
-            sobre tus grupos y restaurantes.
-          </Text>
+            return (
+              <Pressable
+                accessibilityRole="button"
+                key={filter.value}
+                onPress={() => {
+                  void handleFilterChange(
+                    filter.value,
+                  );
+                }}
+                style={({ pressed }) => [
+                  styles.filterButton,
+                  selected
+                    ? styles.filterButtonSelected
+                    : null,
+                  pressed
+                    ? styles.filterButtonPressed
+                    : null,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterText,
+                    selected
+                      ? styles.filterTextSelected
+                      : null,
+                  ]}
+                >
+                  {filter.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         {isLoading ? (
-          <View style={styles.loadingContainer}>
+          <View style={styles.loading}>
             <ActivityIndicator
               color={colors.primary}
               size="large"
             />
-
-            <Text style={styles.loadingText}>
-              Cargando preferencias...
-            </Text>
           </View>
         ) : null}
 
-        {!isLoading && !preferences ? (
-          <View style={styles.loadError}>
-            <Text style={styles.loadErrorTitle}>
-              No hemos podido cargar tus ajustes
+        {!isLoading
+        && errorMessage
+        && notifications.length === 0 ? (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorTitle}>
+              No hemos podido cargar las notificaciones
             </Text>
 
-            <Text style={styles.loadErrorText}>
-              Revisa la conexión con el servidor
-              y vuelve a intentarlo.
+            <Text style={styles.errorText}>
+              {errorMessage}
             </Text>
 
             <Pressable
               accessibilityRole="button"
               onPress={() => {
-                void loadPreferences();
+                void loadFirstPage(
+                  selectedFilter,
+                );
               }}
-              style={({ pressed }) => [
-                styles.retryButton,
-                pressed
-                  ? styles.retryButtonPressed
-                  : null,
-              ]}
             >
-              <Text style={styles.retryButtonText}>
-                Reintentar
+              <Text style={styles.retryText}>
+                Volver a intentar
               </Text>
             </Pressable>
           </View>
         ) : null}
 
-        {!isLoading && preferences ? (
-          <>
-            <Section title="General">
-              <NotificationRow
-                icon={{
-                  ios: 'bell',
-                  android: 'notifications',
-                  web: 'notifications',
+        {!isLoading
+        && !errorMessage
+        && notifications.length === 0 ? (
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <SymbolView
+                name={{
+                  ios: 'bell.slash',
+                  android:
+                    'notifications_off',
+                  web:
+                    'notifications_off',
                 }}
-                isLast
-                onValueChange={(value) => {
-                  void updatePreference(
-                    'notificationsEnabled',
-                    value,
-                  );
-                }}
-                subtitle="Activa o desactiva todas las notificaciones de Mesa."
-                title="Permitir notificaciones"
-                value={
-                  preferences
-                    .notificationsEnabled
-                }
+                size={30}
+                tintColor={colors.primary}
               />
-            </Section>
+            </View>
 
-            <Section title="Actividad">
-              <NotificationRow
-                disabled={
-                  secondaryOptionsDisabled
-                }
-                icon={{
-                  ios: 'fork.knife',
-                  android: 'restaurant',
-                  web: 'restaurant',
-                }}
-                onValueChange={(value) => {
-                  void updatePreference(
-                    'newRestaurantsEnabled',
-                    value,
-                  );
-                }}
-                subtitle="Cuando alguien añada un restaurante a uno de tus grupos."
-                title="Nuevos restaurantes"
-                value={
-                  preferences
-                    .newRestaurantsEnabled
-                }
-              />
+            <Text style={styles.emptyTitle}>
+              Todo al día
+            </Text>
 
-              <NotificationRow
-                disabled={
-                  secondaryOptionsDisabled
-                }
-                icon={{
-                  ios: 'arrow.triangle.2.circlepath',
-                  android: 'sync',
-                  web: 'sync',
-                }}
-                onValueChange={(value) => {
-                  void updatePreference(
-                    'restaurantStatusEnabled',
-                    value,
-                  );
-                }}
-                subtitle="Cuando un restaurante cambie de pendiente, visitado o descartado."
-                title="Cambios de estado"
-                value={
-                  preferences
-                    .restaurantStatusEnabled
-                }
-              />
+            <Text style={styles.emptyText}>
+              Aquí aparecerán las invitaciones y
+              novedades de tus grupos.
+            </Text>
+          </View>
+        ) : null}
 
-              <NotificationRow
-                disabled={
-                  secondaryOptionsDisabled
-                }
-                icon={{
-                  ios: 'star',
-                  android: 'star',
-                  web: 'star',
-                }}
-                onValueChange={(value) => {
-                  void updatePreference(
-                    'ratingsEnabled',
-                    value,
-                  );
-                }}
-                subtitle="Cuando haya nuevas valoraciones en tus grupos."
-                title="Nuevas valoraciones"
-                value={
-                  preferences.ratingsEnabled
-                }
-              />
+        {!isLoading
+        && notifications.length > 0 ? (
+          <View style={styles.sections}>
+            {sections.map(section => (
+              <View
+                key={section.title}
+                style={styles.section}
+              >
+                <Text style={styles.sectionTitle}>
+                  {section.title}
+                </Text>
 
-              <NotificationRow
-                disabled={
-                  secondaryOptionsDisabled
-                }
-                icon={{
-                  ios: 'person.2',
-                  android: 'group',
-                  web: 'group',
-                }}
-                isLast
-                onValueChange={(value) => {
-                  void updatePreference(
-                    'groupActivityEnabled',
-                    value,
-                  );
-                }}
-                subtitle="Novedades relacionadas con miembros y actividad del grupo."
-                title="Actividad de los grupos"
-                value={
-                  preferences
-                    .groupActivityEnabled
-                }
-              />
-            </Section>
+                <View style={styles.sectionCards}>
+                  {section.items.map(
+                    notification => (
+                      <NotificationCard
+                        key={
+                          notification.id
+                        }
+                        notification={
+                          notification
+                        }
+                        onPress={() => {
+                          void openNotification(
+                            notification,
+                          );
+                        }}
+                      />
+                    ),
+                  )}
+                </View>
+              </View>
+            ))}
 
-            <View style={styles.saveStatus}>
-              {isSaving ? (
-                <>
+            {hasMore ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={isLoadingMore}
+                onPress={() => {
+                  void handleLoadMore();
+                }}
+                style={styles.loadMoreButton}
+              >
+                {isLoadingMore ? (
                   <ActivityIndicator
                     color={colors.primary}
                     size="small"
                   />
-
-                  <Text style={styles.saveStatusText}>
-                    Guardando cambios...
+                ) : (
+                  <Text
+                    style={
+                      styles.loadMoreText
+                    }
+                  >
+                    Ver todas las notificaciones
                   </Text>
-                </>
-              ) : (
-                <>
-                  <SymbolView
-                    name={{
-                      ios: 'checkmark.circle',
-                      android: 'check_circle',
-                      web: 'check_circle',
-                    }}
-                    size={17}
-                    tintColor={colors.success}
-                  />
-
-                  <Text style={styles.saveStatusText}>
-                    Los cambios se guardan automáticamente.
-                  </Text>
-                </>
-              )}
-            </View>
-          </>
+                )}
+              </Pressable>
+            ) : null}
+          </View>
         ) : null}
 
-        {errorMessage && preferences ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>
+        {errorMessage
+        && notifications.length > 0 ? (
+          <View style={styles.inlineError}>
+            <Text style={styles.inlineErrorText}>
               {errorMessage}
             </Text>
           </View>
@@ -574,9 +824,9 @@ const styles = StyleSheet.create({
 
   content: {
     flexGrow: 1,
-    paddingHorizontal: 22,
+    paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 34,
+    paddingBottom: 30,
   },
 
   header: {
@@ -599,11 +849,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6EFE9',
   },
 
-  headerPlaceholder: {
-    width: 36,
-    height: 36,
-  },
-
   headerTitle: {
     color: colors.text,
     fontSize: 20,
@@ -611,126 +856,195 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  intro: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-
-  introIcon: {
-    width: 62,
-    height: 62,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 13,
-    borderRadius: 31,
-    backgroundColor: '#F8E9E4',
-  },
-
-  introTitle: {
-    color: colors.text,
-    fontSize: 19,
-    fontWeight: '800',
-  },
-
-  introDescription: {
-    maxWidth: 310,
-    marginTop: 6,
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: 'center',
-  },
-
-  section: {
-    marginBottom: 27,
-  },
-
-  sectionTitle: {
-    marginBottom: 10,
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-
-  sectionContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-
-  notificationRow: {
-    minHeight: 76,
+  filters: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    gap: 9,
+    marginBottom: 25,
   },
 
-  notificationRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-
-  notificationRowDisabled: {
-    opacity: 0.48,
-  },
-
-  notificationIcon: {
-    width: 38,
-    height: 38,
+  filterButton: {
+    flex: 1,
+    minHeight: 38,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 19,
-    backgroundColor: '#F7EEE9',
+    backgroundColor: '#F3ECE7',
+    paddingHorizontal: 12,
   },
 
-  notificationText: {
+  filterButtonSelected: {
+    backgroundColor: colors.primary,
+  },
+
+  filterButtonPressed: {
+    opacity: 0.78,
+  },
+
+  filterText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  filterTextSelected: {
+    color: colors.white,
+  },
+
+  loading: {
+    alignItems: 'center',
+    paddingVertical: 80,
+  },
+
+  sections: {
+    gap: 25,
+  },
+
+  section: {
+    gap: 10,
+  },
+
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+
+  sectionCards: {
+    gap: 9,
+  },
+
+  notificationCard: {
+    minHeight: 74,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    shadowColor: '#2B2421',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.035,
+    shadowRadius: 5,
+    elevation: 1,
+  },
+
+  notificationCardUnread: {
+    borderColor: '#E9B5A6',
+    backgroundColor: '#FFFDFC',
+  },
+
+  notificationCardPressed: {
+    opacity: 0.76,
+  },
+
+  notificationAvatar: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 22,
+    backgroundColor: '#F8E9E4',
+  },
+
+  avatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+
+  unreadAvatarDot: {
+    position: 'absolute',
+    right: 0,
+    bottom: 1,
+    width: 10,
+    height: 10,
+    borderWidth: 2,
+    borderColor: colors.surface,
+    borderRadius: 5,
+    backgroundColor: colors.primary,
+  },
+
+  notificationContent: {
     flex: 1,
-    paddingVertical: 12,
   },
 
   notificationTitle: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 18,
   },
 
-  notificationSubtitle: {
+  notificationMessage: {
     marginTop: 3,
     color: colors.muted,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 16,
   },
 
-  disabledText: {
+  notificationMeta: {
+    minWidth: 38,
+    alignItems: 'flex-end',
+    alignSelf: 'stretch',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+
+  notificationTime: {
     color: colors.muted,
+    fontSize: 10,
+    fontWeight: '600',
   },
 
-  loadingContainer: {
+  unreadDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+
+  loadMoreButton: {
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 65,
+    marginTop: 3,
   },
 
-  loadingText: {
-    marginTop: 13,
-    color: colors.muted,
-    fontSize: 13,
-  },
-
-  loadError: {
-    alignItems: 'center',
-    paddingVertical: 36,
-  },
-
-  loadErrorTitle: {
-    color: colors.text,
-    fontSize: 16,
+  loadMoreText: {
+    color: colors.primary,
+    fontSize: 14,
     fontWeight: '800',
-    textAlign: 'center',
   },
 
-  loadErrorText: {
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 70,
+  },
+
+  emptyIcon: {
+    width: 66,
+    height: 66,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+    borderRadius: 33,
+    backgroundColor: '#F8E9E4',
+  },
+
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '800',
+  },
+
+  emptyText: {
+    maxWidth: 280,
     marginTop: 7,
     color: colors.muted,
     fontSize: 13,
@@ -738,53 +1052,44 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  retryButton: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: 22,
-    paddingHorizontal: 24,
-  },
-
-  retryButtonPressed: {
-    backgroundColor: '#FFF0EB',
-  },
-
-  retryButtonText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-
-  saveStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    marginTop: -5,
-  },
-
-  saveStatusText: {
-    color: colors.muted,
-    fontSize: 12,
-  },
-
-  errorBox: {
-    marginTop: 20,
+  errorCard: {
+    gap: 10,
     borderWidth: 1,
     borderColor: '#F0C2B8',
-    borderRadius: 14,
+    borderRadius: 18,
     backgroundColor: '#FFF1EE',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    padding: 18,
+  },
+
+  errorTitle: {
+    color: colors.danger,
+    fontSize: 15,
+    fontWeight: '800',
   },
 
   errorText: {
-    color: colors.danger,
+    color: colors.muted,
     fontSize: 13,
     lineHeight: 19,
+  },
+
+  retryText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
+  inlineError: {
+    marginTop: 20,
+    borderRadius: 14,
+    backgroundColor: '#FFF1EE',
+    padding: 13,
+  },
+
+  inlineErrorText: {
+    color: colors.danger,
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: 'center',
   },
 });

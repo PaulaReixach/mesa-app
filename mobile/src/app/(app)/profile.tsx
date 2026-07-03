@@ -166,10 +166,11 @@ export default function ProfileScreen() {
     }, [loadStats]),
   );
 
-  const displayName = useMemo(() => {
-    return user?.name?.trim()
-      || 'Tu perfil';
-  }, [user?.name]);
+  const displayName =
+    useMemo(() => {
+      return user?.name?.trim()
+        || 'Tu perfil';
+    }, [user?.name]);
 
   const displayUsername =
     useMemo(() => {
@@ -180,24 +181,27 @@ export default function ProfileScreen() {
       return '@usuario';
     }, [user?.username]);
 
-  const userInitial = useMemo(() => {
-    return displayName
-      .charAt(0)
-      .toUpperCase();
-  }, [displayName]);
+  const userInitial =
+    useMemo(() => {
+      return displayName
+        .charAt(0)
+        .toUpperCase();
+    }, [displayName]);
 
-  const avatarUri = useMemo(() => {
-    if (!user?.avatarUrl) {
-      return null;
-    }
+  const avatarUri =
+    useMemo(() => {
+      if (!user?.avatarUrl) {
+        return null;
+      }
 
-    return resolveApiUrl(
-      user.avatarUrl,
-    );
-  }, [user?.avatarUrl]);
+      return resolveApiUrl(
+        user.avatarUrl,
+      );
+    }, [user?.avatarUrl]);
 
   async function handleSignOut() {
     await signOut();
+
     router.replace('/login');
   }
 
@@ -238,6 +242,7 @@ export default function ProfileScreen() {
             onPress={handleBack}
             style={({ pressed }) => [
               styles.iconButton,
+
               pressed
                 ? styles.iconButtonPressed
                 : null,
@@ -264,6 +269,7 @@ export default function ProfileScreen() {
             onPress={handleEditProfile}
             style={({ pressed }) => [
               styles.iconButton,
+
               pressed
                 ? styles.iconButtonPressed
                 : null,
@@ -327,8 +333,7 @@ export default function ProfileScreen() {
             <StatItem
               label="Restaurantes"
               value={
-                stats
-                  ?.restaurantsCount
+                stats?.restaurantsCount
                 ?? '—'
               }
             />
@@ -406,7 +411,7 @@ export default function ProfileScreen() {
             label="Notificaciones"
             onPress={() => {
               router.push(
-                '/notifications',
+                '/notification-settings',
               );
             }}
           />

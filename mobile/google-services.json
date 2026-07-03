@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "9955097890",
+    "project_id": "mesa-a6dc1",
+    "storage_bucket": "mesa-a6dc1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:9955097890:android:7f14068ed24ada5a3a797b",
+        "android_client_info": {
+          "package_name": "com.pauluna.mesa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZUP51Sk2Vqr1TWFu9LTGLxhhWRpK3cgY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
