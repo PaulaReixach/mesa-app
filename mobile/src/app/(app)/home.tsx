@@ -24,6 +24,7 @@ import { getErrorMessage } from '../../lib/api';
 import { getGroups } from '../../services/group-service';
 import { colors } from '../../theme/colors';
 import { RestaurantGroup } from '../../types/group';
+import { NotificationBellButton } from '../../components/NotificationBellButton';
 
 export default function HomeScreen() {
   const {
@@ -117,10 +118,22 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {userInitial}
-            </Text>
+          <View style={styles.headerActions}>
+            <NotificationBellButton />
+
+            <Pressable
+              accessibilityLabel="Abrir perfil"
+              accessibilityRole="button"
+              onPress={() => {
+                router.push('/profile');
+              }}
+            >
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {userInitial}
+                </Text>
+              </View>
+            </Pressable>
           </View>
         </View>
 
@@ -402,6 +415,11 @@ const styles = StyleSheet.create({
   },
   logoutButtonPressed: {
     backgroundColor: '#FCE8E3',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   logoutText: {
     color: colors.danger,

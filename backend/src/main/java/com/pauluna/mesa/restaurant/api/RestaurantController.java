@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.pauluna.mesa.notification.application.NotificationService;
 import com.pauluna.mesa.restaurant.application.RestaurantService;
 
 import jakarta.validation.Valid;
@@ -24,21 +25,39 @@ import jakarta.validation.Valid;
 @RequestMapping("/groups/{groupId}/restaurants")
 public class RestaurantController {
 
-    private final RestaurantService restaurantService;
+    private final RestaurantService
+            restaurantService;
+
+    private final NotificationService
+            notificationService;
 
     public RestaurantController(
-            RestaurantService restaurantService
+            RestaurantService restaurantService,
+            NotificationService notificationService
     ) {
-        this.restaurantService = restaurantService;
+        this.restaurantService =
+                restaurantService;
+
+        this.notificationService =
+                notificationService;
     }
 
     @PostMapping
-    public ResponseEntity<GroupRestaurantResponse> addRestaurant(
+    public ResponseEntity<GroupRestaurantResponse>
+    addRestaurant(
             @PathVariable UUID groupId,
-            @Valid @RequestBody CreateGroupRestaurantRequest request,
-            @AuthenticationPrincipal Jwt jwt
+
+            @Valid
+            @RequestBody
+            CreateGroupRestaurantRequest request,
+
+            @AuthenticationPrincipal
+            Jwt jwt
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
 
         GroupRestaurantResponse createdRestaurant =
                 restaurantService.addRestaurant(
@@ -47,11 +66,21 @@ public class RestaurantController {
                         userId
                 );
 
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{groupRestaurantId}")
-                .buildAndExpand(createdRestaurant.id())
-                .toUri();
+        notificationService
+                .notifyRestaurantAdded(
+                        groupId,
+                        createdRestaurant.id(),
+                        userId
+                );
+
+        URI location =
+                ServletUriComponentsBuilder
+                        .fromCurrentRequest()
+                        .path("/{groupRestaurantId}")
+                        .buildAndExpand(
+                                createdRestaurant.id()
+                        )
+                        .toUri();
 
         return ResponseEntity
                 .created(location)
@@ -64,7 +93,10 @@ public class RestaurantController {
             @PathVariable UUID groupId,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
 
         return ResponseEntity.ok(
                 restaurantService.getRestaurants(
@@ -75,12 +107,16 @@ public class RestaurantController {
     }
 
     @GetMapping("/{groupRestaurantId}")
-    public ResponseEntity<GroupRestaurantResponse> getRestaurant(
+    public ResponseEntity<GroupRestaurantResponse>
+    getRestaurant(
             @PathVariable UUID groupId,
             @PathVariable UUID groupRestaurantId,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
 
         return ResponseEntity.ok(
                 restaurantService.getRestaurant(
@@ -91,23 +127,42 @@ public class RestaurantController {
         );
     }
 
-    @PatchMapping("/{groupRestaurantId}/status")
-    public ResponseEntity<GroupRestaurantResponse> updateStatus(
+    @PatchMapping(
+            "/{groupRestaurantId}/status"
+    )
+    public ResponseEntity<GroupRestaurantResponse>
+    updateStatus(
             @PathVariable UUID groupId,
             @PathVariable UUID groupRestaurantId,
-            @Valid @RequestBody
-            UpdateGroupRestaurantStatusRequest request,
-            @AuthenticationPrincipal Jwt jwt
-    ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
 
-        return ResponseEntity.ok(
+            @Valid
+            @RequestBody
+            UpdateGroupRestaurantStatusRequest request,
+
+            @AuthenticationPrincipal
+            Jwt jwt
+    ) {
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
+
+        GroupRestaurantResponse response =
                 restaurantService.updateStatus(
                         groupId,
                         groupRestaurantId,
                         request,
                         userId
-                )
-        );
+                );
+
+        notificationService
+                .notifyRestaurantStatusChanged(
+                        groupId,
+                        groupRestaurantId,
+                        request.status(),
+                        userId
+                );
+
+        return ResponseEntity.ok(response);
     }
 }

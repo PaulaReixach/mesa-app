@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { unregisterStoredPushDevice } from '../lib/push-notifications';
 import {
   createContext,
   ReactNode,
@@ -157,6 +158,17 @@ export function AuthProvider({
 
   const signOut = useCallback(
     async (): Promise<void> => {
+      if (accessToken) {
+        try {
+          await unregisterStoredPushDevice(
+            accessToken,
+          );
+        } catch {
+          // La sesión debe cerrarse aunque
+          // el servidor no esté disponible.
+        }
+      }
+
       await SecureStore.deleteItemAsync(
         ACCESS_TOKEN_KEY,
       );
@@ -164,7 +176,7 @@ export function AuthProvider({
       setAccessToken(null);
       setUser(null);
     },
-    [],
+    [accessToken],
   );
 
   const updateCurrentUser = useCallback(

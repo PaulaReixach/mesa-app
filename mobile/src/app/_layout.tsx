@@ -6,13 +6,19 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { Platform } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 
+import { InAppNotificationBanner } from '../components/InAppNotificationBanner';
 import { MesaSplashScreen } from '../components/MesaSplashScreen';
 import {
   AuthProvider,
   useAuth,
 } from '../contexts/auth-context';
+import { NotificationProvider } from '../contexts/notification-context';
 import { colors } from '../theme/colors';
 
 const MINIMUM_SPLASH_DURATION_MS = 1400;
@@ -29,8 +35,15 @@ if (Platform.OS !== 'web') {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <StatusBar style="dark" />
-      <RootNavigator />
+      <NotificationProvider>
+        <View style={styles.root}>
+          <StatusBar style="dark" />
+
+          <RootNavigator />
+
+          <InAppNotificationBanner />
+        </View>
+      </NotificationProvider>
     </AuthProvider>
   );
 }
@@ -61,12 +74,14 @@ function RootNavigator() {
     };
   }, []);
 
-  const handleSplashFinish = useCallback(() => {
-    setSplashFinished(true);
-  }, []);
+  const handleSplashFinish =
+    useCallback(() => {
+      setSplashFinished(true);
+    }, []);
 
   const canFinishSplash =
-    !isLoading && minimumTimeFinished;
+    !isLoading
+    && minimumTimeFinished;
 
   if (!splashFinished) {
     return (
@@ -81,21 +96,35 @@ function RootNavigator() {
     <Stack
       screenOptions={{
         animation: 'fade',
+
         contentStyle: {
-          backgroundColor: colors.background,
+          backgroundColor:
+            colors.background,
         },
+
         headerShown: false,
       }}
     >
       <Stack.Screen name="index" />
 
-      <Stack.Protected guard={!isAuthenticated}>
+      <Stack.Protected
+        guard={!isAuthenticated}
+      >
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
 
-      <Stack.Protected guard={isAuthenticated}>
+      <Stack.Protected
+        guard={isAuthenticated}
+      >
         <Stack.Screen name="(app)" />
       </Stack.Protected>
     </Stack>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+});

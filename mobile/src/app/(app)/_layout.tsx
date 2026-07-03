@@ -36,36 +36,48 @@ export default function AppLayout() {
       initialRouteName="home"
       screenOptions={{
         headerShown: false,
+
         tabBarActiveTintColor:
           navigationColors.active,
+
         tabBarInactiveTintColor:
           navigationColors.inactive,
+
         tabBarHideOnKeyboard: true,
-        tabBarLabelPosition: 'below-icon',
+
+        tabBarLabelPosition:
+          'below-icon',
+
         tabBarItemStyle: {
           justifyContent: 'center',
           paddingTop: 3,
         },
+
         tabBarIconStyle: {
           width: 24,
           height: 22,
           marginBottom: 0,
         },
+
         tabBarLabelStyle: {
           marginTop: 0,
           fontSize: 10,
           fontWeight: '500',
           lineHeight: 13,
         },
+
         tabBarStyle: {
           height: 56 + bottomPadding,
           paddingTop: 4,
           paddingBottom: bottomPadding,
+
           borderTopWidth: 1,
           borderTopColor:
             navigationColors.border,
+
           backgroundColor:
             navigationColors.background,
+
           shadowColor: '#2B2421',
           shadowOffset: {
             width: 0,
@@ -73,6 +85,7 @@ export default function AppLayout() {
           },
           shadowOpacity: 0.04,
           shadowRadius: 5,
+
           elevation: 6,
         },
       }}
@@ -81,7 +94,9 @@ export default function AppLayout() {
         name="home"
         options={{
           title: 'Inicio',
-          tabBarAccessibilityLabel: 'Inicio',
+          tabBarAccessibilityLabel:
+            'Inicio',
+
           tabBarIcon: ({
             focused,
             color,
@@ -105,7 +120,9 @@ export default function AppLayout() {
         name="map"
         options={{
           title: 'Mapa',
-          tabBarAccessibilityLabel: 'Mapa',
+          tabBarAccessibilityLabel:
+            'Mapa',
+
           tabBarIcon: ({
             focused,
             color,
@@ -129,8 +146,11 @@ export default function AppLayout() {
         name="add"
         options={{
           title: 'Añadir',
-          tabBarAccessibilityLabel: 'Añadir',
+          tabBarAccessibilityLabel:
+            'Añadir',
+
           tabBarLabel: () => null,
+
           tabBarButton: ({
             accessibilityState,
             accessibilityLabel,
@@ -177,7 +197,9 @@ export default function AppLayout() {
         name="groups"
         options={{
           title: 'Grupos',
-          tabBarAccessibilityLabel: 'Grupos',
+          tabBarAccessibilityLabel:
+            'Grupos',
+
           tabBarIcon: ({
             focused,
             color,
@@ -201,7 +223,9 @@ export default function AppLayout() {
         name="profile"
         options={{
           title: 'Perfil',
-          tabBarAccessibilityLabel: 'Perfil',
+          tabBarAccessibilityLabel:
+            'Perfil',
+
           tabBarIcon: ({
             focused,
             color,
@@ -240,6 +264,19 @@ export default function AppLayout() {
         name="delete-account"
         options={hiddenScreenOptions}
       />
+
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="notification-settings"
+        options={hiddenScreenOptions}
+      />
+      
     </Tabs>
   );
 }
@@ -250,20 +287,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   addTabButtonPressed: {
     opacity: 0.78,
   },
+
   addCircle: {
     width: 44,
     height: 44,
+
     alignItems: 'center',
     justifyContent: 'center',
+
     marginTop: -5,
+
     borderWidth: 3,
     borderColor:
       navigationColors.background,
+
     borderRadius: 22,
+
     backgroundColor: colors.primary,
+
     shadowColor: '#7E3B2A',
     shadowOffset: {
       width: 0,
@@ -271,6 +316,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.14,
     shadowRadius: 4,
+
     elevation: 4,
   },
 });

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.pauluna.mesa.group.application.GroupMemberService;
+import com.pauluna.mesa.notification.application.NotificationService;
 
 import jakarta.validation.Valid;
 
@@ -24,20 +25,33 @@ import jakarta.validation.Valid;
 @RequestMapping("/groups/{groupId}/members")
 public class GroupMemberController {
 
-    private final GroupMemberService groupMemberService;
+    private final GroupMemberService
+            groupMemberService;
+
+    private final NotificationService
+            notificationService;
 
     public GroupMemberController(
-            GroupMemberService groupMemberService
+            GroupMemberService groupMemberService,
+            NotificationService notificationService
     ) {
-        this.groupMemberService = groupMemberService;
+        this.groupMemberService =
+                groupMemberService;
+
+        this.notificationService =
+                notificationService;
     }
 
     @GetMapping
-    public ResponseEntity<List<GroupMemberResponse>> getMembers(
+    public ResponseEntity<List<GroupMemberResponse>>
+    getMembers(
             @PathVariable UUID groupId,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
 
         return ResponseEntity.ok(
                 groupMemberService.getMembers(
@@ -48,25 +62,44 @@ public class GroupMemberController {
     }
 
     @PostMapping
-    public ResponseEntity<GroupMemberResponse> addMember(
+    public ResponseEntity<GroupMemberResponse>
+    addMember(
             @PathVariable UUID groupId,
-            @Valid @RequestBody AddGroupMemberRequest request,
-            @AuthenticationPrincipal Jwt jwt
+
+            @Valid
+            @RequestBody
+            AddGroupMemberRequest request,
+
+            @AuthenticationPrincipal
+            Jwt jwt
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID requesterUserId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
 
         GroupMemberResponse createdMember =
                 groupMemberService.addMember(
                         groupId,
                         request,
-                        userId
+                        requesterUserId
                 );
 
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{memberUserId}")
-                .buildAndExpand(createdMember.userId())
-                .toUri();
+        notificationService
+                .notifyGroupInvitation(
+                        groupId,
+                        createdMember.userId(),
+                        requesterUserId
+                );
+
+        URI location =
+                ServletUriComponentsBuilder
+                        .fromCurrentRequest()
+                        .path("/{memberUserId}")
+                        .buildAndExpand(
+                                createdMember.userId()
+                        )
+                        .toUri();
 
         return ResponseEntity
                 .created(location)
@@ -74,12 +107,16 @@ public class GroupMemberController {
     }
 
     @DeleteMapping("/{memberUserId}")
-    public ResponseEntity<Void> removeMember(
+    public ResponseEntity<Void>
+    removeMember(
             @PathVariable UUID groupId,
             @PathVariable UUID memberUserId,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
 
         groupMemberService.removeMember(
                 groupId,
@@ -87,6 +124,8 @@ public class GroupMemberController {
                 userId
         );
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 }
