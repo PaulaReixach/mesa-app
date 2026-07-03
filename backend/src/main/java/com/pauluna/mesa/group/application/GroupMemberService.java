@@ -16,6 +16,7 @@ import com.pauluna.mesa.group.api.GroupMemberResponse;
 import com.pauluna.mesa.group.domain.GroupMember;
 import com.pauluna.mesa.group.domain.GroupRole;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
+import com.pauluna.mesa.user.application.PrivacyPreferencesService;
 import com.pauluna.mesa.user.application.UserNotFoundByUsernameException;
 import com.pauluna.mesa.user.application.UserNotFoundException;
 import com.pauluna.mesa.user.domain.User;
@@ -26,17 +27,31 @@ import com.pauluna.mesa.user.infrastructure.UserRepository;
 public class GroupMemberService {
 
     private final GroupService groupService;
-    private final GroupMemberRepository groupMemberRepository;
+
+    private final GroupMemberRepository
+            groupMemberRepository;
+
     private final UserRepository userRepository;
+
+    private final PrivacyPreferencesService
+            privacyPreferencesService;
 
     public GroupMemberService(
             GroupService groupService,
             GroupMemberRepository groupMemberRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            PrivacyPreferencesService
+                    privacyPreferencesService
     ) {
         this.groupService = groupService;
-        this.groupMemberRepository = groupMemberRepository;
+
+        this.groupMemberRepository =
+                groupMemberRepository;
+
         this.userRepository = userRepository;
+
+        this.privacyPreferencesService =
+                privacyPreferencesService;
     }
 
     @Transactional(readOnly = true)
@@ -55,18 +70,24 @@ public class GroupMemberService {
                                 groupId
                         );
 
-        Set<UUID> userIds = memberships
-                .stream()
-                .map(GroupMember::getUserId)
-                .collect(Collectors.toSet());
+        Set<UUID> userIds =
+                memberships
+                        .stream()
+                        .map(GroupMember::getUserId)
+                        .collect(
+                                Collectors.toSet()
+                        );
 
-        Map<UUID, User> usersById = userRepository
-                .findAllById(userIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        User::getId,
-                        Function.identity()
-                ));
+        Map<UUID, User> usersById =
+                userRepository
+                        .findAllById(userIds)
+                        .stream()
+                        .collect(
+                                Collectors.toMap(
+                                        User::getId,
+                                        Function.identity()
+                                )
+                        );
 
         return memberships
                 .stream()
@@ -102,15 +123,19 @@ public class GroupMemberService {
                 requesterUserId
         );
 
-        String username = request.username().trim();
+        String username =
+                request.username().trim();
 
-        User invitedUser = userRepository
-                .findByUsernameIgnoreCase(username)
-                .orElseThrow(() ->
-                        new UserNotFoundByUsernameException(
+        User invitedUser =
+                userRepository
+                        .findByUsernameIgnoreCase(
                                 username
                         )
-                );
+                        .orElseThrow(() ->
+                                new UserNotFoundByUsernameException(
+                                        username
+                                )
+                        );
 
         boolean alreadyBelongsToGroup =
                 groupMemberRepository
@@ -126,14 +151,28 @@ public class GroupMemberService {
             );
         }
 
-        GroupMember groupMember = new GroupMember(
-                groupId,
-                invitedUser.getId(),
-                GroupRole.MEMBER
-        );
+        boolean invitationsEnabled =
+                privacyPreferencesService
+                        .areGroupInvitationsEnabled(
+                                invitedUser.getId()
+                        );
+
+        if (!invitationsEnabled) {
+            throw new GroupInvitationsDisabledException(
+                    invitedUser.getUsername()
+            );
+        }
+
+        GroupMember groupMember =
+                new GroupMember(
+                        groupId,
+                        invitedUser.getId(),
+                        GroupRole.MEMBER
+                );
 
         GroupMember savedMembership =
-                groupMemberRepository.save(groupMember);
+                groupMemberRepository
+                        .save(groupMember);
 
         return GroupMemberResponse.from(
                 savedMembership,
@@ -151,29 +190,38 @@ public class GroupMemberService {
                 requesterUserId
         );
 
-        GroupMember membership = groupMemberRepository
-                .findByGroupIdAndUserId(
-                        groupId,
-                        memberUserId
-                )
-                .orElseThrow(() ->
-                        new GroupMemberNotFoundException(
+        GroupMember membership =
+                groupMemberRepository
+                        .findByGroupIdAndUserId(
                                 groupId,
                                 memberUserId
                         )
-                );
+                        .orElseThrow(() ->
+                                new GroupMemberNotFoundException(
+                                        groupId,
+                                        memberUserId
+                                )
+                        );
 
-        if (membership.getRole() == GroupRole.OWNER) {
+        if (
+                membership.getRole()
+                        == GroupRole.OWNER
+        ) {
             throw new GroupOwnerCannotBeRemovedException(
                     groupId
             );
         }
 
-        groupMemberRepository.delete(membership);
+        groupMemberRepository.delete(
+                membership
+        );
     }
 
-    private static int roleOrder(GroupMember membership) {
-        return membership.getRole() == GroupRole.OWNER
+    private static int roleOrder(
+            GroupMember membership
+    ) {
+        return membership.getRole()
+                == GroupRole.OWNER
                 ? 0
                 : 1;
     }
@@ -182,10 +230,13 @@ public class GroupMemberService {
             Map<UUID, User> usersById,
             UUID userId
     ) {
-        User user = usersById.get(userId);
+        User user =
+                usersById.get(userId);
 
         if (user == null) {
-            throw new UserNotFoundException(userId);
+            throw new UserNotFoundException(
+                    userId
+            );
         }
 
         return user;

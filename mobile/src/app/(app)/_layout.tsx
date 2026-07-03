@@ -276,6 +276,26 @@ export default function AppLayout() {
         name="notification-settings"
         options={hiddenScreenOptions}
       />
+
+      <Tabs.Screen
+        name="privacy-settings"
+        options={hiddenScreenOptions}
+      />
+
+      <Tabs.Screen
+        name="help-support"
+        options={hiddenScreenOptions}
+      />
+
+      <Tabs.Screen
+        name="support-request"
+        options={hiddenScreenOptions}
+      />
+
+      <Tabs.Screen
+        name="about-mesa"
+        options={hiddenScreenOptions}
+      />
       
     </Tabs>
   );
