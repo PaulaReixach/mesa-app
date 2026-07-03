@@ -1,6 +1,12 @@
-import { apiRequest } from '../lib/api';
+import { File } from 'expo-file-system';
+
+import {
+  apiMultipartRequest,
+  apiRequest,
+} from '../lib/api';
 import {
   CreateGroupPayload,
+  GroupImageUploadFile,
   RestaurantGroup,
 } from '../types/group';
 
@@ -38,6 +44,48 @@ export function createGroup(
     {
       method: 'POST',
       body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export function uploadGroupImage(
+  groupId: string,
+  file: GroupImageUploadFile,
+  accessToken: string,
+): Promise<RestaurantGroup> {
+  const groupImageFile =
+    new File(file.uri);
+
+  if (!groupImageFile.exists) {
+    throw new Error(
+      'No se ha podido acceder a la imagen seleccionada.',
+    );
+  }
+
+  const formData = new FormData();
+
+  formData.append(
+    'file',
+    groupImageFile,
+  );
+
+  return apiMultipartRequest<RestaurantGroup>(
+    `/groups/${groupId}/image`,
+    formData,
+    accessToken,
+    'PUT',
+  );
+}
+
+export function deleteGroupImage(
+  groupId: string,
+  accessToken: string,
+): Promise<RestaurantGroup> {
+  return apiRequest<RestaurantGroup>(
+    `/groups/${groupId}/image`,
+    {
+      method: 'DELETE',
     },
     accessToken,
   );

@@ -1,4 +1,6 @@
-export type GroupPrivacy = 'PRIVATE' | 'PUBLIC';
+export type GroupPrivacy =
+  | 'PRIVATE'
+  | 'PUBLIC';
 
 export type RestaurantGroup = {
   id: string;
@@ -18,4 +20,8 @@ export type CreateGroupPayload = {
   imageUrl: string | null;
   city: string | null;
   privacy: GroupPrivacy;
+};
+
+export type GroupImageUploadFile = {
+  uri: string;
 };
