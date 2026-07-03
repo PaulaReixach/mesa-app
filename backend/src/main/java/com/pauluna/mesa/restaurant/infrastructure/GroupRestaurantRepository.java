@@ -1,5 +1,6 @@
 package com.pauluna.mesa.restaurant.infrastructure;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +17,11 @@ public interface GroupRestaurantRepository
     List<GroupRestaurant>
     findAllByGroupIdOrderByCreatedAtDesc(
             UUID groupId
+    );
+
+    List<GroupRestaurant>
+    findAllByGroupIdInOrderByCreatedAtDesc(
+            Collection<UUID> groupIds
     );
 
     Optional<GroupRestaurant> findByIdAndGroupId(
@@ -59,9 +65,16 @@ public interface GroupRestaurantRepository
                   )
             """)
     long countEquivalentManualRestaurantInGroup(
-            @Param("groupId") UUID groupId,
-            @Param("name") String name,
-            @Param("address") String address,
-            @Param("city") String city
+            @Param("groupId")
+            UUID groupId,
+
+            @Param("name")
+            String name,
+
+            @Param("address")
+            String address,
+
+            @Param("city")
+            String city
     );
 }
