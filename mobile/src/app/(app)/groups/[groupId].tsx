@@ -16,6 +16,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,7 +24,7 @@ import { GroupMemberCard } from '../../../components/GroupMemberCard';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { RestaurantCard } from '../../../components/RestaurantCard';
 import { useAuth } from '../../../contexts/auth-context';
-import { getErrorMessage } from '../../../lib/api';
+import { getErrorMessage, resolveApiUrl } from '../../../lib/api';
 import {
   getGroupMembers,
   removeGroupMember,
@@ -179,6 +180,13 @@ export default function GroupDetailScreen() {
     }
   }
 
+  const groupImageUri =
+  group?.imageUrl
+    ? resolveApiUrl(
+        group.imageUrl,
+      )
+    : null;
+
   return (
     <SafeAreaView
       edges={['top', 'right', 'bottom', 'left']}
@@ -244,9 +252,18 @@ export default function GroupDetailScreen() {
           <>
             <View style={styles.groupHeader}>
               <View style={styles.groupIcon}>
-                <Text style={styles.groupIconText}>
-                  {group.name.charAt(0).toUpperCase()}
-                </Text>
+                {groupImageUri ? (
+                  <Image
+                    source={{
+                      uri: groupImageUri,
+                    }}
+                    style={styles.groupImage}
+                  />
+                ) : (
+                  <Text style={styles.groupIconText}>
+                    {group.name.charAt(0).toUpperCase()}
+                  </Text>
+                )}
               </View>
 
               <Text style={styles.groupName}>
@@ -456,9 +473,14 @@ const styles = StyleSheet.create({
     width: 78,
     height: 78,
     alignItems: 'center',
+    overflow: 'hidden',
     justifyContent: 'center',
     borderRadius: 26,
     backgroundColor: colors.primary,
+  },
+  groupImage: {
+    width: '100%',
+    height: '100%',
   },
   groupIconText: {
     color: colors.white,
