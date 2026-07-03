@@ -39,7 +39,10 @@ public interface NotificationRepository
             UUID userId
     );
 
-    @Modifying
+    @Modifying(
+            clearAutomatically = true,
+            flushAutomatically = true
+    )
     @Query("""
             UPDATE AppNotification notification
             SET notification.read = true,
@@ -48,7 +51,38 @@ public interface NotificationRepository
               AND notification.read = false
             """)
     int markAllAsRead(
-            @Param("userId") UUID userId,
-            @Param("readAt") Instant readAt
+            @Param("userId")
+            UUID userId,
+            @Param("readAt")
+            Instant readAt
+    );
+
+    @Modifying(
+            clearAutomatically = true,
+            flushAutomatically = true
+    )
+    @Query("""
+            DELETE FROM AppNotification notification
+            WHERE notification.id = :notificationId
+              AND notification.userId = :userId
+            """)
+    int deleteByIdAndUserId(
+            @Param("notificationId")
+            UUID notificationId,
+            @Param("userId")
+            UUID userId
+    );
+
+    @Modifying(
+            clearAutomatically = true,
+            flushAutomatically = true
+    )
+    @Query("""
+            DELETE FROM AppNotification notification
+            WHERE notification.userId = :userId
+            """)
+    int deleteAllByUserId(
+            @Param("userId")
+            UUID userId
     );
 }

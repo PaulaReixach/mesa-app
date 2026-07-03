@@ -12,6 +12,7 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   RefreshControl,
@@ -20,17 +21,25 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+} from 'react-native-safe-area-context';
 
-import { useAuth } from '../../contexts/auth-context';
-import { useNotifications } from '../../contexts/notification-context';
+import {
+  useAuth,
+} from '../../contexts/auth-context';
+import {
+  useNotifications,
+} from '../../contexts/notification-context';
 import {
   getErrorMessage,
   resolveApiUrl,
 } from '../../lib/api';
 import {
+  deleteAllNotifications,
+  deleteNotification,
   getNotifications,
-  markNotificationAsRead,
+  markAllNotificationsAsRead,
 } from '../../services/notification-center-service';
 import { colors } from '../../theme/colors';
 import {
@@ -50,6 +59,13 @@ type FilterOption = {
 type NotificationSection = {
   title: string;
   items: AppNotification[];
+};
+
+type NotificationCardProps = {
+  notification: AppNotification;
+  deleting: boolean;
+  onDelete: () => void;
+  onPress: () => void;
 };
 
 const PAGE_SIZE = 8;
@@ -122,39 +138,37 @@ function getSectionKey(
   ].join('-');
 }
 
+function isSameDay(
+  first: Date,
+  second: Date,
+): boolean {
+  return (
+    first.getFullYear()
+      === second.getFullYear()
+    && first.getMonth()
+      === second.getMonth()
+    && first.getDate()
+      === second.getDate()
+  );
+}
+
 function getSectionTitle(
   dateValue: string,
 ): string {
   const date = new Date(dateValue);
-
   const today = new Date();
 
-  const yesterday =
-    new Date(today);
+  const yesterday = new Date(today);
 
   yesterday.setDate(
     today.getDate() - 1,
   );
 
-  const sameDay = (
-    first: Date,
-    second: Date,
-  ) => {
-    return (
-      first.getFullYear()
-        === second.getFullYear()
-      && first.getMonth()
-        === second.getMonth()
-      && first.getDate()
-        === second.getDate()
-    );
-  };
-
-  if (sameDay(date, today)) {
+  if (isSameDay(date, today)) {
     return 'Hoy';
   }
 
-  if (sameDay(date, yesterday)) {
+  if (isSameDay(date, yesterday)) {
     return 'Ayer';
   }
 
@@ -170,19 +184,17 @@ function getSectionTitle(
 function formatRelativeTime(
   dateValue: string,
 ): string {
-  const date =
-    new Date(dateValue);
+  const date = new Date(dateValue);
 
   const differenceMs =
     Date.now() - date.getTime();
 
-  const minutes =
-    Math.max(
-      Math.floor(
-        differenceMs / 60000,
-      ),
-      0,
-    );
+  const minutes = Math.max(
+    Math.floor(
+      differenceMs / 60000,
+    ),
+    0,
+  );
 
   if (minutes < 1) {
     return 'Ahora';
@@ -212,47 +224,51 @@ function buildSections(
   notifications: AppNotification[],
 ): NotificationSection[] {
   const sections =
-    new Map<string, NotificationSection>();
+    new Map<
+      string,
+      NotificationSection
+    >();
 
-  notifications.forEach(notification => {
-    const key =
-      getSectionKey(
-        notification.createdAt,
-      );
-
-    const existingSection =
-      sections.get(key);
-
-    if (existingSection) {
-      existingSection.items.push(
-        notification,
-      );
-      return;
-    }
-
-    sections.set(
-      key,
-      {
-        title: getSectionTitle(
+  notifications.forEach(
+    notification => {
+      const key =
+        getSectionKey(
           notification.createdAt,
-        ),
-        items: [notification],
-      },
-    );
-  });
+        );
+
+      const existingSection =
+        sections.get(key);
+
+      if (existingSection) {
+        existingSection.items.push(
+          notification,
+        );
+
+        return;
+      }
+
+      sections.set(
+        key,
+        {
+          title:
+            getSectionTitle(
+              notification.createdAt,
+            ),
+          items: [notification],
+        },
+      );
+    },
+  );
 
   return Array.from(
     sections.values(),
   );
 }
 
-type NotificationCardProps = {
-  notification: AppNotification;
-  onPress: () => void;
-};
-
 function NotificationCard({
   notification,
+  deleting,
+  onDelete,
   onPress,
 }: NotificationCardProps) {
   const avatarUri =
@@ -268,9 +284,11 @@ function NotificationCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.notificationCard,
+
         !notification.read
           ? styles.notificationCardUnread
           : null,
+
         pressed
           ? styles.notificationCardPressed
           : null,
@@ -295,7 +313,9 @@ function NotificationCard({
         )}
 
         {!notification.read ? (
-          <View style={styles.unreadAvatarDot} />
+          <View
+            style={styles.unreadAvatarDot}
+          />
         ) : null}
       </View>
 
@@ -308,30 +328,67 @@ function NotificationCard({
         </Text>
 
         <Text
-          numberOfLines={2}
+          numberOfLines={3}
           style={styles.notificationMessage}
         >
           {notification.message}
         </Text>
       </View>
 
-      <View style={styles.notificationMeta}>
+      <Pressable
+        accessibilityLabel="Borrar notificación"
+        accessibilityRole="button"
+        disabled={deleting}
+        hitSlop={10}
+        onPress={event => {
+          event.stopPropagation();
+          onDelete();
+        }}
+        style={({ pressed }) => [
+          styles.deleteNotificationButton,
+
+          pressed
+            ? styles.deleteNotificationButtonPressed
+            : null,
+        ]}
+      >
+        {deleting ? (
+          <ActivityIndicator
+            size={13}
+            color={colors.muted}
+          />
+        ) : (
+          <SymbolView
+            name={{
+              ios: 'xmark',
+              android: 'close',
+              web: 'close',
+            }}
+            size={13}
+            tintColor={colors.muted}
+          />
+        )}
+      </Pressable>
+
+      <View style={styles.notificationTimeContainer}>
+        {!notification.read ? (
+          <View style={styles.unreadDot} />
+        ) : null}
+
         <Text style={styles.notificationTime}>
           {formatRelativeTime(
             notification.createdAt,
           )}
         </Text>
-
-        {!notification.read ? (
-          <View style={styles.unreadDot} />
-        ) : null}
       </View>
     </Pressable>
   );
 }
 
 export default function NotificationsScreen() {
-  const { accessToken } = useAuth();
+  const {
+    accessToken,
+  } = useAuth();
 
   const {
     refreshUnreadCount,
@@ -379,6 +436,16 @@ export default function NotificationsScreen() {
   ] = useState(false);
 
   const [
+    deletingNotificationId,
+    setDeletingNotificationId,
+  ] = useState<string | null>(null);
+
+  const [
+    isDeletingAll,
+    setIsDeletingAll,
+  ] = useState(false);
+
+  const [
     errorMessage,
     setErrorMessage,
   ] = useState<string | null>(null);
@@ -394,10 +461,9 @@ export default function NotificationsScreen() {
   const loadFirstPage =
     useCallback(
       async (
-        filter:
-          NotificationFilter,
+        filter: NotificationFilter,
         refreshing = false,
-      ) => {
+      ): Promise<void> => {
         if (!accessToken) {
           return;
         }
@@ -424,11 +490,10 @@ export default function NotificationsScreen() {
           );
 
           setCurrentPage(0);
+
           setHasMore(
             response.hasMore,
           );
-
-          await refreshUnreadCount();
         } catch (error) {
           setErrorMessage(
             getErrorMessage(error),
@@ -438,29 +503,56 @@ export default function NotificationsScreen() {
           setIsRefreshing(false);
         }
       },
-      [
-        accessToken,
-        refreshUnreadCount,
-      ],
+      [accessToken],
     );
 
   useFocusEffect(
     useCallback(() => {
-      void loadFirstPage(
-        selectedFilter,
-      );
+      let active = true;
+
+      const openNotificationCenter =
+        async (): Promise<void> => {
+          if (!accessToken) {
+            return;
+          }
+
+          setSelectedFilter('ALL');
+
+          try {
+            await markAllNotificationsAsRead(
+              accessToken,
+            );
+
+            await refreshUnreadCount();
+          } catch (error) {
+            if (active) {
+              setErrorMessage(
+                getErrorMessage(error),
+              );
+            }
+          }
+
+          if (active) {
+            await loadFirstPage('ALL');
+          }
+        };
+
+      void openNotificationCenter();
+
+      return () => {
+        active = false;
+      };
     }, [
+      accessToken,
       loadFirstPage,
-      selectedFilter,
+      refreshUnreadCount,
     ]),
   );
 
   async function handleFilterChange(
     filter: NotificationFilter,
-  ) {
-    if (
-      filter === selectedFilter
-    ) {
+  ): Promise<void> {
+    if (filter === selectedFilter) {
       return;
     }
 
@@ -472,7 +564,32 @@ export default function NotificationsScreen() {
     await loadFirstPage(filter);
   }
 
-  async function handleLoadMore() {
+  async function handleRefresh():
+  Promise<void> {
+    if (!accessToken) {
+      return;
+    }
+
+    try {
+      await markAllNotificationsAsRead(
+        accessToken,
+      );
+
+      await refreshUnreadCount();
+    } catch (error) {
+      setErrorMessage(
+        getErrorMessage(error),
+      );
+    }
+
+    await loadFirstPage(
+      selectedFilter,
+      true,
+    );
+  }
+
+  async function handleLoadMore():
+  Promise<void> {
     if (
       !accessToken
       || !hasMore
@@ -496,14 +613,31 @@ export default function NotificationsScreen() {
           accessToken,
         );
 
-      setNotifications(
-        current => [
+      setNotifications(current => {
+        const currentIds =
+          new Set(
+            current.map(
+              notification =>
+                notification.id,
+            ),
+          );
+
+        const newItems =
+          response.items.filter(
+            notification =>
+              !currentIds.has(
+                notification.id,
+              ),
+          );
+
+        return [
           ...current,
-          ...response.items,
-        ],
-      );
+          ...newItems,
+        ];
+      });
 
       setCurrentPage(nextPage);
+
       setHasMore(
         response.hasMore,
       );
@@ -516,46 +650,108 @@ export default function NotificationsScreen() {
     }
   }
 
-  async function openNotification(
+  function openNotification(
     notification: AppNotification,
+  ): void {
+    if (!notification.targetUrl) {
+      return;
+    }
+
+    router.push(
+      notification.targetUrl as Href,
+    );
+  }
+
+  async function handleDeleteNotification(
+    notificationId: string,
+  ): Promise<void> {
+    if (
+      !accessToken
+      || deletingNotificationId
     ) {
-    if (!accessToken) {
-        return;
+      return;
     }
 
-    if (!notification.read) {
-        try {
-        await markNotificationAsRead(
-            notification.id,
-            accessToken,
-        );
+    setDeletingNotificationId(
+      notificationId,
+    );
 
-        setNotifications(current =>
-            current.map(item =>
-            item.id === notification.id
-                ? {
-                    ...item,
-                    read: true,
-                    readAt: new Date().toISOString(),
-                }
-                : item,
-            ),
-        );
+    try {
+      await deleteNotification(
+        notificationId,
+        accessToken,
+      );
 
-        await refreshUnreadCount();
-        } catch (error) {
-        setErrorMessage(
-            getErrorMessage(error),
-        );
-        }
+      setNotifications(current =>
+        current.filter(
+          notification =>
+            notification.id
+            !== notificationId,
+        ),
+      );
+
+      await refreshUnreadCount();
+    } catch (error) {
+      Alert.alert(
+        'No se ha podido borrar',
+        getErrorMessage(error),
+      );
+    } finally {
+      setDeletingNotificationId(null);
+    }
+  }
+
+  async function executeDeleteAll():
+  Promise<void> {
+    if (
+      !accessToken
+      || isDeletingAll
+    ) {
+      return;
     }
 
-    if (notification.targetUrl) {
-        router.push(
-        notification.targetUrl as Href,
-        );
+    setIsDeletingAll(true);
+
+    try {
+      await deleteAllNotifications(
+        accessToken,
+      );
+
+      setNotifications([]);
+      setCurrentPage(0);
+      setHasMore(false);
+      setErrorMessage(null);
+
+      await refreshUnreadCount();
+    } catch (error) {
+      Alert.alert(
+        'No se han podido borrar',
+        getErrorMessage(error),
+      );
+    } finally {
+      setIsDeletingAll(false);
     }
-    }
+  }
+
+  function confirmDeleteAll(): void {
+    Alert.alert(
+      'Borrar todas las notificaciones',
+      'Se eliminarán todas tus notificaciones. Esta acción no se puede deshacer.',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Borrar todas',
+          style: 'destructive',
+          onPress: () => {
+            void executeDeleteAll();
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <SafeAreaView
@@ -567,73 +763,122 @@ export default function NotificationsScreen() {
       style={styles.safeArea}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={
+          styles.content
+        }
         refreshControl={
           <RefreshControl
             onRefresh={() => {
-              void loadFirstPage(
-                selectedFilter,
-                true,
-              );
+              void handleRefresh();
             }}
             refreshing={isRefreshing}
             tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Pressable
-            accessibilityLabel="Volver"
-            accessibilityRole="button"
-            onPress={() => router.back()}
-            style={({ pressed }) => [
-              styles.headerButton,
-              pressed
-                ? styles.headerButtonPressed
-                : null,
-            ]}
-          >
-            <SymbolView
-              name={{
-                ios: 'chevron.left',
-                android: 'arrow_back',
-                web: 'arrow_back',
+          <View style={styles.headerLeft}>
+            <Pressable
+              accessibilityLabel="Volver"
+              accessibilityRole="button"
+              hitSlop={10}
+              onPress={() => {
+                router.back();
               }}
-              size={20}
-              tintColor={colors.text}
-            />
-          </Pressable>
+              style={({ pressed }) => [
+                styles.headerButton,
+
+                pressed
+                  ? styles.headerButtonPressed
+                  : null,
+              ]}
+            >
+              <SymbolView
+                name={{
+                  ios: 'chevron.left',
+                  android: 'arrow_back',
+                  web: 'arrow_back',
+                }}
+                size={20}
+                tintColor={colors.text}
+              />
+            </Pressable>
+          </View>
 
           <Text style={styles.headerTitle}>
             Notificaciones
           </Text>
 
-          <Pressable
-            accessibilityLabel="Ajustes de notificaciones"
-            accessibilityRole="button"
-            onPress={() => {
-              router.push(
-                '/notification-settings',
-              );
-            }}
-            style={({ pressed }) => [
-              styles.headerButton,
-              pressed
-                ? styles.headerButtonPressed
-                : null,
-            ]}
-          >
-            <SymbolView
-              name={{
-                ios: 'gearshape',
-                android: 'settings',
-                web: 'settings',
+          <View style={styles.headerActions}>
+            <Pressable
+              accessibilityLabel="Borrar todas las notificaciones"
+              accessibilityRole="button"
+              disabled={
+                notifications.length === 0
+                || isDeletingAll
+              }
+              hitSlop={8}
+              onPress={confirmDeleteAll}
+              style={({ pressed }) => [
+                styles.headerButton,
+
+                notifications.length === 0
+                  ? styles.headerButtonDisabled
+                  : null,
+
+                pressed
+                  ? styles.headerButtonPressed
+                  : null,
+              ]}
+            >
+              {isDeletingAll ? (
+                <ActivityIndicator
+                  size="small"
+                  color={colors.muted}
+                />
+              ) : (
+                <SymbolView
+                  name={{
+                    ios: 'trash',
+                    android: 'delete_outline',
+                    web: 'delete',
+                  }}
+                  size={18}
+                  tintColor={colors.muted}
+                />
+              )}
+            </Pressable>
+
+            <Pressable
+              accessibilityLabel="Ajustes de notificaciones"
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => {
+                router.push(
+                  '/notification-settings',
+                );
               }}
-              size={20}
-              tintColor={colors.text}
-            />
-          </Pressable>
+              style={({ pressed }) => [
+                styles.headerButton,
+
+                pressed
+                  ? styles.headerButtonPressed
+                  : null,
+              ]}
+            >
+              <SymbolView
+                name={{
+                  ios: 'gearshape',
+                  android: 'settings',
+                  web: 'settings',
+                }}
+                size={20}
+                tintColor={colors.text}
+              />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.filters}>
@@ -644,8 +889,8 @@ export default function NotificationsScreen() {
 
             return (
               <Pressable
-                accessibilityRole="button"
                 key={filter.value}
+                accessibilityRole="button"
                 onPress={() => {
                   void handleFilterChange(
                     filter.value,
@@ -653,9 +898,11 @@ export default function NotificationsScreen() {
                 }}
                 style={({ pressed }) => [
                   styles.filterButton,
+
                   selected
                     ? styles.filterButtonSelected
                     : null,
+
                   pressed
                     ? styles.filterButtonPressed
                     : null,
@@ -664,6 +911,7 @@ export default function NotificationsScreen() {
                 <Text
                   style={[
                     styles.filterText,
+
                     selected
                       ? styles.filterTextSelected
                       : null,
@@ -757,14 +1005,21 @@ export default function NotificationsScreen() {
                   {section.items.map(
                     notification => (
                       <NotificationCard
-                        key={
-                          notification.id
-                        }
+                        key={notification.id}
                         notification={
                           notification
                         }
+                        deleting={
+                          deletingNotificationId
+                          === notification.id
+                        }
+                        onDelete={() => {
+                          void handleDeleteNotification(
+                            notification.id,
+                          );
+                        }}
                         onPress={() => {
-                          void openNotification(
+                          openNotification(
                             notification,
                           );
                         }}
@@ -790,11 +1045,7 @@ export default function NotificationsScreen() {
                     size="small"
                   />
                 ) : (
-                  <Text
-                    style={
-                      styles.loadMoreText
-                    }
-                  >
+                  <Text style={styles.loadMoreText}>
                     Ver todas las notificaciones
                   </Text>
                 )}
@@ -825,7 +1076,7 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 10,
     paddingBottom: 30,
   },
 
@@ -833,8 +1084,21 @@ const styles = StyleSheet.create({
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: 22,
+  },
+
+  headerLeft: {
+    width: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+
+  headerActions: {
+    width: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
 
   headerButton: {
@@ -849,11 +1113,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6EFE9',
   },
 
+  headerButtonDisabled: {
+    opacity: 0.3,
+  },
+
   headerTitle: {
+    flex: 1,
     color: colors.text,
     fontSize: 20,
     fontWeight: '800',
     letterSpacing: -0.3,
+    textAlign: 'center',
   },
 
   filters: {
@@ -864,12 +1134,12 @@ const styles = StyleSheet.create({
 
   filterButton: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 45,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 19,
-    backgroundColor: '#F3ECE7',
     paddingHorizontal: 12,
+    borderRadius: 30,
+    backgroundColor: '#F3ECE7',
   },
 
   filterButtonSelected: {
@@ -914,16 +1184,18 @@ const styles = StyleSheet.create({
   },
 
   notificationCard: {
-    minHeight: 74,
+    position: 'relative',
+    minHeight: 86,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 22,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 18,
     backgroundColor: colors.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
     shadowColor: '#2B2421',
     shadowOffset: {
       width: 0,
@@ -972,6 +1244,7 @@ const styles = StyleSheet.create({
 
   notificationContent: {
     flex: 1,
+    paddingRight: 24,
   },
 
   notificationTitle: {
@@ -988,12 +1261,29 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
 
-  notificationMeta: {
-    minWidth: 38,
-    alignItems: 'flex-end',
-    alignSelf: 'stretch',
-    justifyContent: 'space-between',
-    paddingVertical: 2,
+  deleteNotificationButton: {
+    position: 'absolute',
+    top: 7,
+    right: 7,
+    zIndex: 2,
+    width: 27,
+    height: 27,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+  },
+
+  deleteNotificationButtonPressed: {
+    backgroundColor: '#F6EFE9',
+  },
+
+  notificationTimeContainer: {
+    position: 'absolute',
+    right: 13,
+    bottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
 
   notificationTime: {
@@ -1054,11 +1344,11 @@ const styles = StyleSheet.create({
 
   errorCard: {
     gap: 10,
+    padding: 18,
     borderWidth: 1,
     borderColor: '#F0C2B8',
     borderRadius: 18,
     backgroundColor: '#FFF1EE',
-    padding: 18,
   },
 
   errorTitle: {
@@ -1081,9 +1371,9 @@ const styles = StyleSheet.create({
 
   inlineError: {
     marginTop: 20,
+    padding: 13,
     borderRadius: 14,
     backgroundColor: '#FFF1EE',
-    padding: 13,
   },
 
   inlineErrorText: {
