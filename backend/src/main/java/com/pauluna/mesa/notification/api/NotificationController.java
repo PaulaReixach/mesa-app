@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -68,7 +69,8 @@ public class NotificationController {
     @GetMapping("/unread-count")
     public ResponseEntity<UnreadNotificationCountResponse>
     getUnreadCount(
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal
+            Jwt jwt
     ) {
         UUID userId =
                 UUID.fromString(
@@ -111,7 +113,8 @@ public class NotificationController {
     @PatchMapping("/read-all")
     public ResponseEntity<Void>
     markAllAsRead(
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal
+            Jwt jwt
     ) {
         UUID userId =
                 UUID.fromString(
@@ -120,6 +123,52 @@ public class NotificationController {
 
         notificationService
                 .markAllAsRead(userId);
+
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
+    @DeleteMapping("/{notificationId}")
+    public ResponseEntity<Void>
+    deleteNotification(
+            @PathVariable
+            UUID notificationId,
+
+            @AuthenticationPrincipal
+            Jwt jwt
+    ) {
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
+
+        notificationService
+                .deleteNotification(
+                        notificationId,
+                        userId
+                );
+
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void>
+    deleteAllNotifications(
+            @AuthenticationPrincipal
+            Jwt jwt
+    ) {
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
+
+        notificationService
+                .deleteAllNotifications(
+                        userId
+                );
 
         return ResponseEntity
                 .noContent()

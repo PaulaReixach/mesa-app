@@ -180,6 +180,36 @@ public class NotificationService {
         );
     }
 
+    public void deleteNotification(
+                UUID notificationId,
+                UUID userId
+        ) {
+        validateUserExists(userId);
+
+        int deletedNotifications =
+                notificationRepository
+                        .deleteByIdAndUserId(
+                                notificationId,
+                                userId
+                        );
+
+        if (deletedNotifications == 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "La notificación no existe."
+                );
+        }
+        }
+
+        public void deleteAllNotifications(
+                UUID userId
+        ) {
+        validateUserExists(userId);
+
+        notificationRepository
+                .deleteAllByUserId(userId);
+        }
+
     public void notifyGroupInvitation(
             UUID groupId,
             UUID invitedUserId,

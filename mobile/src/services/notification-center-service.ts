@@ -15,7 +15,9 @@ export function getNotifications(
   accessToken: string,
 ): Promise<NotificationPage> {
   return apiRequest<NotificationPage>(
-    `/notifications?filter=${filter}&page=${page}&size=${size}`,
+    `/notifications?filter=${filter}`
+      + `&page=${page}`
+      + `&size=${size}`,
     {
       method: 'GET',
     },
@@ -55,6 +57,31 @@ export function markAllNotificationsAsRead(
     '/notifications/read-all',
     {
       method: 'PATCH',
+    },
+    accessToken,
+  );
+}
+
+export function deleteNotification(
+  notificationId: string,
+  accessToken: string,
+): Promise<void> {
+  return apiRequest<void>(
+    `/notifications/${notificationId}`,
+    {
+      method: 'DELETE',
+    },
+    accessToken,
+  );
+}
+
+export function deleteAllNotifications(
+  accessToken: string,
+): Promise<void> {
+  return apiRequest<void>(
+    '/notifications',
+    {
+      method: 'DELETE',
     },
     accessToken,
   );
