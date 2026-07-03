@@ -437,7 +437,11 @@ export default function ProfileScreen() {
               web: 'help',
             }}
             label="Ayuda y soporte"
-            onPress={() => {}}
+            onPress={() => {
+              router.push(
+                '/help-support',
+              );
+            }}
           />
 
           <MenuRow
@@ -448,7 +452,11 @@ export default function ProfileScreen() {
             }}
             isLast
             label="Acerca de Mesa"
-            onPress={() => {}}
+            onPress={() => {
+              router.push(
+                '/about-mesa',
+              );
+            }}
           />
         </View>
 
