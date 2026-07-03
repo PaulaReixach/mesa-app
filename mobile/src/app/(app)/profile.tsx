@@ -423,7 +423,11 @@ export default function ProfileScreen() {
               web: 'lock',
             }}
             label="Privacidad"
-            onPress={() => {}}
+            onPress={() => {
+              router.push(
+                '/privacy-settings',
+              );
+            }}
           />
 
           <MenuRow

@@ -276,6 +276,11 @@ export default function AppLayout() {
         name="notification-settings"
         options={hiddenScreenOptions}
       />
+
+      <Tabs.Screen
+        name="privacy-settings"
+        options={hiddenScreenOptions}
+      />
       
     </Tabs>
   );
