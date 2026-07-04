@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -122,6 +123,34 @@ public class RestaurantController {
                 restaurantService.getRestaurant(
                         groupId,
                         groupRestaurantId,
+                        userId
+                )
+        );
+    }
+
+    @PutMapping("/{groupRestaurantId}")
+    public ResponseEntity<GroupRestaurantResponse>
+    updateRestaurant(
+            @PathVariable UUID groupId,
+            @PathVariable UUID groupRestaurantId,
+
+            @Valid
+            @RequestBody
+            UpdateGroupRestaurantRequest request,
+
+            @AuthenticationPrincipal
+            Jwt jwt
+    ) {
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
+
+        return ResponseEntity.ok(
+                restaurantService.updateRestaurant(
+                        groupId,
+                        groupRestaurantId,
+                        request,
                         userId
                 )
         );
