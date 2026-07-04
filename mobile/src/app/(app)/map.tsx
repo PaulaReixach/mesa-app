@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   ActivityIndicator,
   Alert,
@@ -449,21 +450,15 @@ function RestaurantRow({
               size="small"
             />
           ) : (
-            <SymbolView
-              name={{
-                ios: favorite
-                  ? 'bookmark.fill'
-                  : 'bookmark',
-                android: favorite
-                  ? 'bookmark'
-                  : 'bookmark_border',
-                web: favorite
-                  ? 'bookmark'
-                  : 'bookmark_border',
-              }}
-              size={21}
-              tintColor={colors.primary}
-            />
+          <MaterialIcons
+            name={
+              favorite
+                ? 'bookmark'
+                : 'bookmark-border'
+            }
+            size={25}
+            color={colors.primary}
+          />
           )}
         </Pressable>
       </View>
