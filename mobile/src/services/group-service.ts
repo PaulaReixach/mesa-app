@@ -8,6 +8,7 @@ import {
   CreateGroupPayload,
   GroupImageUploadFile,
   RestaurantGroup,
+  UpdateGroupPayload,
 } from '../types/group';
 
 export function getGroups(
@@ -43,6 +44,21 @@ export function createGroup(
     '/groups',
     {
       method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export function updateGroup(
+  groupId: string,
+  payload: UpdateGroupPayload,
+  accessToken: string,
+): Promise<RestaurantGroup> {
+  return apiRequest<RestaurantGroup>(
+    `/groups/${groupId}`,
+    {
+      method: 'PUT',
       body: JSON.stringify(payload),
     },
     accessToken,
