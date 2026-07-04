@@ -47,7 +47,7 @@ function ActionCard({
       <View style={styles.actionIcon}>
         <SymbolView
           name={icon}
-          size={25}
+          size={23}
           tintColor={colors.primary}
         />
       </View>
@@ -69,7 +69,7 @@ function ActionCard({
             android: 'chevron_right',
             web: 'chevron_right',
           }}
-          size={20}
+          size={19}
           tintColor={colors.muted}
         />
       )}
@@ -78,8 +78,13 @@ function ActionCard({
 }
 
 export default function AddScreen() {
-  function openGroups() {
-    router.push('/groups');
+  function chooseGroup(
+    addMode: 'SEARCH' | 'MANUAL',
+  ): void {
+    router.push({
+      pathname: '/groups',
+      params: { addMode },
+    });
   }
 
   return (
@@ -91,13 +96,46 @@ export default function AddScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>
+        <View style={styles.navigationHeader}>
+          <Pressable
+            accessibilityLabel="Cerrar"
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => {
+              router.back();
+            }}
+            style={({ pressed }) => [
+              styles.closeButton,
+              pressed
+                ? styles.closeButtonPressed
+                : null,
+            ]}
+          >
+            <SymbolView
+              name={{
+                ios: 'xmark',
+                android: 'close',
+                web: 'close',
+              }}
+              size={18}
+              tintColor={colors.text}
+            />
+          </Pressable>
+
+          <Text style={styles.navigationTitle}>
             Añadir
           </Text>
 
-          <Text style={styles.subtitle}>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        <View style={styles.header}>
+          <Text style={styles.title}>
             ¿Qué quieres hacer?
+          </Text>
+
+          <Text style={styles.subtitle}>
+            Elige cómo quieres ampliar tus planes en Mesa.
           </Text>
         </View>
 
@@ -109,23 +147,27 @@ export default function AddScreen() {
               android: 'search',
               web: 'search',
             }}
-            onPress={openGroups}
+            onPress={() => {
+              chooseGroup('SEARCH');
+            }}
             title="Buscar restaurante"
           />
 
           <ActionCard
-            description="Añade un restaurante que todavía no aparezca en la búsqueda."
+            description="Crea un restaurante que todavía no aparezca en Mesa."
             icon={{
               ios: 'square.and.pencil',
               android: 'edit',
               web: 'edit',
             }}
-            onPress={openGroups}
+            onPress={() => {
+              chooseGroup('MANUAL');
+            }}
             title="Añadir manualmente"
           />
 
           <ActionCard
-            description="Crea un espacio para organizar restaurantes con otras personas."
+            description="Invita a tu gente y empezad a organizar restaurantes juntos."
             icon={{
               ios: 'person.2.badge.plus',
               android: 'group_add',
@@ -139,19 +181,20 @@ export default function AddScreen() {
         </View>
 
         <View style={styles.notice}>
-          <SymbolView
-            name={{
-              ios: 'info.circle',
-              android: 'info',
-              web: 'info',
-            }}
-            size={20}
-            tintColor={colors.primary}
-          />
+          <View style={styles.noticeIcon}>
+            <SymbolView
+              name={{
+                ios: 'info.circle',
+                android: 'info',
+                web: 'info',
+              }}
+              size={18}
+              tintColor={colors.primary}
+            />
+          </View>
 
           <Text style={styles.noticeText}>
-            Para añadir un restaurante tendrás que elegir
-            primero el grupo donde quieres guardarlo.
+            Antes de guardar un restaurante elegirás el grupo donde quieres añadirlo.
           </Text>
         </View>
       </ScrollView>
@@ -164,39 +207,88 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+
   content: {
     flexGrow: 1,
-    gap: 28,
-    paddingHorizontal: 24,
-    paddingTop: 26,
+    gap: 26,
+    paddingHorizontal: 20,
+    paddingTop: 8,
     paddingBottom: 34,
   },
+
+  navigationHeader: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  closeButton: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 19,
+  },
+
+  closeButtonPressed: {
+    backgroundColor: '#F4E9E3',
+  },
+
+  navigationTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+
+  headerSpacer: {
+    width: 38,
+  },
+
   header: {
     gap: 7,
+    paddingTop: 2,
   },
+
   title: {
     color: colors.text,
-    fontSize: 30,
-    fontWeight: '800',
+    fontSize: 23,
+    fontWeight: '900',
+    letterSpacing: -0.35,
   },
+
   subtitle: {
+    maxWidth: 310,
     color: colors.muted,
-    fontSize: 16,
+    fontSize: 13,
+    lineHeight: 19,
   },
+
   actions: {
     gap: 13,
   },
+
   actionCard: {
-    minHeight: 104,
+    minHeight: 98,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
+    gap: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 22,
+    borderRadius: 20,
     backgroundColor: colors.surface,
-    padding: 17,
+    shadowColor: '#2B2421',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.035,
+    shadowRadius: 6,
+    elevation: 1,
   },
+
   actionCardPressed: {
     opacity: 0.72,
     transform: [
@@ -205,40 +297,55 @@ const styles = StyleSheet.create({
       },
     ],
   },
+
   actionIcon: {
-    width: 54,
-    height: 54,
+    width: 50,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 18,
+    borderRadius: 25,
     backgroundColor: '#FBE9E2',
   },
+
   actionContent: {
     flex: 1,
     gap: 5,
   },
+
   actionTitle: {
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '900',
   },
+
   actionDescription: {
     color: colors.muted,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 11,
+    lineHeight: 17,
   },
+
   notice: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 10,
-    borderRadius: 17,
-    backgroundColor: '#FBE9E2',
-    padding: 15,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: '#FBEDE7',
   },
+
+  noticeIcon: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+    backgroundColor: '#FFF8F3',
+  },
+
   noticeText: {
     flex: 1,
     color: colors.muted,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 11,
+    lineHeight: 17,
   },
 });
