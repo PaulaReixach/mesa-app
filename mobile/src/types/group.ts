@@ -22,6 +22,13 @@ export type CreateGroupPayload = {
   privacy: GroupPrivacy;
 };
 
+export type UpdateGroupPayload = {
+  name: string;
+  description: string | null;
+  city: string | null;
+  privacy: GroupPrivacy;
+};
+
 export type GroupImageUploadFile = {
   uri: string;
 };
