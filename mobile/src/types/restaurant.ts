@@ -45,6 +45,15 @@ export type CreateGroupRestaurantPayload = {
   groupNotes: string | null;
 };
 
+export type UpdateGroupRestaurantPayload = {
+  name: string;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  category: string | null;
+  groupNotes: string | null;
+};
+
 export type RestaurantSearchResult = {
   provider: string;
   externalPlaceId: string;
