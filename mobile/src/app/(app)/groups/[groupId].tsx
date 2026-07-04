@@ -1,3 +1,4 @@
+import { SymbolView } from 'expo-symbols';
 import {
   router,
   useFocusEffect,
@@ -10,21 +11,22 @@ import {
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { GroupMemberCard } from '../../../components/GroupMemberCard';
-import { PrimaryButton } from '../../../components/PrimaryButton';
 import { RestaurantCard } from '../../../components/RestaurantCard';
 import { useAuth } from '../../../contexts/auth-context';
-import { getErrorMessage, resolveApiUrl } from '../../../lib/api';
+import {
+  getErrorMessage,
+  resolveApiUrl,
+} from '../../../lib/api';
 import {
   getGroupMembers,
   removeGroupMember,
@@ -32,9 +34,104 @@ import {
 import { getGroup } from '../../../services/group-service';
 import { getGroupRestaurants } from '../../../services/restaurant-service';
 import { colors } from '../../../theme/colors';
-import { GroupMember } from '../../../types/group-member';
-import { RestaurantGroup } from '../../../types/group';
-import { GroupRestaurant } from '../../../types/restaurant';
+import type { RestaurantGroup } from '../../../types/group';
+import type { GroupMember } from '../../../types/group-member';
+import type { GroupRestaurant } from '../../../types/restaurant';
+
+function MemberRow({
+  member,
+  canRemove,
+  removing,
+  onRemove,
+}: {
+  member: GroupMember;
+  canRemove: boolean;
+  removing: boolean;
+  onRemove: () => void;
+}) {
+  const avatarUri = member.avatarUrl
+    ? resolveApiUrl(member.avatarUrl)
+    : null;
+
+  return (
+    <View style={styles.memberRow}>
+      <View style={styles.memberAvatar}>
+        {avatarUri ? (
+          <Image
+            source={{ uri: avatarUri }}
+            style={styles.memberAvatarImage}
+          />
+        ) : (
+          <Text style={styles.memberAvatarText}>
+            {member.name.charAt(0).toUpperCase()}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.memberText}>
+        <Text style={styles.memberName}>
+          {member.name}
+        </Text>
+        <Text style={styles.memberUsername}>
+          @{member.username}
+        </Text>
+      </View>
+
+      <View
+        style={[
+          styles.roleBadge,
+          member.role === 'OWNER'
+            ? styles.ownerBadge
+            : null,
+        ]}
+      >
+        <Text
+          style={[
+            styles.roleText,
+            member.role === 'OWNER'
+              ? styles.ownerRoleText
+              : null,
+          ]}
+        >
+          {member.role === 'OWNER'
+            ? 'Creadora'
+            : 'Miembro'}
+        </Text>
+      </View>
+
+      {canRemove ? (
+        <Pressable
+          accessibilityLabel={`Eliminar a ${member.name}`}
+          accessibilityRole="button"
+          disabled={removing}
+          hitSlop={8}
+          onPress={onRemove}
+          style={({ pressed }) => [
+            styles.removeMemberButton,
+            pressed ? styles.pressed : null,
+          ]}
+        >
+          {removing ? (
+            <ActivityIndicator
+              color={colors.danger}
+              size="small"
+            />
+          ) : (
+            <SymbolView
+              name={{
+                ios: 'trash',
+                android: 'delete_outline',
+                web: 'delete_outline',
+              }}
+              size={18}
+              tintColor={colors.danger}
+            />
+          )}
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
 
 export default function GroupDetailScreen() {
   const { groupId } = useLocalSearchParams<{
@@ -51,7 +148,8 @@ export default function GroupDetailScreen() {
     useState<GroupRestaurant[]>([]);
   const [removingUserId, setRemovingUserId] =
     useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] =
+    useState(true);
   const [isRefreshing, setIsRefreshing] =
     useState(false);
   const [loadError, setLoadError] =
@@ -102,41 +200,39 @@ export default function GroupDetailScreen() {
     }, [loadGroupData]),
   );
 
-  const currentMember = members.find(
-    (member) => member.userId === user?.id,
-  );
+  const isOwner =
+    Boolean(group && user?.id === group.ownerUserId);
 
-  const canManageMembers =
-    currentMember?.role === 'OWNER';
-
-  function openCreateRestaurant() {
+  function openCreateRestaurant(): void {
     router.push({
       pathname:
         '/groups/[groupId]/restaurants/create',
-      params: {
-        groupId,
-      },
+      params: { groupId },
     });
   }
 
-  function openAddMember() {
+  function openAddMember(): void {
     router.push({
       pathname: '/groups/[groupId]/members/add',
-      params: {
-        groupId,
-      },
+      params: { groupId },
     });
   }
 
-  function confirmRemoveMember(member: GroupMember) {
+  function openEditGroup(): void {
+    router.push({
+      pathname: '/groups/[groupId]/edit',
+      params: { groupId },
+    });
+  }
+
+  function confirmRemoveMember(
+    member: GroupMember,
+  ): void {
     Alert.alert(
       'Eliminar miembro',
       `¿Quieres eliminar a ${member.name} del grupo?`,
       [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
+        { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Eliminar',
           style: 'destructive',
@@ -150,24 +246,21 @@ export default function GroupDetailScreen() {
 
   async function handleRemoveMember(
     member: GroupMember,
-  ) {
+  ): Promise<void> {
     if (!accessToken || !groupId) {
       return;
     }
 
     try {
       setRemovingUserId(member.userId);
-
       await removeGroupMember(
         groupId,
         member.userId,
         accessToken,
       );
-
-      setMembers((currentMembers) =>
-        currentMembers.filter(
-          (currentMemberItem) =>
-            currentMemberItem.userId !== member.userId,
+      setMembers(current =>
+        current.filter(item =>
+          item.userId !== member.userId,
         ),
       );
     } catch (error) {
@@ -180,11 +273,8 @@ export default function GroupDetailScreen() {
     }
   }
 
-  const groupImageUri =
-  group?.imageUrl
-    ? resolveApiUrl(
-        group.imageUrl,
-      )
+  const groupImageUri = group?.imageUrl
+    ? resolveApiUrl(group.imageUrl)
     : null;
 
   return (
@@ -196,7 +286,9 @@ export default function GroupDetailScreen() {
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
-            onRefresh={() => loadGroupData(true)}
+            onRefresh={() => {
+              void loadGroupData(true);
+            }}
             refreshing={isRefreshing}
             tintColor={colors.primary}
           />
@@ -205,18 +297,52 @@ export default function GroupDetailScreen() {
       >
         <View style={styles.header}>
           <Pressable
+            accessibilityLabel="Volver"
             accessibilityRole="button"
             onPress={() => router.back()}
-            style={styles.backButton}
+            style={({ pressed }) => [
+              styles.headerButton,
+              pressed ? styles.pressed : null,
+            ]}
           >
-            <Text style={styles.backText}>‹</Text>
+            <SymbolView
+              name={{
+                ios: 'chevron.left',
+                android: 'arrow_back',
+                web: 'arrow_back',
+              }}
+              size={20}
+              tintColor={colors.text}
+            />
           </Pressable>
 
           <Text style={styles.headerTitle}>
             Grupo
           </Text>
 
-          <View style={styles.headerSpacer} />
+          {isOwner ? (
+            <Pressable
+              accessibilityLabel="Editar grupo"
+              accessibilityRole="button"
+              onPress={openEditGroup}
+              style={({ pressed }) => [
+                styles.headerButton,
+                pressed ? styles.pressed : null,
+              ]}
+            >
+              <SymbolView
+                name={{
+                  ios: 'pencil',
+                  android: 'edit',
+                  web: 'edit',
+                }}
+                size={19}
+                tintColor={colors.primary}
+              />
+            </Pressable>
+          ) : (
+            <View style={styles.headerSpacer} />
+          )}
         </View>
 
         {isLoading ? (
@@ -233,13 +359,14 @@ export default function GroupDetailScreen() {
             <Text style={styles.errorTitle}>
               No hemos podido abrir el grupo
             </Text>
-
             <Text style={styles.errorText}>
               {loadError}
             </Text>
-
             <Pressable
-              onPress={() => loadGroupData()}
+              accessibilityRole="button"
+              onPress={() => {
+                void loadGroupData();
+              }}
             >
               <Text style={styles.retryText}>
                 Volver a intentar
@@ -250,101 +377,148 @@ export default function GroupDetailScreen() {
 
         {!isLoading && !loadError && group ? (
           <>
-            <View style={styles.groupHeader}>
-              <View style={styles.groupIcon}>
+            <View style={styles.heroCard}>
+              <View style={styles.heroArtwork}>
                 {groupImageUri ? (
                   <Image
-                    source={{
-                      uri: groupImageUri,
-                    }}
-                    style={styles.groupImage}
+                    source={{ uri: groupImageUri }}
+                    style={styles.heroImage}
                   />
                 ) : (
-                  <Text style={styles.groupIconText}>
-                    {group.name.charAt(0).toUpperCase()}
-                  </Text>
+                  <View style={styles.heroFallback}>
+                    <Text style={styles.heroInitial}>
+                      {group.name.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
                 )}
               </View>
 
-              <Text style={styles.groupName}>
-                {group.name}
-              </Text>
-
-              {group.description ? (
-                <Text style={styles.groupDescription}>
-                  {group.description}
+              <View style={styles.heroContent}>
+                <Text style={styles.heroEyebrow}>
+                  VUESTRO ESPACIO
                 </Text>
-              ) : null}
+                <Text style={styles.groupName}>
+                  {group.name}
+                </Text>
 
-              <View style={styles.metadata}>
-                <View style={styles.metadataItem}>
-                  <Text style={styles.metadataLabel}>
-                    Ciudad
+                {group.description ? (
+                  <Text style={styles.groupDescription}>
+                    {group.description}
                   </Text>
+                ) : null}
 
-                  <Text style={styles.metadataValue}>
-                    {group.city ?? 'Sin ubicación'}
-                  </Text>
+                <View style={styles.heroChips}>
+                  <View style={styles.heroChip}>
+                    <SymbolView
+                      name={{
+                        ios: 'mappin',
+                        android: 'location_on',
+                        web: 'location_on',
+                      }}
+                      size={13}
+                      tintColor={colors.primary}
+                    />
+                    <Text style={styles.heroChipText}>
+                      {group.city ?? 'Sin ciudad'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.heroChip}>
+                    <SymbolView
+                      name={{
+                        ios: group.privacy === 'PRIVATE'
+                          ? 'lock.fill'
+                          : 'globe',
+                        android: group.privacy === 'PRIVATE'
+                          ? 'lock'
+                          : 'public',
+                        web: group.privacy === 'PRIVATE'
+                          ? 'lock'
+                          : 'public',
+                      }}
+                      size={13}
+                      tintColor={colors.primary}
+                    />
+                    <Text style={styles.heroChipText}>
+                      {group.privacy === 'PRIVATE'
+                        ? 'Privado'
+                        : 'Público'}
+                    </Text>
+                  </View>
                 </View>
+              </View>
+            </View>
 
-                <View style={styles.metadataItem}>
-                  <Text style={styles.metadataLabel}>
-                    Privacidad
-                  </Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>
+                  {restaurants.length}
+                </Text>
+                <Text style={styles.statLabel}>
+                  Restaurantes
+                </Text>
+              </View>
 
-                  <Text style={styles.metadataValue}>
-                    {group.privacy === 'PRIVATE'
-                      ? 'Privado'
-                      : 'Público'}
-                  </Text>
-                </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>
+                  {members.length}
+                </Text>
+                <Text style={styles.statLabel}>
+                  Miembros
+                </Text>
               </View>
             </View>
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <View style={styles.sectionTitleRow}>
+                <View>
                   <Text style={styles.sectionTitle}>
                     Miembros
                   </Text>
-
-                  <Text style={styles.sectionCount}>
-                    {members.length}
+                  <Text style={styles.sectionSubtitle}>
+                    Las personas que comparten este grupo
                   </Text>
                 </View>
 
-                {canManageMembers ? (
+                {isOwner ? (
                   <Pressable
                     accessibilityRole="button"
                     onPress={openAddMember}
                     style={({ pressed }) => [
-                      styles.addButton,
-                      pressed
-                        ? styles.addButtonPressed
-                        : null,
+                      styles.secondaryAction,
+                      pressed ? styles.pressed : null,
                     ]}
                   >
-                    <Text style={styles.addButtonText}>
-                      + Añadir
+                    <SymbolView
+                      name={{
+                        ios: 'person.badge.plus',
+                        android: 'person_add',
+                        web: 'person_add',
+                      }}
+                      size={17}
+                      tintColor={colors.primary}
+                    />
+                    <Text style={styles.secondaryActionText}>
+                      Invitar
                     </Text>
                   </Pressable>
                 ) : null}
               </View>
 
               <View style={styles.memberList}>
-                {members.map((member) => (
-                  <GroupMemberCard
+                {members.map(member => (
+                  <MemberRow
                     canRemove={
-                      canManageMembers
+                      isOwner
                       && member.role !== 'OWNER'
-                    }
-                    isRemoving={
-                      removingUserId === member.userId
                     }
                     key={member.id}
                     member={member}
-                    onRemove={() =>
-                      confirmRemoveMember(member)
+                    onRemove={() => {
+                      confirmRemoveMember(member);
+                    }}
+                    removing={
+                      removingUserId === member.userId
                     }
                   />
                 ))}
@@ -353,13 +527,12 @@ export default function GroupDetailScreen() {
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <View style={styles.sectionTitleRow}>
+                <View>
                   <Text style={styles.sectionTitle}>
                     Restaurantes
                   </Text>
-
-                  <Text style={styles.sectionCount}>
-                    {restaurants.length}
+                  <Text style={styles.sectionSubtitle}>
+                    Vuestras propuestas y sitios guardados
                   </Text>
                 </View>
 
@@ -367,52 +540,60 @@ export default function GroupDetailScreen() {
                   accessibilityRole="button"
                   onPress={openCreateRestaurant}
                   style={({ pressed }) => [
-                    styles.addButton,
-                    pressed
-                      ? styles.addButtonPressed
-                      : null,
+                    styles.primaryAction,
+                    pressed ? styles.primaryActionPressed : null,
                   ]}
                 >
-                  <Text style={styles.addButtonText}>
-                    + Añadir
+                  <SymbolView
+                    name={{
+                      ios: 'plus',
+                      android: 'add',
+                      web: 'add',
+                    }}
+                    size={18}
+                    tintColor={colors.white}
+                  />
+                  <Text style={styles.primaryActionText}>
+                    Añadir
                   </Text>
                 </Pressable>
               </View>
 
               {restaurants.length === 0 ? (
-                <View style={styles.emptyRestaurants}>
-                  <Text style={styles.emptyEmoji}>
-                    📍
-                  </Text>
-
-                  <Text style={styles.emptyTitle}>
-                    Todavía no hay restaurantes
-                  </Text>
-
-                  <Text style={styles.emptyText}>
-                    Añade el primer sitio pendiente
-                    del grupo.
-                  </Text>
-
-                  <View style={styles.emptyButton}>
-                    <PrimaryButton
-                      onPress={openCreateRestaurant}
-                      title="Añadir restaurante"
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={openCreateRestaurant}
+                  style={({ pressed }) => [
+                    styles.emptyRestaurants,
+                    pressed ? styles.pressed : null,
+                  ]}
+                >
+                  <View style={styles.emptyIcon}>
+                    <SymbolView
+                      name={{
+                        ios: 'fork.knife',
+                        android: 'restaurant',
+                        web: 'restaurant',
+                      }}
+                      size={25}
+                      tintColor={colors.primary}
                     />
                   </View>
-                </View>
+                  <Text style={styles.emptyTitle}>
+                    Añadid vuestro primer restaurante
+                  </Text>
+                  <Text style={styles.emptyText}>
+                    Guardad un sitio pendiente y empezad a decidir juntos.
+                  </Text>
+                </Pressable>
               ) : (
                 <View style={styles.restaurantList}>
-                  {restaurants.map(
-                    (groupRestaurant) => (
-                      <RestaurantCard
-                        groupRestaurant={
-                          groupRestaurant
-                        }
-                        key={groupRestaurant.id}
-                      />
-                    ),
-                  )}
+                  {restaurants.map(item => (
+                    <RestaurantCard
+                      groupRestaurant={item}
+                      key={item.id}
+                    />
+                  ))}
                 </View>
               )}
             </View>
@@ -430,102 +611,127 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: 26,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 32,
+    gap: 22,
+    paddingHorizontal: 18,
+    paddingTop: 8,
+    paddingBottom: 34,
   },
   header: {
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  backButton: {
-    width: 44,
-    height: 44,
+  headerButton: {
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-  },
-  backText: {
-    color: colors.text,
-    fontSize: 34,
-    lineHeight: 36,
+    borderRadius: 19,
   },
   headerTitle: {
     color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '900',
   },
   headerSpacer: {
-    width: 44,
+    width: 38,
   },
   loading: {
     alignItems: 'center',
-    paddingVertical: 80,
+    paddingVertical: 90,
   },
-  groupHeader: {
-    alignItems: 'center',
-    gap: 12,
-  },
-  groupIcon: {
-    width: 78,
-    height: 78,
-    alignItems: 'center',
+  heroCard: {
     overflow: 'hidden',
-    justifyContent: 'center',
-    borderRadius: 26,
-    backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 24,
+    backgroundColor: colors.surface,
   },
-  groupImage: {
+  heroArtwork: {
+    height: 160,
+    backgroundColor: '#F2DED5',
+  },
+  heroImage: {
     width: '100%',
     height: '100%',
   },
-  groupIconText: {
-    color: colors.white,
-    fontSize: 32,
-    fontWeight: '800',
+  heroFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroInitial: {
+    color: colors.primary,
+    fontSize: 58,
+    fontWeight: '900',
+  },
+  heroContent: {
+    gap: 8,
+    padding: 18,
+  },
+  heroEyebrow: {
+    color: colors.primary,
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1.1,
   },
   groupName: {
     color: colors.text,
-    fontSize: 29,
-    fontWeight: '800',
-    textAlign: 'center',
+    fontSize: 25,
+    fontWeight: '900',
+    letterSpacing: -0.45,
   },
   groupDescription: {
     color: colors.muted,
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
+    fontSize: 12,
+    lineHeight: 18,
   },
-  metadata: {
-    width: '100%',
+  heroChips: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 2,
   },
-  metadataItem: {
+  heroChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#FBE9E2',
+  },
+  heroChipText: {
+    color: colors.primary,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  statCard: {
     flex: 1,
-    gap: 4,
+    gap: 2,
+    padding: 15,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 16,
+    borderRadius: 18,
     backgroundColor: colors.surface,
-    padding: 14,
   },
-  metadataLabel: {
+  statValue: {
+    color: colors.primary,
+    fontSize: 23,
+    fontWeight: '900',
+  },
+  statLabel: {
     color: colors.muted,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  metadataValue: {
-    color: colors.text,
-    fontSize: 15,
+    fontSize: 10,
     fontWeight: '700',
   },
   section: {
-    gap: 14,
+    gap: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -533,90 +739,176 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-  },
   sectionTitle: {
     color: colors.text,
-    fontSize: 21,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '900',
   },
-  sectionCount: {
+  sectionSubtitle: {
+    marginTop: 3,
     color: colors.muted,
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 10,
   },
-  addButton: {
+  secondaryAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
     borderRadius: 999,
-    backgroundColor: '#F7D9CF',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    backgroundColor: '#FBE9E2',
   },
-  addButtonPressed: {
-    opacity: 0.7,
-  },
-  addButtonText: {
+  secondaryActionText: {
     color: colors.primary,
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  primaryAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+  },
+  primaryActionPressed: {
+    backgroundColor: colors.primaryPressed,
+  },
+  primaryActionText: {
+    color: colors.white,
+    fontSize: 10,
+    fontWeight: '900',
   },
   memberList: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 19,
+    backgroundColor: colors.surface,
+  },
+  memberRow: {
+    minHeight: 68,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  memberAvatar: {
+    width: 42,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderRadius: 21,
+    backgroundColor: '#F3DED5',
+  },
+  memberAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  memberAvatarText: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  memberText: {
+    flex: 1,
+    gap: 2,
+  },
+  memberName: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  memberUsername: {
+    color: colors.muted,
+    fontSize: 10,
+  },
+  roleBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#EEEAE7',
+  },
+  ownerBadge: {
+    backgroundColor: '#FBE4DA',
+  },
+  roleText: {
+    color: colors.muted,
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  ownerRoleText: {
+    color: colors.primary,
+  },
+  removeMemberButton: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
   },
   restaurantList: {
-    gap: 12,
+    gap: 10,
   },
   emptyRestaurants: {
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+    padding: 24,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 22,
+    borderRadius: 20,
     backgroundColor: colors.surface,
-    padding: 26,
   },
-  emptyEmoji: {
-    fontSize: 32,
+  emptyIcon: {
+    width: 52,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
+    backgroundColor: '#FBE9E2',
   },
   emptyTitle: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '900',
     textAlign: 'center',
   },
   emptyText: {
+    maxWidth: 280,
     color: colors.muted,
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 11,
+    lineHeight: 17,
     textAlign: 'center',
   },
-  emptyButton: {
-    width: '100%',
-    marginTop: 4,
-  },
   errorCard: {
-    gap: 10,
+    gap: 8,
+    padding: 18,
     borderWidth: 1,
     borderColor: '#F3C5BC',
-    borderRadius: 20,
+    borderRadius: 18,
     backgroundColor: '#FFF1EE',
-    padding: 20,
   },
   errorTitle: {
     color: colors.danger,
-    fontSize: 17,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '900',
   },
   errorText: {
     color: colors.muted,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 12,
+    lineHeight: 18,
   },
   retryText: {
     color: colors.primary,
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  pressed: {
+    opacity: 0.66,
   },
 });
