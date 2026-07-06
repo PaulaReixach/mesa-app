@@ -67,6 +67,12 @@ public class GroupRestaurant {
     )
     private String groupNotes;
 
+    @Column(name = "copied_from_group_id")
+    private UUID copiedFromGroupId;
+
+    @Column(name = "copied_from_group_restaurant_id")
+    private UUID copiedFromGroupRestaurantId;
+
     @Column(
             name = "created_at",
             nullable = false,
@@ -91,11 +97,34 @@ public class GroupRestaurant {
             UUID proposedByUserId,
             String groupNotes
     ) {
+        this(
+                groupId,
+                restaurantId,
+                status,
+                proposedByUserId,
+                groupNotes,
+                null,
+                null
+        );
+    }
+
+    public GroupRestaurant(
+            UUID groupId,
+            UUID restaurantId,
+            GroupRestaurantStatus status,
+            UUID proposedByUserId,
+            String groupNotes,
+            UUID copiedFromGroupId,
+            UUID copiedFromGroupRestaurantId
+    ) {
         this.groupId = groupId;
         this.restaurantId = restaurantId;
         this.status = status;
         this.proposedByUserId = proposedByUserId;
         this.groupNotes = groupNotes;
+        this.copiedFromGroupId = copiedFromGroupId;
+        this.copiedFromGroupRestaurantId =
+                copiedFromGroupRestaurantId;
     }
 
     public void changeStatus(
@@ -167,6 +196,14 @@ public class GroupRestaurant {
 
     public String getGroupNotes() {
         return groupNotes;
+    }
+
+    public UUID getCopiedFromGroupId() {
+        return copiedFromGroupId;
+    }
+
+    public UUID getCopiedFromGroupRestaurantId() {
+        return copiedFromGroupRestaurantId;
     }
 
     public Instant getCreatedAt() {
