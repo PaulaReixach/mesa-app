@@ -4,7 +4,11 @@ import {
   useFocusEffect,
   useLocalSearchParams,
 } from 'expo-router';
-import { useCallback, useState } from 'react';
+import type { Href } from 'expo-router';
+import {
+  useCallback,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -17,58 +21,98 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GroupCard } from '../../../components/GroupCard';
+import { PublicGroupCard } from '../../../components/PublicGroupCard';
 import { useAuth } from '../../../contexts/auth-context';
 import { getErrorMessage } from '../../../lib/api';
-import { getGroups } from '../../../services/group-service';
+import {
+  getFollowedPublicGroups,
+  getGroups,
+} from '../../../services/group-service';
 import { colors } from '../../../theme/colors';
-import type { RestaurantGroup } from '../../../types/group';
+import type {
+  PublicGroupSummary,
+  RestaurantGroup,
+} from '../../../types/group';
 
 type AddMode = 'SEARCH' | 'MANUAL';
 
 export default function GroupsScreen() {
-  const { addMode: addModeParam } = useLocalSearchParams<{
-    addMode?: string;
-  }>();
+  const { addMode: addModeParam } =
+    useLocalSearchParams<{
+      addMode?: string;
+    }>();
   const { accessToken } = useAuth();
 
-  const [groups, setGroups] = useState<RestaurantGroup[]>([]);
+  const [groups, setGroups] =
+    useState<RestaurantGroup[]>([]);
+  const [followedGroups, setFollowedGroups] =
+    useState<PublicGroupSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] =
+    useState<string | null>(null);
 
   const addMode: AddMode | null =
-    addModeParam === 'SEARCH' || addModeParam === 'MANUAL'
+    addModeParam === 'SEARCH'
+    || addModeParam === 'MANUAL'
       ? addModeParam
       : null;
   const selectingGroup = addMode !== null;
 
-  const load = useCallback(async (isRefresh = false) => {
-    if (!accessToken) {
-      setLoading(false);
-      return;
-    }
+  const load = useCallback(
+    async (isRefresh = false) => {
+      if (!accessToken) {
+        setLoading(false);
+        return;
+      }
 
-    try {
-      setError(null);
-      isRefresh ? setRefreshing(true) : setLoading(true);
-      setGroups(await getGroups(accessToken));
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [accessToken]);
+      try {
+        setError(null);
 
-  useFocusEffect(useCallback(() => {
-    void load();
-  }, [load]));
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+
+        if (selectingGroup) {
+          setGroups(await getGroups(accessToken));
+          setFollowedGroups([]);
+        } else {
+          const [memberGroups, following] =
+            await Promise.all([
+              getGroups(accessToken),
+              getFollowedPublicGroups(accessToken),
+            ]);
+
+          setGroups(memberGroups);
+          setFollowedGroups(following);
+        }
+      } catch (requestError) {
+        setError(getErrorMessage(requestError));
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [accessToken, selectingGroup],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   function openGroup(groupId: string): void {
     if (addMode) {
       router.push({
-        pathname: '/groups/[groupId]/restaurants/create',
-        params: { groupId, mode: addMode },
+        pathname:
+          '/groups/[groupId]/restaurants/create',
+        params: {
+          groupId,
+          mode: addMode,
+        },
       });
       return;
     }
@@ -79,14 +123,28 @@ export default function GroupsScreen() {
     });
   }
 
+  function openPublicGroup(groupId: string): void {
+    router.push(
+      `/groups/public/${groupId}` as Href,
+    );
+  }
+
+  const hasAnyGroup =
+    groups.length > 0 || followedGroups.length > 0;
+
   return (
-    <SafeAreaView edges={['top', 'right', 'left']} style={styles.safeArea}>
+    <SafeAreaView
+      edges={['top', 'right', 'left']}
+      style={styles.safeArea}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
+            onRefresh={() => {
+              void load(true);
+            }}
             refreshing={refreshing}
-            onRefresh={() => void load(true)}
             tintColor={colors.primary}
           />
         }
@@ -96,16 +154,26 @@ export default function GroupsScreen() {
           <View style={styles.selectionHeader}>
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.back()}
+              onPress={() => {
+                router.back();
+              }}
               style={styles.iconButton}
             >
               <SymbolView
-                name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
+                name={{
+                  ios: 'chevron.left',
+                  android: 'arrow_back',
+                  web: 'arrow_back',
+                }}
                 size={20}
                 tintColor={colors.text}
               />
             </Pressable>
-            <Text style={styles.selectionTitle}>Elegir grupo</Text>
+
+            <Text style={styles.selectionTitle}>
+              Elegir grupo
+            </Text>
+
             <View style={styles.iconButton} />
           </View>
         ) : null}
@@ -113,7 +181,9 @@ export default function GroupsScreen() {
         <View style={styles.header}>
           <View style={styles.headerText}>
             <Text style={styles.title}>
-              {selectingGroup ? '¿Dónde lo guardamos?' : 'Grupos'}
+              {selectingGroup
+                ? '¿Dónde lo guardamos?'
+                : 'Grupos'}
             </Text>
             <Text style={styles.subtitle}>
               {selectingGroup
@@ -126,11 +196,17 @@ export default function GroupsScreen() {
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.push('/groups/create')}
+            onPress={() => {
+              router.push('/groups/create');
+            }}
             style={styles.createButton}
           >
             <SymbolView
-              name={{ ios: 'plus', android: 'add', web: 'add' }}
+              name={{
+                ios: 'plus',
+                android: 'add',
+                web: 'add',
+              }}
               size={23}
               tintColor={colors.white}
             />
@@ -139,91 +215,231 @@ export default function GroupsScreen() {
 
         {!selectingGroup ? (
           <View style={styles.tabs}>
-            <View style={[styles.tab, styles.tabActive]}>
-              <Text style={styles.tabTextActive}>Mis grupos</Text>
+            <View
+              style={[
+                styles.tab,
+                styles.tabActive,
+              ]}
+            >
+              <Text style={styles.tabTextActive}>
+                Mis grupos
+              </Text>
             </View>
+
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.push('/groups/explore')}
+              onPress={() => {
+                router.push('/groups/explore');
+              }}
               style={styles.tab}
             >
-              <Text style={styles.tabText}>Explorar</Text>
+              <Text style={styles.tabText}>
+                Explorar
+              </Text>
             </Pressable>
           </View>
         ) : (
           <View style={styles.modeBadge}>
             <SymbolView
               name={{
-                ios: addMode === 'MANUAL' ? 'square.and.pencil' : 'magnifyingglass',
-                android: addMode === 'MANUAL' ? 'edit' : 'search',
-                web: addMode === 'MANUAL' ? 'edit' : 'search',
+                ios: addMode === 'MANUAL'
+                  ? 'square.and.pencil'
+                  : 'magnifyingglass',
+                android: addMode === 'MANUAL'
+                  ? 'edit'
+                  : 'search',
+                web: addMode === 'MANUAL'
+                  ? 'edit'
+                  : 'search',
               }}
               size={16}
               tintColor={colors.primary}
             />
             <Text style={styles.modeText}>
-              {addMode === 'MANUAL' ? 'Añadir manualmente' : 'Buscar restaurante'}
+              {addMode === 'MANUAL'
+                ? 'Añadir manualmente'
+                : 'Buscar restaurante'}
             </Text>
           </View>
         )}
 
-        {!selectingGroup ? (
-          <View style={styles.summary}>
-            <Text style={styles.summaryValue}>{groups.length}</Text>
-            <Text style={styles.summaryLabel}>
-              {groups.length === 1 ? 'grupo activo' : 'grupos activos'}
-            </Text>
-          </View>
-        ) : null}
-
         {loading ? (
           <View style={styles.centered}>
-            <ActivityIndicator color={colors.primary} size="large" />
+            <ActivityIndicator
+              color={colors.primary}
+              size="large"
+            />
           </View>
         ) : null}
 
         {!loading && error ? (
           <View style={styles.messageCard}>
-            <Text style={styles.messageTitle}>No hemos podido cargar tus grupos</Text>
-            <Text style={styles.messageText}>{error}</Text>
-            <Pressable onPress={() => void load()}>
-              <Text style={styles.retryText}>Volver a intentar</Text>
+            <Text style={styles.messageTitle}>
+              No hemos podido cargar tus grupos
+            </Text>
+            <Text style={styles.messageText}>
+              {error}
+            </Text>
+            <Pressable
+              onPress={() => {
+                void load();
+              }}
+            >
+              <Text style={styles.retryText}>
+                Volver a intentar
+              </Text>
             </Pressable>
           </View>
         ) : null}
 
-        {!loading && !error && groups.length === 0 ? (
+        {!loading
+        && !error
+        && selectingGroup
+        && groups.length === 0 ? (
           <View style={styles.emptyCard}>
             <View style={styles.emptyIcon}>
               <SymbolView
-                name={{ ios: 'person.2.fill', android: 'group', web: 'group' }}
+                name={{
+                  ios: 'person.2.fill',
+                  android: 'group',
+                  web: 'group',
+                }}
                 size={30}
                 tintColor={colors.primary}
               />
             </View>
-            <Text style={styles.emptyTitle}>Crea tu primer grupo</Text>
+            <Text style={styles.emptyTitle}>
+              Necesitas un grupo propio
+            </Text>
             <Text style={styles.emptyText}>
-              Organiza restaurantes con tus amigos o crea una lista pública para compartirla.
+              Los grupos que sigues son de consulta. Crea uno para guardar restaurantes.
             </Text>
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.push('/groups/create')}
+              onPress={() => {
+                router.push('/groups/create');
+              }}
               style={styles.primaryButton}
             >
-              <Text style={styles.primaryButtonText}>Crear grupo</Text>
+              <Text style={styles.primaryButtonText}>
+                Crear grupo
+              </Text>
             </Pressable>
           </View>
         ) : null}
 
-        {!loading && !error && groups.length > 0 ? (
-          <View style={styles.list}>
-            {groups.map(group => (
-              <GroupCard
-                key={group.id}
-                group={group}
-                onPress={() => openGroup(group.id)}
+        {!loading
+        && !error
+        && !selectingGroup
+        && !hasAnyGroup ? (
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIcon}>
+              <SymbolView
+                name={{
+                  ios: 'person.2.fill',
+                  android: 'group',
+                  web: 'group',
+                }}
+                size={30}
+                tintColor={colors.primary}
               />
-            ))}
+            </View>
+            <Text style={styles.emptyTitle}>
+              Empieza tu colección de grupos
+            </Text>
+            <Text style={styles.emptyText}>
+              Crea un grupo con tus amigos o sigue listas públicas que te inspiren.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                router.push('/groups/create');
+              }}
+              style={styles.primaryButton}
+            >
+              <Text style={styles.primaryButtonText}>
+                Crear grupo
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                router.push('/groups/explore');
+              }}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryButtonText}>
+                Explorar grupos públicos
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {!loading
+        && !error
+        && groups.length > 0 ? (
+          <View style={styles.section}>
+            {!selectingGroup ? (
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  Tus grupos
+                </Text>
+                <Text style={styles.sectionCount}>
+                  {groups.length}
+                </Text>
+              </View>
+            ) : null}
+
+            <View style={styles.list}>
+              {groups.map(group => (
+                <GroupCard
+                  group={group}
+                  key={group.id}
+                  onPress={() => {
+                    openGroup(group.id);
+                  }}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {!loading
+        && !error
+        && !selectingGroup
+        && followedGroups.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Text style={styles.sectionTitle}>
+                  Siguiendo
+                </Text>
+                <View style={styles.followingBadge}>
+                  <Text style={styles.followingBadgeText}>
+                    Públicos
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.sectionCount}>
+                {followedGroups.length}
+              </Text>
+            </View>
+
+            <Text style={styles.sectionDescription}>
+              Listas públicas que has guardado para volver a consultarlas.
+            </Text>
+
+            <View style={styles.list}>
+              {followedGroups.map(group => (
+                <PublicGroupCard
+                  group={group}
+                  key={group.id}
+                  onPress={() => {
+                    openPublicGroup(group.id);
+                  }}
+                />
+              ))}
+            </View>
           </View>
         ) : null}
       </ScrollView>
@@ -232,7 +448,10 @@ export default function GroupsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   content: {
     flexGrow: 1,
     gap: 20,
@@ -253,11 +472,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 19,
   },
-  selectionTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  headerText: { flex: 1, gap: 5 },
-  title: { color: colors.text, fontSize: 27, fontWeight: '900' },
-  subtitle: { color: colors.muted, fontSize: 13, lineHeight: 19 },
+  selectionTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  headerText: {
+    flex: 1,
+    gap: 5,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 27,
+    fontWeight: '900',
+  },
+  subtitle: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
   createButton: {
     width: 44,
     height: 44,
@@ -273,10 +511,25 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#F1E9E4',
   },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 13 },
-  tabActive: { backgroundColor: colors.primary },
-  tabText: { color: colors.muted, fontSize: 12, fontWeight: '800' },
-  tabTextActive: { color: colors.white, fontSize: 12, fontWeight: '900' },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+  },
+  tabActive: {
+    backgroundColor: colors.primary,
+  },
+  tabText: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  tabTextActive: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '900',
+  },
   modeBadge: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
@@ -287,12 +540,57 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: '#FBE9E2',
   },
-  modeText: { color: colors.primary, fontSize: 11, fontWeight: '900' },
-  summary: { flexDirection: 'row', alignItems: 'baseline', gap: 7 },
-  summaryValue: { color: colors.primary, fontSize: 25, fontWeight: '900' },
-  summaryLabel: { color: colors.muted, fontSize: 13 },
-  centered: { alignItems: 'center', paddingVertical: 80 },
-  list: { gap: 13 },
+  modeText: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  centered: {
+    alignItems: 'center',
+    paddingVertical: 80,
+  },
+  section: {
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  sectionCount: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  sectionDescription: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  followingBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#E8EEDD',
+  },
+  followingBadgeText: {
+    color: '#607349',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  list: {
+    gap: 13,
+  },
   emptyCard: {
     alignItems: 'center',
     gap: 14,
@@ -310,7 +608,12 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: '#FBE9E2',
   },
-  emptyTitle: { color: colors.text, fontSize: 19, fontWeight: '900' },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 19,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
   emptyText: {
     color: colors.muted,
     fontSize: 13,
@@ -325,7 +628,26 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: colors.primary,
   },
-  primaryButtonText: { color: colors.white, fontSize: 14, fontWeight: '800' },
+  primaryButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  secondaryButton: {
+    minHeight: 46,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 23,
+    backgroundColor: colors.inputBackground,
+  },
+  secondaryButtonText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '900',
+  },
   messageCard: {
     gap: 8,
     padding: 20,
@@ -334,7 +656,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: colors.surface,
   },
-  messageTitle: { color: colors.text, fontSize: 16, fontWeight: '900' },
-  messageText: { color: colors.muted, fontSize: 12, lineHeight: 18 },
-  retryText: { color: colors.primary, fontSize: 12, fontWeight: '900' },
+  messageTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  messageText: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  retryText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '900',
+  },
 });
