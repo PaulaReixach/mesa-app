@@ -180,7 +180,7 @@ public class GroupCollaborationService {
                     new GroupMember(
                             groupId,
                             request.getUserId(),
-                            GroupRole.MEMBER
+                            GroupRole.CONTRIBUTOR
                     )
             );
         }
