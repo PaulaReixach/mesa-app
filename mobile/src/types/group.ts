@@ -59,3 +59,16 @@ export type PublicGroupDetail = {
   group: PublicGroupSummary;
   restaurants: GroupRestaurant[];
 };
+
+export type CopyPublicRestaurantsPayload = {
+  destinationGroupId: string;
+  groupRestaurantIds: string[];
+};
+
+export type CopyPublicRestaurantsResult = {
+  destinationGroupId: string;
+  copiedCount: number;
+  skippedCount: number;
+  copiedGroupRestaurantIds: string[];
+  skippedSourceGroupRestaurantIds: string[];
+};
