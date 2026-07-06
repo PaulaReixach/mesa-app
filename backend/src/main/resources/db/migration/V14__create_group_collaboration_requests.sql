@@ -6,7 +6,7 @@ ALTER TABLE group_members
 
 ALTER TABLE group_members
     ADD CONSTRAINT ck_group_members_role
-        CHECK (role IN ('OWNER', 'MEMBER', 'COLLABORATOR'));
+        CHECK (role IN ('OWNER', 'MEMBER', 'CONTRIBUTOR'));
 
 CREATE TABLE group_collaboration_requests (
     id UUID PRIMARY KEY,
@@ -16,26 +16,9 @@ CREATE TABLE group_collaboration_requests (
     status VARCHAR(20) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
-
-    CONSTRAINT fk_group_collaboration_requests_group
-        FOREIGN KEY (group_id)
-        REFERENCES restaurant_groups(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT fk_group_collaboration_requests_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT ck_group_collaboration_requests_status
-        CHECK (
-            status IN (
-                'PENDING',
-                'ACCEPTED',
-                'REJECTED',
-                'CANCELLED'
-            )
-        )
+    CONSTRAINT fk_group_collaboration_requests_group FOREIGN KEY (group_id) REFERENCES restaurant_groups(id) ON DELETE CASCADE,
+    CONSTRAINT fk_group_collaboration_requests_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT ck_group_collaboration_requests_status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'))
 );
 
 CREATE UNIQUE INDEX uk_group_collaboration_requests_pending
