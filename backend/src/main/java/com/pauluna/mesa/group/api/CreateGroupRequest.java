@@ -34,6 +34,8 @@ public record CreateGroupRequest(
         String city,
 
         @NotNull(message = "La privacidad del grupo es obligatoria.")
-        GroupPrivacy privacy
+        GroupPrivacy privacy,
+
+        Boolean acceptingCollaborators
 ) {
 }
