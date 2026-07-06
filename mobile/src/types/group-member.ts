@@ -1,4 +1,7 @@
-export type GroupRole = 'OWNER' | 'MEMBER';
+export type GroupRole =
+  | 'OWNER'
+  | 'MEMBER'
+  | 'CONTRIBUTOR';
 
 export type GroupMember = {
   id: string;
