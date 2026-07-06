@@ -1,5 +1,6 @@
 package com.pauluna.mesa.group.infrastructure;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,5 +26,11 @@ public interface GroupFollowerRepository
     long deleteByGroupIdAndUserId(
             UUID groupId,
             UUID userId
+    );
+
+    long deleteAllByUserId(UUID userId);
+
+    long deleteAllByGroupIdIn(
+            Collection<UUID> groupIds
     );
 }
