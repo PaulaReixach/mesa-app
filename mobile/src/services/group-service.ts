@@ -7,6 +7,8 @@ import {
 import {
   CreateGroupPayload,
   GroupImageUploadFile,
+  PublicGroupDetail,
+  PublicGroupSummary,
   RestaurantGroup,
   UpdateGroupPayload,
 } from '../types/group';
@@ -16,9 +18,7 @@ export function getGroups(
 ): Promise<RestaurantGroup[]> {
   return apiRequest<RestaurantGroup[]>(
     '/groups',
-    {
-      method: 'GET',
-    },
+    { method: 'GET' },
     accessToken,
   );
 }
@@ -29,9 +29,7 @@ export function getGroup(
 ): Promise<RestaurantGroup> {
   return apiRequest<RestaurantGroup>(
     `/groups/${groupId}`,
-    {
-      method: 'GET',
-    },
+    { method: 'GET' },
     accessToken,
   );
 }
@@ -65,13 +63,71 @@ export function updateGroup(
   );
 }
 
+export function getPublicGroups(
+  accessToken: string,
+  query = '',
+): Promise<PublicGroupSummary[]> {
+  const normalizedQuery = query.trim();
+  const suffix = normalizedQuery
+    ? `?query=${encodeURIComponent(normalizedQuery)}`
+    : '';
+
+  return apiRequest<PublicGroupSummary[]>(
+    `/groups/public${suffix}`,
+    { method: 'GET' },
+    accessToken,
+  );
+}
+
+export function getFollowedPublicGroups(
+  accessToken: string,
+): Promise<PublicGroupSummary[]> {
+  return apiRequest<PublicGroupSummary[]>(
+    '/groups/public/following',
+    { method: 'GET' },
+    accessToken,
+  );
+}
+
+export function getPublicGroup(
+  groupId: string,
+  accessToken: string,
+): Promise<PublicGroupDetail> {
+  return apiRequest<PublicGroupDetail>(
+    `/groups/public/${groupId}`,
+    { method: 'GET' },
+    accessToken,
+  );
+}
+
+export function followPublicGroup(
+  groupId: string,
+  accessToken: string,
+): Promise<PublicGroupSummary> {
+  return apiRequest<PublicGroupSummary>(
+    `/groups/public/${groupId}/followers`,
+    { method: 'POST' },
+    accessToken,
+  );
+}
+
+export function unfollowPublicGroup(
+  groupId: string,
+  accessToken: string,
+): Promise<PublicGroupSummary> {
+  return apiRequest<PublicGroupSummary>(
+    `/groups/public/${groupId}/followers`,
+    { method: 'DELETE' },
+    accessToken,
+  );
+}
+
 export function uploadGroupImage(
   groupId: string,
   file: GroupImageUploadFile,
   accessToken: string,
 ): Promise<RestaurantGroup> {
-  const groupImageFile =
-    new File(file.uri);
+  const groupImageFile = new File(file.uri);
 
   if (!groupImageFile.exists) {
     throw new Error(
@@ -80,11 +136,7 @@ export function uploadGroupImage(
   }
 
   const formData = new FormData();
-
-  formData.append(
-    'file',
-    groupImageFile,
-  );
+  formData.append('file', groupImageFile);
 
   return apiMultipartRequest<RestaurantGroup>(
     `/groups/${groupId}/image`,
@@ -100,9 +152,7 @@ export function deleteGroupImage(
 ): Promise<RestaurantGroup> {
   return apiRequest<RestaurantGroup>(
     `/groups/${groupId}/image`,
-    {
-      method: 'DELETE',
-    },
+    { method: 'DELETE' },
     accessToken,
   );
 }

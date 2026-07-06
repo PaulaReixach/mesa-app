@@ -25,6 +25,8 @@ public interface GroupMemberRepository
             UUID groupId
     );
 
+    long countByGroupId(UUID groupId);
+
     long countByUserId(
             UUID userId
     );

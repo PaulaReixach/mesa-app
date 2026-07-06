@@ -1,6 +1,6 @@
-export type GroupPrivacy =
-  | 'PRIVATE'
-  | 'PUBLIC';
+import type { GroupRestaurant } from './restaurant';
+
+export type GroupPrivacy = 'PRIVATE' | 'PUBLIC';
 
 export type RestaurantGroup = {
   id: string;
@@ -31,4 +31,31 @@ export type UpdateGroupPayload = {
 
 export type GroupImageUploadFile = {
   uri: string;
+};
+
+export type PublicGroupOwner = {
+  id: string;
+  name: string;
+  username: string;
+  avatarUrl: string | null;
+};
+
+export type PublicGroupSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  city: string | null;
+  owner: PublicGroupOwner;
+  restaurantCount: number;
+  collaboratorCount: number;
+  followerCount: number;
+  following: boolean;
+  ownedByCurrentUser: boolean;
+  updatedAt: string;
+};
+
+export type PublicGroupDetail = {
+  group: PublicGroupSummary;
+  restaurants: GroupRestaurant[];
 };

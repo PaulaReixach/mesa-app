@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.pauluna.mesa.group.domain.RestaurantGroup;
+import com.pauluna.mesa.group.infrastructure.GroupFollowerRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
@@ -26,45 +27,32 @@ import com.pauluna.mesa.user.infrastructure.UserRepository;
 public class UserAccountService {
 
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
-
-    private final RestaurantGroupRepository
-            restaurantGroupRepository;
-
-    private final GroupMemberRepository
-            groupMemberRepository;
-
-    private final GroupRestaurantRepository
-            groupRestaurantRepository;
-
-    private final RestaurantRatingRepository
-            restaurantRatingRepository;
-
-    private final UserAvatarRepository
-            userAvatarRepository;
+    private final RestaurantGroupRepository restaurantGroupRepository;
+    private final GroupMemberRepository groupMemberRepository;
+    private final GroupFollowerRepository groupFollowerRepository;
+    private final GroupRestaurantRepository groupRestaurantRepository;
+    private final RestaurantRatingRepository restaurantRatingRepository;
+    private final UserAvatarRepository userAvatarRepository;
 
     public UserAccountService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             RestaurantGroupRepository restaurantGroupRepository,
             GroupMemberRepository groupMemberRepository,
+            GroupFollowerRepository groupFollowerRepository,
             GroupRestaurantRepository groupRestaurantRepository,
             RestaurantRatingRepository restaurantRatingRepository,
             UserAvatarRepository userAvatarRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.restaurantGroupRepository =
-                restaurantGroupRepository;
-        this.groupMemberRepository =
-                groupMemberRepository;
-        this.groupRestaurantRepository =
-                groupRestaurantRepository;
-        this.restaurantRatingRepository =
-                restaurantRatingRepository;
-        this.userAvatarRepository =
-                userAvatarRepository;
+        this.restaurantGroupRepository = restaurantGroupRepository;
+        this.groupMemberRepository = groupMemberRepository;
+        this.groupFollowerRepository = groupFollowerRepository;
+        this.groupRestaurantRepository = groupRestaurantRepository;
+        this.restaurantRatingRepository = restaurantRatingRepository;
+        this.userAvatarRepository = userAvatarRepository;
     }
 
     public void changePassword(
@@ -113,6 +101,23 @@ public class UserAccountService {
         reassignRestaurantsProposedByUser(
                 userId
         );
+
+        List<UUID> ownedGroupIds =
+                restaurantGroupRepository
+                        .findAllByOwnerUserId(userId)
+                        .stream()
+                        .map(RestaurantGroup::getId)
+                        .toList();
+
+        if (!ownedGroupIds.isEmpty()) {
+            groupFollowerRepository
+                    .deleteAllByGroupIdIn(
+                            ownedGroupIds
+                    );
+        }
+
+        groupFollowerRepository
+                .deleteAllByUserId(userId);
 
         restaurantGroupRepository
                 .deleteAllByOwnerUserId(userId);

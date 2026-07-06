@@ -4,6 +4,7 @@ import {
   useFocusEffect,
   useLocalSearchParams,
 } from 'expo-router';
+import type { Href } from 'expo-router';
 import {
   useCallback,
   useState,
@@ -20,11 +21,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GroupCard } from '../../../components/GroupCard';
+import { PublicGroupCard } from '../../../components/PublicGroupCard';
 import { useAuth } from '../../../contexts/auth-context';
 import { getErrorMessage } from '../../../lib/api';
-import { getGroups } from '../../../services/group-service';
+import {
+  getFollowedPublicGroups,
+  getGroups,
+} from '../../../services/group-service';
 import { colors } from '../../../theme/colors';
-import type { RestaurantGroup } from '../../../types/group';
+import type {
+  PublicGroupSummary,
+  RestaurantGroup,
+} from '../../../types/group';
 
 type AddMode = 'SEARCH' | 'MANUAL';
 
@@ -33,16 +41,15 @@ export default function GroupsScreen() {
     useLocalSearchParams<{
       addMode?: string;
     }>();
-
   const { accessToken } = useAuth();
 
   const [groups, setGroups] =
     useState<RestaurantGroup[]>([]);
-  const [isLoading, setIsLoading] =
-    useState(true);
-  const [isRefreshing, setIsRefreshing] =
-    useState(false);
-  const [loadError, setLoadError] =
+  const [followedGroups, setFollowedGroups] =
+    useState<PublicGroupSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] =
     useState<string | null>(null);
 
   const addMode: AddMode | null =
@@ -50,43 +57,51 @@ export default function GroupsScreen() {
     || addModeParam === 'MANUAL'
       ? addModeParam
       : null;
-
   const selectingGroup = addMode !== null;
 
-  const loadGroups = useCallback(
-    async (refreshing = false) => {
+  const load = useCallback(
+    async (isRefresh = false) => {
       if (!accessToken) {
-        setIsLoading(false);
+        setLoading(false);
         return;
       }
 
       try {
-        setLoadError(null);
+        setError(null);
 
-        if (refreshing) {
-          setIsRefreshing(true);
+        if (isRefresh) {
+          setRefreshing(true);
         } else {
-          setIsLoading(true);
+          setLoading(true);
         }
 
-        const response =
-          await getGroups(accessToken);
+        if (selectingGroup) {
+          setGroups(await getGroups(accessToken));
+          setFollowedGroups([]);
+        } else {
+          const [memberGroups, following] =
+            await Promise.all([
+              getGroups(accessToken),
+              getFollowedPublicGroups(accessToken),
+            ]);
 
-        setGroups(response);
-      } catch (error) {
-        setLoadError(getErrorMessage(error));
+          setGroups(memberGroups);
+          setFollowedGroups(following);
+        }
+      } catch (requestError) {
+        setError(getErrorMessage(requestError));
       } finally {
-        setIsLoading(false);
-        setIsRefreshing(false);
+        setLoading(false);
+        setRefreshing(false);
       }
     },
-    [accessToken],
+    [accessToken, selectingGroup],
   );
 
   useFocusEffect(
     useCallback(() => {
-      void loadGroups();
-    }, [loadGroups]),
+      void load();
+    }, [load]),
   );
 
   function openGroup(groupId: string): void {
@@ -108,9 +123,14 @@ export default function GroupsScreen() {
     });
   }
 
-  function openCreateGroup(): void {
-    router.push('/groups/create');
+  function openPublicGroup(groupId: string): void {
+    router.push(
+      `/groups/public/${groupId}` as Href,
+    );
   }
+
+  const hasAnyGroup =
+    groups.length > 0 || followedGroups.length > 0;
 
   return (
     <SafeAreaView
@@ -122,29 +142,22 @@ export default function GroupsScreen() {
         refreshControl={
           <RefreshControl
             onRefresh={() => {
-              void loadGroups(true);
+              void load(true);
             }}
-            refreshing={isRefreshing}
+            refreshing={refreshing}
             tintColor={colors.primary}
           />
         }
         showsVerticalScrollIndicator={false}
       >
         {selectingGroup ? (
-          <View style={styles.selectionNavigation}>
+          <View style={styles.selectionHeader}>
             <Pressable
-              accessibilityLabel="Volver"
               accessibilityRole="button"
-              hitSlop={8}
               onPress={() => {
                 router.back();
               }}
-              style={({ pressed }) => [
-                styles.backButton,
-                pressed
-                  ? styles.backButtonPressed
-                  : null,
-              ]}
+              style={styles.iconButton}
             >
               <SymbolView
                 name={{
@@ -157,11 +170,11 @@ export default function GroupsScreen() {
               />
             </Pressable>
 
-            <Text style={styles.selectionNavigationTitle}>
+            <Text style={styles.selectionTitle}>
               Elegir grupo
             </Text>
 
-            <View style={styles.navigationSpacer} />
+            <View style={styles.iconButton} />
           </View>
         ) : null}
 
@@ -172,26 +185,21 @@ export default function GroupsScreen() {
                 ? '¿Dónde lo guardamos?'
                 : 'Grupos'}
             </Text>
-
             <Text style={styles.subtitle}>
               {selectingGroup
                 ? addMode === 'MANUAL'
                   ? 'Selecciona el grupo donde quieres crear el restaurante.'
                   : 'Selecciona el grupo donde quieres añadir el restaurante.'
-                : 'Guarda y organiza restaurantes con tu gente.'}
+                : 'Guarda, comparte y descubre restaurantes.'}
             </Text>
           </View>
 
           <Pressable
-            accessibilityLabel="Crear grupo"
             accessibilityRole="button"
-            onPress={openCreateGroup}
-            style={({ pressed }) => [
-              styles.createButton,
-              pressed
-                ? styles.createButtonPressed
-                : null,
-            ]}
+            onPress={() => {
+              router.push('/groups/create');
+            }}
+            style={styles.createButton}
           >
             <SymbolView
               name={{
@@ -205,48 +213,58 @@ export default function GroupsScreen() {
           </Pressable>
         </View>
 
-        {selectingGroup ? (
-          <View style={styles.selectionHint}>
-            <View style={styles.selectionHintIcon}>
-              <SymbolView
-                name={{
-                  ios: addMode === 'MANUAL'
-                    ? 'square.and.pencil'
-                    : 'magnifyingglass',
-                  android: addMode === 'MANUAL'
-                    ? 'edit'
-                    : 'search',
-                  web: addMode === 'MANUAL'
-                    ? 'edit'
-                    : 'search',
-                }}
-                size={18}
-                tintColor={colors.primary}
-              />
+        {!selectingGroup ? (
+          <View style={styles.tabs}>
+            <View
+              style={[
+                styles.tab,
+                styles.tabActive,
+              ]}
+            >
+              <Text style={styles.tabTextActive}>
+                Mis grupos
+              </Text>
             </View>
 
-            <Text style={styles.selectionHintText}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                router.push('/groups/explore');
+              }}
+              style={styles.tab}
+            >
+              <Text style={styles.tabText}>
+                Explorar
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.modeBadge}>
+            <SymbolView
+              name={{
+                ios: addMode === 'MANUAL'
+                  ? 'square.and.pencil'
+                  : 'magnifyingglass',
+                android: addMode === 'MANUAL'
+                  ? 'edit'
+                  : 'search',
+                web: addMode === 'MANUAL'
+                  ? 'edit'
+                  : 'search',
+              }}
+              size={16}
+              tintColor={colors.primary}
+            />
+            <Text style={styles.modeText}>
               {addMode === 'MANUAL'
                 ? 'Añadir manualmente'
                 : 'Buscar restaurante'}
             </Text>
           </View>
-        ) : (
-          <View style={styles.summary}>
-            <Text style={styles.summaryValue}>
-              {groups.length}
-            </Text>
-
-            <Text style={styles.summaryLabel}>
-              {groups.length === 1
-                ? 'grupo activo'
-                : 'grupos activos'}
-            </Text>
-          </View>
         )}
 
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
+        {loading ? (
+          <View style={styles.centered}>
             <ActivityIndicator
               color={colors.primary}
               size="large"
@@ -254,20 +272,17 @@ export default function GroupsScreen() {
           </View>
         ) : null}
 
-        {!isLoading && loadError ? (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorTitle}>
+        {!loading && error ? (
+          <View style={styles.messageCard}>
+            <Text style={styles.messageTitle}>
               No hemos podido cargar tus grupos
             </Text>
-
-            <Text style={styles.errorText}>
-              {loadError}
+            <Text style={styles.messageText}>
+              {error}
             </Text>
-
             <Pressable
-              accessibilityRole="button"
               onPress={() => {
-                void loadGroups();
+                void load();
               }}
             >
               <Text style={styles.retryText}>
@@ -277,8 +292,9 @@ export default function GroupsScreen() {
           </View>
         ) : null}
 
-        {!isLoading
-        && !loadError
+        {!loading
+        && !error
+        && selectingGroup
         && groups.length === 0 ? (
           <View style={styles.emptyCard}>
             <View style={styles.emptyIcon}>
@@ -292,45 +308,138 @@ export default function GroupsScreen() {
                 tintColor={colors.primary}
               />
             </View>
-
             <Text style={styles.emptyTitle}>
-              Crea tu primer grupo
+              Necesitas un grupo propio
             </Text>
-
             <Text style={styles.emptyText}>
-              Necesitas un grupo para guardar y organizar restaurantes con otras personas.
+              Los grupos que sigues son de consulta. Crea uno para guardar restaurantes.
             </Text>
-
             <Pressable
               accessibilityRole="button"
-              onPress={openCreateGroup}
-              style={({ pressed }) => [
-                styles.emptyButton,
-                pressed
-                  ? styles.emptyButtonPressed
-                  : null,
-              ]}
+              onPress={() => {
+                router.push('/groups/create');
+              }}
+              style={styles.primaryButton}
             >
-              <Text style={styles.emptyButtonText}>
+              <Text style={styles.primaryButtonText}>
                 Crear grupo
               </Text>
             </Pressable>
           </View>
         ) : null}
 
-        {!isLoading
-        && !loadError
-        && groups.length > 0 ? (
-          <View style={styles.groups}>
-            {groups.map(group => (
-              <GroupCard
-                group={group}
-                key={group.id}
-                onPress={() => {
-                  openGroup(group.id);
+        {!loading
+        && !error
+        && !selectingGroup
+        && !hasAnyGroup ? (
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIcon}>
+              <SymbolView
+                name={{
+                  ios: 'person.2.fill',
+                  android: 'group',
+                  web: 'group',
                 }}
+                size={30}
+                tintColor={colors.primary}
               />
-            ))}
+            </View>
+            <Text style={styles.emptyTitle}>
+              Empieza tu colección de grupos
+            </Text>
+            <Text style={styles.emptyText}>
+              Crea un grupo con tus amigos o sigue listas públicas que te inspiren.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                router.push('/groups/create');
+              }}
+              style={styles.primaryButton}
+            >
+              <Text style={styles.primaryButtonText}>
+                Crear grupo
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                router.push('/groups/explore');
+              }}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryButtonText}>
+                Explorar grupos públicos
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {!loading
+        && !error
+        && groups.length > 0 ? (
+          <View style={styles.section}>
+            {!selectingGroup ? (
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  Tus grupos
+                </Text>
+                <Text style={styles.sectionCount}>
+                  {groups.length}
+                </Text>
+              </View>
+            ) : null}
+
+            <View style={styles.list}>
+              {groups.map(group => (
+                <GroupCard
+                  group={group}
+                  key={group.id}
+                  onPress={() => {
+                    openGroup(group.id);
+                  }}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {!loading
+        && !error
+        && !selectingGroup
+        && followedGroups.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Text style={styles.sectionTitle}>
+                  Siguiendo
+                </Text>
+                <View style={styles.followingBadge}>
+                  <Text style={styles.followingBadgeText}>
+                    Públicos
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.sectionCount}>
+                {followedGroups.length}
+              </Text>
+            </View>
+
+            <Text style={styles.sectionDescription}>
+              Listas públicas que has guardado para volver a consultarlas.
+            </Text>
+
+            <View style={styles.list}>
+              {followedGroups.map(group => (
+                <PublicGroupCard
+                  group={group}
+                  key={group.id}
+                  onPress={() => {
+                    openPublicGroup(group.id);
+                  }}
+                />
+              ))}
+            </View>
           </View>
         ) : null}
       </ScrollView>
@@ -343,68 +452,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-
   content: {
     flexGrow: 1,
-    gap: 22,
+    gap: 20,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 34,
   },
-
-  selectionNavigation: {
+  selectionHeader: {
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-
-  backButton: {
+  iconButton: {
     width: 38,
     height: 38,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 19,
   },
-
-  backButtonPressed: {
-    backgroundColor: '#F4E9E3',
-  },
-
-  selectionNavigationTitle: {
+  selectionTitle: {
     color: colors.text,
     fontSize: 15,
     fontWeight: '900',
   },
-
-  navigationSpacer: {
-    width: 38,
-  },
-
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
   },
-
   headerText: {
     flex: 1,
     gap: 5,
   },
-
   title: {
     color: colors.text,
     fontSize: 27,
     fontWeight: '900',
-    letterSpacing: -0.45,
   },
-
   subtitle: {
     color: colors.muted,
     fontSize: 13,
     lineHeight: 19,
   },
-
   createButton: {
     width: 44,
     height: 44,
@@ -413,68 +504,93 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: colors.primary,
   },
-
-  createButtonPressed: {
-    backgroundColor: colors.primaryPressed,
-    transform: [
-      {
-        scale: 0.96,
-      },
-    ],
+  tabs: {
+    minHeight: 42,
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: 16,
+    backgroundColor: '#F1E9E4',
   },
-
-  selectionHint: {
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+  },
+  tabActive: {
+    backgroundColor: colors.primary,
+  },
+  tabText: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  tabTextActive: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  modeBadge: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 7,
     paddingHorizontal: 11,
     paddingVertical: 7,
     borderRadius: 999,
     backgroundColor: '#FBE9E2',
   },
-
-  selectionHintIcon: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-  },
-
-  selectionHintText: {
+  modeText: {
     color: colors.primary,
     fontSize: 11,
     fontWeight: '900',
   },
-
-  summary: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 7,
-  },
-
-  summaryValue: {
-    color: colors.primary,
-    fontSize: 25,
-    fontWeight: '900',
-  },
-
-  summaryLabel: {
-    color: colors.muted,
-    fontSize: 13,
-  },
-
-  loadingContainer: {
+  centered: {
     alignItems: 'center',
     paddingVertical: 80,
   },
-
-  groups: {
+  section: {
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  sectionCount: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  sectionDescription: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  followingBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#E8EEDD',
+  },
+  followingBadgeText: {
+    color: '#607349',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  list: {
     gap: 13,
   },
-
   emptyCard: {
     alignItems: 'center',
     gap: 14,
@@ -484,7 +600,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: colors.surface,
   },
-
   emptyIcon: {
     width: 64,
     height: 64,
@@ -493,64 +608,67 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: '#FBE9E2',
   },
-
   emptyTitle: {
     color: colors.text,
     fontSize: 19,
     fontWeight: '900',
+    textAlign: 'center',
   },
-
   emptyText: {
     color: colors.muted,
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',
   },
-
-  emptyButton: {
+  primaryButton: {
     minHeight: 48,
     alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
     borderRadius: 24,
     backgroundColor: colors.primary,
   },
-
-  emptyButtonPressed: {
-    backgroundColor: colors.primaryPressed,
-  },
-
-  emptyButtonText: {
+  primaryButtonText: {
     color: colors.white,
     fontSize: 14,
     fontWeight: '800',
   },
-
-  errorCard: {
-    gap: 10,
+  secondaryButton: {
+    minHeight: 46,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 23,
+    backgroundColor: colors.inputBackground,
+  },
+  secondaryButtonText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  messageCard: {
+    gap: 8,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#F3C5BC',
+    borderColor: colors.border,
     borderRadius: 20,
-    backgroundColor: '#FFF1EE',
+    backgroundColor: colors.surface,
   },
-
-  errorTitle: {
-    color: colors.danger,
+  messageTitle: {
+    color: colors.text,
     fontSize: 16,
     fontWeight: '900',
   },
-
-  errorText: {
+  messageText: {
     color: colors.muted,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 18,
   },
-
   retryText: {
     color: colors.primary,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '900',
   },
 });

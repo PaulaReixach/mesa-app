@@ -34,6 +34,8 @@ public interface GroupRestaurantRepository
             UUID restaurantId
     );
 
+    long countByGroupId(UUID groupId);
+
     long countByProposedByUserId(
             UUID proposedByUserId
     );
