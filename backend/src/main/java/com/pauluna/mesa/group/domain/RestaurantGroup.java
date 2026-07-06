@@ -57,6 +57,12 @@ public class RestaurantGroup {
     private GroupPrivacy privacy;
 
     @Column(
+            name = "accepting_collaborators",
+            nullable = false
+    )
+    private boolean acceptingCollaborators;
+
+    @Column(
             name = "owner_user_id",
             nullable = false
     )
@@ -85,6 +91,7 @@ public class RestaurantGroup {
             String imageUrl,
             String city,
             GroupPrivacy privacy,
+            boolean acceptingCollaborators,
             UUID ownerUserId
     ) {
         this.name = name;
@@ -92,6 +99,7 @@ public class RestaurantGroup {
         this.imageUrl = imageUrl;
         this.city = city;
         this.privacy = privacy;
+        this.acceptingCollaborators = acceptingCollaborators;
         this.ownerUserId = ownerUserId;
     }
 
@@ -99,7 +107,8 @@ public class RestaurantGroup {
             String name,
             String description,
             String city,
-            GroupPrivacy privacy
+            GroupPrivacy privacy,
+            boolean acceptingCollaborators
     ) {
         this.name = Objects.requireNonNull(
                 name,
@@ -111,6 +120,7 @@ public class RestaurantGroup {
                 privacy,
                 "La privacidad del grupo es obligatoria."
         );
+        this.acceptingCollaborators = acceptingCollaborators;
     }
 
     public void updateImageUrl(
@@ -154,6 +164,10 @@ public class RestaurantGroup {
 
     public GroupPrivacy getPrivacy() {
         return privacy;
+    }
+
+    public boolean isAcceptingCollaborators() {
+        return acceptingCollaborators;
     }
 
     public UUID getOwnerUserId() {
