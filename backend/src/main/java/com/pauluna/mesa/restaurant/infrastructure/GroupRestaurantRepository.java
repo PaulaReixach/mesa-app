@@ -24,6 +24,11 @@ public interface GroupRestaurantRepository
             Collection<UUID> groupIds
     );
 
+    List<GroupRestaurant> findAllByIdInAndGroupId(
+            Collection<UUID> ids,
+            UUID groupId
+    );
+
     Optional<GroupRestaurant> findByIdAndGroupId(
             UUID id,
             UUID groupId
