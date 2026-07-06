@@ -1,6 +1,7 @@
 package com.pauluna.mesa.group.infrastructure;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,6 +19,10 @@ public interface GroupFollowerRepository
 
     boolean existsByGroupIdAndUserId(
             UUID groupId,
+            UUID userId
+    );
+
+    List<GroupFollower> findAllByUserIdOrderByCreatedAtDesc(
             UUID userId
     );
 
