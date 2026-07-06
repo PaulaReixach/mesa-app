@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PublicGroupCollaborationActions } from '../../../../components/PublicGroupCollaborationActions';
 import { useAuth } from '../../../../contexts/auth-context';
 import {
   getErrorMessage,
@@ -374,13 +375,10 @@ export default function PublicGroupDetailScreen() {
                 )}
 
                 <View style={styles.secondaryActions}>
-                  {!group.ownedByCurrentUser ? (
-                    <View style={styles.disabledAction}>
-                      <Text style={styles.disabledActionText}>
-                        Solicitar colaborar · Próximamente
-                      </Text>
-                    </View>
-                  ) : null}
+                  <PublicGroupCollaborationActions
+                    groupId={groupId}
+                    ownedByCurrentUser={group.ownedByCurrentUser}
+                  />
 
                   {detail.restaurants.length > 0 ? (
                     <Pressable
@@ -603,20 +601,6 @@ const styles = StyleSheet.create({
   },
   secondaryActions: {
     gap: 8,
-  },
-  disabledAction: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 15,
-    backgroundColor: colors.inputBackground,
-  },
-  disabledActionText: {
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: '800',
   },
   copyAction: {
     minHeight: 46,
