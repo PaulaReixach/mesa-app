@@ -13,6 +13,7 @@ public record GroupResponse(
         String imageUrl,
         String city,
         GroupPrivacy privacy,
+        boolean acceptingCollaborators,
         UUID ownerUserId,
         Instant createdAt,
         Instant updatedAt
@@ -26,6 +27,7 @@ public record GroupResponse(
                 restaurantGroup.getImageUrl(),
                 restaurantGroup.getCity(),
                 restaurantGroup.getPrivacy(),
+                restaurantGroup.isAcceptingCollaborators(),
                 restaurantGroup.getOwnerUserId(),
                 restaurantGroup.getCreatedAt(),
                 restaurantGroup.getUpdatedAt()
