@@ -1,5 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
+import type { Href } from 'expo-router';
 import {
   Image,
   Pressable,
@@ -30,9 +31,22 @@ export function GroupCard({
   const imageUri = group.imageUrl
     ? resolveApiUrl(group.imageUrl)
     : null;
+  const ownedByCurrentUser = group.ownerUserId === user?.id;
   const canManageCollaboration =
-    group.privacy === 'PUBLIC'
-    && group.ownerUserId === user?.id;
+    group.privacy === 'PUBLIC' && ownedByCurrentUser;
+  const collaborating =
+    group.privacy === 'PUBLIC' && !ownedByCurrentUser;
+
+  function handlePress(): void {
+    if (collaborating) {
+      router.push(
+        `/groups/public/${group.id}` as Href,
+      );
+      return;
+    }
+
+    onPress();
+  }
 
   function openCollaborationManagement(): void {
     router.push({
@@ -45,7 +59,7 @@ export function GroupCard({
     <View style={styles.wrapper}>
       <Pressable
         accessibilityRole="button"
-        onPress={onPress}
+        onPress={handlePress}
         style={({ pressed }) => [
           styles.card,
           pressed ? styles.cardPressed : null,
@@ -75,7 +89,7 @@ export function GroupCard({
 
             <View style={styles.badge}>
               <Text style={styles.badgeText}>
-                {privacyLabel}
+                {collaborating ? 'Colaboras' : privacyLabel}
               </Text>
             </View>
           </View>
