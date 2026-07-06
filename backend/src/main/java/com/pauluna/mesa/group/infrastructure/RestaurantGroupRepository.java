@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.pauluna.mesa.group.domain.GroupPrivacy;
 import com.pauluna.mesa.group.domain.RestaurantGroup;
 
 public interface RestaurantGroupRepository
@@ -25,6 +26,10 @@ public interface RestaurantGroupRepository
             """)
     List<RestaurantGroup> findAllByMemberUserId(
             @Param("userId") UUID userId
+    );
+
+    List<RestaurantGroup> findAllByPrivacyOrderByUpdatedAtDesc(
+            GroupPrivacy privacy
     );
 
     List<RestaurantGroup> findAllByOwnerUserId(
