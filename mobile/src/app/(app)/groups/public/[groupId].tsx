@@ -4,6 +4,7 @@ import {
   useFocusEffect,
   useLocalSearchParams,
 } from 'expo-router';
+import type { Href } from 'expo-router';
 import {
   useCallback,
   useState,
@@ -163,6 +164,12 @@ export default function PublicGroupDetailScreen() {
     }
   }
 
+  function openCopyFlow(): void {
+    router.push(
+      `/groups/public/${groupId}/copy` as Href,
+    );
+  }
+
   const group = detail?.group;
   const groupImage = group?.imageUrl
     ? resolveApiUrl(group.imageUrl)
@@ -173,12 +180,7 @@ export default function PublicGroupDetailScreen() {
 
   return (
     <SafeAreaView
-      edges={[
-        'top',
-        'right',
-        'bottom',
-        'left',
-      ]}
+      edges={['top', 'right', 'bottom', 'left']}
       style={styles.safeArea}
     >
       <ScrollView
@@ -252,9 +254,7 @@ export default function PublicGroupDetailScreen() {
                 ) : (
                   <View style={styles.heroFallback}>
                     <Text style={styles.heroInitial}>
-                      {group.name
-                        .charAt(0)
-                        .toUpperCase()}
+                      {group.name.charAt(0).toUpperCase()}
                     </Text>
                   </View>
                 )}
@@ -340,9 +340,7 @@ export default function PublicGroupDetailScreen() {
                 ) : (
                   <Pressable
                     accessibilityRole="button"
-                    disabled={
-                      group.following || following
-                    }
+                    disabled={group.following || following}
                     onPress={() => {
                       void handleFollow();
                     }}
@@ -375,20 +373,39 @@ export default function PublicGroupDetailScreen() {
                   </Pressable>
                 )}
 
-                {!group.ownedByCurrentUser ? (
-                  <View style={styles.secondaryActions}>
+                <View style={styles.secondaryActions}>
+                  {!group.ownedByCurrentUser ? (
                     <View style={styles.disabledAction}>
                       <Text style={styles.disabledActionText}>
                         Solicitar colaborar · Próximamente
                       </Text>
                     </View>
-                    <View style={styles.disabledAction}>
-                      <Text style={styles.disabledActionText}>
-                        Copiar restaurantes · Próximamente
+                  ) : null}
+
+                  {detail.restaurants.length > 0 ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={openCopyFlow}
+                      style={({ pressed }) => [
+                        styles.copyAction,
+                        pressed ? styles.copyActionPressed : null,
+                      ]}
+                    >
+                      <SymbolView
+                        name={{
+                          ios: 'square.on.square',
+                          android: 'content_copy',
+                          web: 'content_copy',
+                        }}
+                        size={16}
+                        tintColor={colors.primary}
+                      />
+                      <Text style={styles.copyActionText}>
+                        Copiar restaurantes
                       </Text>
-                    </View>
-                  </View>
-                ) : null}
+                    </Pressable>
+                  ) : null}
+                </View>
               </View>
             </View>
 
@@ -600,6 +617,25 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 10,
     fontWeight: '800',
+  },
+  copyAction: {
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 15,
+    backgroundColor: '#FFF4EF',
+  },
+  copyActionPressed: {
+    opacity: 0.72,
+  },
+  copyActionText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '900',
   },
   section: {
     gap: 11,
