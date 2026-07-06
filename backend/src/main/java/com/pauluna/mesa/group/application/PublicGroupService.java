@@ -98,6 +98,27 @@ public class PublicGroupService {
     }
 
     @Transactional(readOnly = true)
+    public List<PublicGroupSummaryResponse> getFollowedGroups(
+            UUID userId
+    ) {
+        validateUserExists(userId);
+
+        return groupFollowerRepository
+                .findAllByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(GroupFollower::getGroupId)
+                .map(restaurantGroupRepository::findById)
+                .flatMap(java.util.Optional::stream)
+                .filter(group ->
+                        group.getPrivacy() == GroupPrivacy.PUBLIC
+                )
+                .map(group ->
+                        toSummary(group, userId)
+                )
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public PublicGroupDetailResponse getPublicGroup(
             UUID groupId,
             UUID userId
