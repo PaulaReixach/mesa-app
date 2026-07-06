@@ -4,7 +4,10 @@ import {
   useFocusEffect,
   useLocalSearchParams,
 } from 'expo-router';
-import { useCallback, useState } from 'react';
+import {
+  useCallback,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -16,21 +19,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useAuth } from '../../../../../contexts/auth-context';
+import { useAuth } from '../../../../contexts/auth-context';
 import {
   getErrorMessage,
   resolveApiUrl,
-} from '../../../../../lib/api';
+} from '../../../../lib/api';
 import {
   followPublicGroup,
   getPublicGroup,
-} from '../../../../../services/group-service';
-import { colors } from '../../../../../theme/colors';
-import type {
-  PublicGroupDetail,
-  PublicGroupSummary,
-} from '../../../../../types/group';
-import type { GroupRestaurant } from '../../../../../types/restaurant';
+} from '../../../../services/group-service';
+import { colors } from '../../../../theme/colors';
+import type { PublicGroupDetail } from '../../../../types/group';
+import type { GroupRestaurant } from '../../../../types/restaurant';
 
 function RestaurantRow({
   item,
@@ -97,11 +97,14 @@ export default function PublicGroupDetailScreen() {
     useState<PublicGroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] =
+    useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!accessToken || !groupId) {
-      setError('No se ha podido recuperar el grupo público.');
+      setError(
+        'No se ha podido recuperar el grupo público.',
+      );
       setLoading(false);
       return;
     }
@@ -109,7 +112,12 @@ export default function PublicGroupDetailScreen() {
     try {
       setLoading(true);
       setError(null);
-      setDetail(await getPublicGroup(groupId, accessToken));
+      setDetail(
+        await getPublicGroup(
+          groupId,
+          accessToken,
+        ),
+      );
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -117,21 +125,31 @@ export default function PublicGroupDetailScreen() {
     }
   }, [accessToken, groupId]);
 
-  useFocusEffect(useCallback(() => {
-    void load();
-  }, [load]));
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   async function handleFollow(): Promise<void> {
-    if (!accessToken || !groupId || !detail || following) {
+    if (
+      !accessToken
+      || !groupId
+      || !detail
+      || following
+    ) {
       return;
     }
 
     try {
       setFollowing(true);
+      setError(null);
+
       const updatedGroup = await followPublicGroup(
         groupId,
         accessToken,
       );
+
       setDetail(current => current
         ? {
             ...current,
@@ -145,17 +163,6 @@ export default function PublicGroupDetailScreen() {
     }
   }
 
-  function updateGroup(
-    group: PublicGroupSummary,
-  ): void {
-    setDetail(current => current
-      ? {
-          ...current,
-          group,
-        }
-      : current);
-  }
-
   const group = detail?.group;
   const groupImage = group?.imageUrl
     ? resolveApiUrl(group.imageUrl)
@@ -166,7 +173,12 @@ export default function PublicGroupDetailScreen() {
 
   return (
     <SafeAreaView
-      edges={['top', 'right', 'bottom', 'left']}
+      edges={[
+        'top',
+        'right',
+        'bottom',
+        'left',
+      ]}
       style={styles.safeArea}
     >
       <ScrollView
@@ -176,7 +188,9 @@ export default function PublicGroupDetailScreen() {
         <View style={styles.header}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.back()}
+            onPress={() => {
+              router.back();
+            }}
             style={styles.iconButton}
           >
             <SymbolView
@@ -214,7 +228,11 @@ export default function PublicGroupDetailScreen() {
             <Text style={styles.messageText}>
               {error}
             </Text>
-            <Pressable onPress={() => void load()}>
+            <Pressable
+              onPress={() => {
+                void load();
+              }}
+            >
               <Text style={styles.retryText}>
                 Volver a intentar
               </Text>
@@ -234,7 +252,9 @@ export default function PublicGroupDetailScreen() {
                 ) : (
                   <View style={styles.heroFallback}>
                     <Text style={styles.heroInitial}>
-                      {group.name.charAt(0).toUpperCase()}
+                      {group.name
+                        .charAt(0)
+                        .toUpperCase()}
                     </Text>
                   </View>
                 )}
@@ -250,7 +270,9 @@ export default function PublicGroupDetailScreen() {
                       />
                     ) : (
                       <Text style={styles.ownerInitial}>
-                        {group.owner.name.charAt(0).toUpperCase()}
+                        {group.owner.name
+                          .charAt(0)
+                          .toUpperCase()}
                       </Text>
                     )}
                   </View>
@@ -280,6 +302,7 @@ export default function PublicGroupDetailScreen() {
                       Restaurantes
                     </Text>
                   </View>
+
                   <View style={styles.stat}>
                     <Text style={styles.statValue}>
                       {group.followerCount}
@@ -288,6 +311,7 @@ export default function PublicGroupDetailScreen() {
                       Seguidores
                     </Text>
                   </View>
+
                   <View style={styles.stat}>
                     <Text style={styles.statValue}>
                       {group.collaboratorCount}
@@ -301,10 +325,12 @@ export default function PublicGroupDetailScreen() {
                 {group.ownedByCurrentUser ? (
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => router.push({
-                      pathname: '/groups/[groupId]',
-                      params: { groupId },
-                    })}
+                    onPress={() => {
+                      router.push({
+                        pathname: '/groups/[groupId]',
+                        params: { groupId },
+                      });
+                    }}
                     style={styles.primaryButton}
                   >
                     <Text style={styles.primaryButtonText}>
@@ -314,8 +340,12 @@ export default function PublicGroupDetailScreen() {
                 ) : (
                   <Pressable
                     accessibilityRole="button"
-                    disabled={group.following || following}
-                    onPress={() => void handleFollow()}
+                    disabled={
+                      group.following || following
+                    }
+                    onPress={() => {
+                      void handleFollow();
+                    }}
                     style={[
                       styles.primaryButton,
                       group.following
