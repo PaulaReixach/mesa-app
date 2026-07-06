@@ -7,6 +7,7 @@ import {
 import type { Href } from 'expo-router';
 import {
   useCallback,
+  useMemo,
   useState,
 } from 'react';
 import {
@@ -38,10 +39,8 @@ type AddMode = 'SEARCH' | 'MANUAL';
 
 export default function GroupsScreen() {
   const { addMode: addModeParam } =
-    useLocalSearchParams<{
-      addMode?: string;
-    }>();
-  const { accessToken } = useAuth();
+    useLocalSearchParams<{ addMode?: string }>();
+  const { accessToken, user } = useAuth();
 
   const [groups, setGroups] =
     useState<RestaurantGroup[]>([]);
@@ -49,54 +48,43 @@ export default function GroupsScreen() {
     useState<PublicGroupSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] =
-    useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const addMode: AddMode | null =
-    addModeParam === 'SEARCH'
-    || addModeParam === 'MANUAL'
+    addModeParam === 'SEARCH' || addModeParam === 'MANUAL'
       ? addModeParam
       : null;
   const selectingGroup = addMode !== null;
 
-  const load = useCallback(
-    async (isRefresh = false) => {
-      if (!accessToken) {
-        setLoading(false);
-        return;
+  const load = useCallback(async (isRefresh = false) => {
+    if (!accessToken) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setError(null);
+      isRefresh ? setRefreshing(true) : setLoading(true);
+
+      if (selectingGroup) {
+        setGroups(await getGroups(accessToken));
+        setFollowedGroups([]);
+      } else {
+        const [memberGroups, following] = await Promise.all([
+          getGroups(accessToken),
+          getFollowedPublicGroups(accessToken),
+        ]);
+
+        setGroups(memberGroups);
+        setFollowedGroups(following);
       }
-
-      try {
-        setError(null);
-
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
-
-        if (selectingGroup) {
-          setGroups(await getGroups(accessToken));
-          setFollowedGroups([]);
-        } else {
-          const [memberGroups, following] =
-            await Promise.all([
-              getGroups(accessToken),
-              getFollowedPublicGroups(accessToken),
-            ]);
-
-          setGroups(memberGroups);
-          setFollowedGroups(following);
-        }
-      } catch (requestError) {
-        setError(getErrorMessage(requestError));
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [accessToken, selectingGroup],
-  );
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [accessToken, selectingGroup]);
 
   useFocusEffect(
     useCallback(() => {
@@ -104,33 +92,69 @@ export default function GroupsScreen() {
     }, [load]),
   );
 
-  function openGroup(groupId: string): void {
+  const collaboratingGroups = useMemo(
+    () => groups.filter(group =>
+      group.privacy === 'PUBLIC'
+      && group.ownerUserId !== user?.id,
+    ),
+    [groups, user?.id],
+  );
+
+  const regularGroups = useMemo(
+    () => groups.filter(group =>
+      group.privacy === 'PRIVATE'
+      || group.ownerUserId === user?.id,
+    ),
+    [groups, user?.id],
+  );
+
+  const selectableGroups = useMemo(
+    () => groups.filter(group =>
+      group.privacy === 'PRIVATE'
+      || group.ownerUserId === user?.id,
+    ),
+    [groups, user?.id],
+  );
+
+  function openGroup(group: RestaurantGroup): void {
     if (addMode) {
       router.push({
-        pathname:
-          '/groups/[groupId]/restaurants/create',
+        pathname: '/groups/[groupId]/restaurants/create',
         params: {
-          groupId,
+          groupId: group.id,
           mode: addMode,
         },
       });
       return;
     }
 
+    if (
+      group.privacy === 'PUBLIC'
+      && group.ownerUserId !== user?.id
+    ) {
+      router.push(
+        `/groups/public/${group.id}` as Href,
+      );
+      return;
+    }
+
     router.push({
       pathname: '/groups/[groupId]',
-      params: { groupId },
+      params: { groupId: group.id },
     });
   }
 
   function openPublicGroup(groupId: string): void {
-    router.push(
-      `/groups/public/${groupId}` as Href,
-    );
+    router.push(`/groups/public/${groupId}` as Href);
   }
 
+  const displayedGroups = selectingGroup
+    ? selectableGroups
+    : regularGroups;
   const hasAnyGroup =
-    groups.length > 0 || followedGroups.length > 0;
+    regularGroups.length > 0
+    || collaboratingGroups.length > 0
+    || followedGroups.length > 0;
 
   return (
     <SafeAreaView
@@ -141,10 +165,8 @@ export default function GroupsScreen() {
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
-            onRefresh={() => {
-              void load(true);
-            }}
             refreshing={refreshing}
+            onRefresh={() => void load(true)}
             tintColor={colors.primary}
           />
         }
@@ -154,9 +176,7 @@ export default function GroupsScreen() {
           <View style={styles.selectionHeader}>
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                router.back();
-              }}
+              onPress={() => router.back()}
               style={styles.iconButton}
             >
               <SymbolView
@@ -169,11 +189,9 @@ export default function GroupsScreen() {
                 tintColor={colors.text}
               />
             </Pressable>
-
             <Text style={styles.selectionTitle}>
               Elegir grupo
             </Text>
-
             <View style={styles.iconButton} />
           </View>
         ) : null}
@@ -181,9 +199,7 @@ export default function GroupsScreen() {
         <View style={styles.header}>
           <View style={styles.headerText}>
             <Text style={styles.title}>
-              {selectingGroup
-                ? '¿Dónde lo guardamos?'
-                : 'Grupos'}
+              {selectingGroup ? '¿Dónde lo guardamos?' : 'Grupos'}
             </Text>
             <Text style={styles.subtitle}>
               {selectingGroup
@@ -196,17 +212,11 @@ export default function GroupsScreen() {
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => {
-              router.push('/groups/create');
-            }}
+            onPress={() => router.push('/groups/create')}
             style={styles.createButton}
           >
             <SymbolView
-              name={{
-                ios: 'plus',
-                android: 'add',
-                web: 'add',
-              }}
+              name={{ ios: 'plus', android: 'add', web: 'add' }}
               size={23}
               tintColor={colors.white}
             />
@@ -215,22 +225,14 @@ export default function GroupsScreen() {
 
         {!selectingGroup ? (
           <View style={styles.tabs}>
-            <View
-              style={[
-                styles.tab,
-                styles.tabActive,
-              ]}
-            >
+            <View style={[styles.tab, styles.tabActive]}>
               <Text style={styles.tabTextActive}>
                 Mis grupos
               </Text>
             </View>
-
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                router.push('/groups/explore');
-              }}
+              onPress={() => router.push('/groups/explore')}
               style={styles.tab}
             >
               <Text style={styles.tabText}>
@@ -265,10 +267,7 @@ export default function GroupsScreen() {
 
         {loading ? (
           <View style={styles.centered}>
-            <ActivityIndicator
-              color={colors.primary}
-              size="large"
-            />
+            <ActivityIndicator color={colors.primary} size="large" />
           </View>
         ) : null}
 
@@ -277,14 +276,8 @@ export default function GroupsScreen() {
             <Text style={styles.messageTitle}>
               No hemos podido cargar tus grupos
             </Text>
-            <Text style={styles.messageText}>
-              {error}
-            </Text>
-            <Pressable
-              onPress={() => {
-                void load();
-              }}
-            >
+            <Text style={styles.messageText}>{error}</Text>
+            <Pressable onPress={() => void load()}>
               <Text style={styles.retryText}>
                 Volver a intentar
               </Text>
@@ -295,7 +288,7 @@ export default function GroupsScreen() {
         {!loading
         && !error
         && selectingGroup
-        && groups.length === 0 ? (
+        && displayedGroups.length === 0 ? (
           <View style={styles.emptyCard}>
             <View style={styles.emptyIcon}>
               <SymbolView
@@ -312,13 +305,11 @@ export default function GroupsScreen() {
               Necesitas un grupo propio
             </Text>
             <Text style={styles.emptyText}>
-              Los grupos que sigues son de consulta. Crea uno para guardar restaurantes.
+              Los grupos que sigues o donde colaboras no permiten añadir restaurantes directamente.
             </Text>
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                router.push('/groups/create');
-              }}
+              onPress={() => router.push('/groups/create')}
               style={styles.primaryButton}
             >
               <Text style={styles.primaryButtonText}>
@@ -352,9 +343,7 @@ export default function GroupsScreen() {
             </Text>
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                router.push('/groups/create');
-              }}
+              onPress={() => router.push('/groups/create')}
               style={styles.primaryButton}
             >
               <Text style={styles.primaryButtonText}>
@@ -363,9 +352,7 @@ export default function GroupsScreen() {
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                router.push('/groups/explore');
-              }}
+              onPress={() => router.push('/groups/explore')}
               style={styles.secondaryButton}
             >
               <Text style={styles.secondaryButtonText}>
@@ -375,9 +362,7 @@ export default function GroupsScreen() {
           </View>
         ) : null}
 
-        {!loading
-        && !error
-        && groups.length > 0 ? (
+        {!loading && !error && displayedGroups.length > 0 ? (
           <View style={styles.section}>
             {!selectingGroup ? (
               <View style={styles.sectionHeader}>
@@ -385,19 +370,54 @@ export default function GroupsScreen() {
                   Tus grupos
                 </Text>
                 <Text style={styles.sectionCount}>
-                  {groups.length}
+                  {displayedGroups.length}
                 </Text>
               </View>
             ) : null}
 
             <View style={styles.list}>
-              {groups.map(group => (
+              {displayedGroups.map(group => (
                 <GroupCard
-                  group={group}
                   key={group.id}
-                  onPress={() => {
-                    openGroup(group.id);
-                  }}
+                  group={group}
+                  onPress={() => openGroup(group)}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {!loading
+        && !error
+        && !selectingGroup
+        && collaboratingGroups.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Text style={styles.sectionTitle}>
+                  Colaboras en
+                </Text>
+                <View style={styles.collaborationBadge}>
+                  <Text style={styles.collaborationBadgeText}>
+                    Públicos
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.sectionCount}>
+                {collaboratingGroups.length}
+              </Text>
+            </View>
+
+            <Text style={styles.sectionDescription}>
+              Grupos públicos donde la persona creadora te ha aceptado como colaboradora.
+            </Text>
+
+            <View style={styles.list}>
+              {collaboratingGroups.map(group => (
+                <GroupCard
+                  key={group.id}
+                  group={group}
+                  onPress={() => openGroup(group)}
                 />
               ))}
             </View>
@@ -432,11 +452,9 @@ export default function GroupsScreen() {
             <View style={styles.list}>
               {followedGroups.map(group => (
                 <PublicGroupCard
-                  group={group}
                   key={group.id}
-                  onPress={() => {
-                    openPublicGroup(group.id);
-                  }}
+                  group={group}
+                  onPress={() => openPublicGroup(group.id)}
                 />
               ))}
             </View>
@@ -585,6 +603,17 @@ const styles = StyleSheet.create({
   },
   followingBadgeText: {
     color: '#607349',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  collaborationBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#FBE9E2',
+  },
+  collaborationBadgeText: {
+    color: colors.primary,
     fontSize: 8,
     fontWeight: '900',
   },
