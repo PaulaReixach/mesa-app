@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.pauluna.mesa.group.api.CreateGroupRequest;
 import com.pauluna.mesa.group.api.GroupResponse;
+import com.pauluna.mesa.group.api.UpdateGroupRequest;
 import com.pauluna.mesa.group.domain.GroupMember;
 import com.pauluna.mesa.group.domain.GroupRole;
 import com.pauluna.mesa.group.domain.RestaurantGroup;
@@ -61,6 +62,34 @@ public class GroupService {
         groupMemberRepository.save(ownerMembership);
 
         return GroupResponse.from(savedGroup);
+    }
+
+    public GroupResponse updateGroup(
+            UUID groupId,
+            UpdateGroupRequest request,
+            UUID userId
+    ) {
+        validateOwnerAccess(groupId, userId);
+
+        RestaurantGroup restaurantGroup =
+                restaurantGroupRepository
+                        .findById(groupId)
+                        .orElseThrow(() ->
+                                new GroupNotFoundException(groupId)
+                        );
+
+        restaurantGroup.updateDetails(
+                request.name().trim(),
+                normalizeOptionalValue(request.description()),
+                normalizeOptionalValue(request.city()),
+                request.privacy()
+        );
+
+        return GroupResponse.from(
+                restaurantGroupRepository.saveAndFlush(
+                        restaurantGroup
+                )
+        );
     }
 
     @Transactional(readOnly = true)

@@ -1,3 +1,4 @@
+import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import {
   Pressable,
@@ -7,7 +8,7 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
-import {
+import type {
   GroupRestaurant,
   GroupRestaurantStatus,
 } from '../types/restaurant';
@@ -25,28 +26,28 @@ const statusPresentation: Record<
   }
 > = {
   WANT_TO_GO: {
-    label: 'Queremos ir',
-    backgroundColor: '#F7E8D2',
-    textColor: '#8A5B17',
+    label: 'Pendiente',
+    backgroundColor: '#FBE4DA',
+    textColor: colors.primary,
   },
   VISITED: {
     label: 'Visitado',
-    backgroundColor: '#E5EDF7',
-    textColor: '#365F91',
+    backgroundColor: '#E8EEDD',
+    textColor: '#607349',
   },
   FAVORITE: {
     label: 'Favorito',
-    backgroundColor: '#FBE4E7',
-    textColor: '#A33B4A',
+    backgroundColor: '#F7DDD3',
+    textColor: colors.primary,
   },
   WANT_TO_REPEAT: {
-    label: 'Queremos repetir',
-    backgroundColor: '#E8F1EB',
-    textColor: colors.success,
+    label: 'Repetir',
+    backgroundColor: '#E7EEDC',
+    textColor: '#62794D',
   },
   DO_NOT_REPEAT: {
     label: 'No repetir',
-    backgroundColor: '#FBE9E5',
+    backgroundColor: '#F1E5E1',
     textColor: colors.danger,
   },
   ARCHIVED: {
@@ -71,7 +72,7 @@ export function RestaurantCard({
   const status =
     statusPresentation[groupRestaurant.status];
 
-  function openRestaurant() {
+  function openRestaurant(): void {
     router.push({
       pathname:
         '/groups/[groupId]/restaurants/[groupRestaurantId]',
@@ -91,10 +92,16 @@ export function RestaurantCard({
         pressed ? styles.cardPressed : null,
       ]}
     >
-      <View style={styles.icon}>
-        <Text style={styles.iconText}>
-          {restaurant.name.charAt(0).toUpperCase()}
-        </Text>
+      <View style={styles.artwork}>
+        <SymbolView
+          name={{
+            ios: 'fork.knife',
+            android: 'restaurant',
+            web: 'restaurant',
+          }}
+          size={23}
+          tintColor={colors.primary}
+        />
       </View>
 
       <View style={styles.content}>
@@ -128,14 +135,15 @@ export function RestaurantCard({
           </View>
         </View>
 
-        {restaurant.category ? (
-          <Text style={styles.category}>
-            {restaurant.category}
-          </Text>
-        ) : null}
+        <Text
+          numberOfLines={1}
+          style={styles.category}
+        >
+          {restaurant.category ?? 'Restaurante'}
+        </Text>
 
         <Text
-          numberOfLines={2}
+          numberOfLines={1}
           style={styles.location}
         >
           {location || 'Sin ubicación'}
@@ -143,7 +151,7 @@ export function RestaurantCard({
 
         {groupRestaurant.groupNotes ? (
           <Text
-            numberOfLines={2}
+            numberOfLines={1}
             style={styles.notes}
           >
             {groupRestaurant.groupNotes}
@@ -151,83 +159,80 @@ export function RestaurantCard({
         ) : null}
       </View>
 
-      <Text style={styles.chevron}>›</Text>
+      <SymbolView
+        name={{
+          ios: 'chevron.right',
+          android: 'chevron_right',
+          web: 'chevron_right',
+        }}
+        size={19}
+        tintColor={colors.muted}
+      />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    minHeight: 82,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: 18,
     backgroundColor: colors.surface,
-    padding: 16,
   },
   cardPressed: {
     opacity: 0.72,
   },
-  icon: {
-    width: 52,
-    height: 52,
+  artwork: {
+    width: 58,
+    height: 58,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 17,
-    backgroundColor: '#F7D9CF',
-  },
-  iconText: {
-    color: colors.primary,
-    fontSize: 21,
-    fontWeight: '800',
+    borderRadius: 16,
+    backgroundColor: '#F3DED5',
   },
   content: {
     flex: 1,
-    gap: 5,
+    gap: 3,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 7,
   },
   title: {
     flex: 1,
     color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '900',
   },
   status: {
-    borderRadius: 999,
-    paddingHorizontal: 9,
+    paddingHorizontal: 8,
     paddingVertical: 4,
+    borderRadius: 999,
   },
   statusText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 9,
+    fontWeight: '900',
   },
   category: {
-    color: colors.primary,
-    fontSize: 13,
+    color: colors.text,
+    fontSize: 10,
     fontWeight: '700',
   },
   location: {
     color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 10,
   },
   notes: {
-    marginTop: 3,
-    color: colors.text,
-    fontSize: 13,
+    marginTop: 1,
+    color: colors.primary,
+    fontSize: 9,
     fontStyle: 'italic',
-    lineHeight: 18,
-  },
-  chevron: {
-    alignSelf: 'center',
-    color: colors.muted,
-    fontSize: 28,
-    lineHeight: 30,
   },
 });

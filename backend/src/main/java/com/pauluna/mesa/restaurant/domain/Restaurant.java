@@ -2,6 +2,7 @@ package com.pauluna.mesa.restaurant.domain;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -77,6 +78,23 @@ public class Restaurant {
         this.country = country;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.category = category;
+    }
+
+    public void updateDetails(
+            String name,
+            String address,
+            String city,
+            String country,
+            String category
+    ) {
+        this.name = Objects.requireNonNull(
+                name,
+                "El nombre del restaurante es obligatorio."
+        );
+        this.address = address;
+        this.city = city;
+        this.country = country;
         this.category = category;
     }
 

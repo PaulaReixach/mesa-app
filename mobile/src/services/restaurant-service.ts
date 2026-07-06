@@ -3,6 +3,7 @@ import {
   CreateGroupRestaurantPayload,
   GroupRestaurant,
   RestaurantSearchResult,
+  UpdateGroupRestaurantPayload,
   UpdateGroupRestaurantStatusPayload,
 } from '../types/restaurant';
 
@@ -42,6 +43,22 @@ export function createGroupRestaurant(
     `/groups/${groupId}/restaurants`,
     {
       method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export function updateGroupRestaurant(
+  groupId: string,
+  groupRestaurantId: string,
+  payload: UpdateGroupRestaurantPayload,
+  accessToken: string,
+): Promise<GroupRestaurant> {
+  return apiRequest<GroupRestaurant>(
+    `/groups/${groupId}/restaurants/${groupRestaurantId}`,
+    {
+      method: 'PUT',
       body: JSON.stringify(payload),
     },
     accessToken,

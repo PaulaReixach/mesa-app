@@ -1,6 +1,7 @@
 package com.pauluna.mesa.group.domain;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -92,6 +93,24 @@ public class RestaurantGroup {
         this.city = city;
         this.privacy = privacy;
         this.ownerUserId = ownerUserId;
+    }
+
+    public void updateDetails(
+            String name,
+            String description,
+            String city,
+            GroupPrivacy privacy
+    ) {
+        this.name = Objects.requireNonNull(
+                name,
+                "El nombre del grupo es obligatorio."
+        );
+        this.description = description;
+        this.city = city;
+        this.privacy = Objects.requireNonNull(
+                privacy,
+                "La privacidad del grupo es obligatoria."
+        );
     }
 
     public void updateImageUrl(

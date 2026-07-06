@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.pauluna.mesa.group.application.GroupService;
 import com.pauluna.mesa.restaurant.api.CreateGroupRestaurantRequest;
 import com.pauluna.mesa.restaurant.api.GroupRestaurantResponse;
+import com.pauluna.mesa.restaurant.api.UpdateGroupRestaurantRequest;
 import com.pauluna.mesa.restaurant.api.UpdateGroupRestaurantStatusRequest;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurantStatus;
@@ -203,6 +204,85 @@ public class RestaurantService {
         return GroupRestaurantResponse.from(
                 groupRestaurant,
                 restaurant
+        );
+    }
+
+    public GroupRestaurantResponse updateRestaurant(
+            UUID groupId,
+            UUID groupRestaurantId,
+            UpdateGroupRestaurantRequest request,
+            UUID userId
+    ) {
+        groupService.validateMemberAccess(groupId, userId);
+
+        GroupRestaurant groupRestaurant =
+                findGroupRestaurant(
+                        groupId,
+                        groupRestaurantId
+                );
+
+        Restaurant currentRestaurant =
+                findRestaurant(
+                        groupRestaurant.getRestaurantId()
+                );
+
+        String name = request.name().trim();
+        String address =
+                normalizeOptionalValue(request.address());
+        String city =
+                normalizeOptionalValue(request.city());
+        String country =
+                normalizeOptionalValue(request.country());
+        String category =
+                normalizeOptionalValue(request.category());
+        String groupNotes =
+                normalizeOptionalValue(request.groupNotes());
+
+        Restaurant updatedRestaurant;
+
+        if (currentRestaurant.getProvider() != null) {
+            updatedRestaurant = restaurantRepository.save(
+                    new Restaurant(
+                            null,
+                            null,
+                            name,
+                            address,
+                            city,
+                            country,
+                            currentRestaurant.getLatitude(),
+                            currentRestaurant.getLongitude(),
+                            category
+                    )
+            );
+
+            groupRestaurant.changeRestaurantId(
+                    updatedRestaurant.getId()
+            );
+        } else {
+            currentRestaurant.updateDetails(
+                    name,
+                    address,
+                    city,
+                    country,
+                    category
+            );
+
+            updatedRestaurant =
+                    restaurantRepository.saveAndFlush(
+                            currentRestaurant
+                    );
+        }
+
+        groupRestaurant.updateGroupNotes(groupNotes);
+
+        GroupRestaurant updatedGroupRestaurant =
+                groupRestaurantRepository.saveAndFlush(
+                        groupRestaurant
+                );
+
+        return GroupRestaurantResponse.from(
+                updatedGroupRestaurant,
+                updatedRestaurant
         );
     }
 

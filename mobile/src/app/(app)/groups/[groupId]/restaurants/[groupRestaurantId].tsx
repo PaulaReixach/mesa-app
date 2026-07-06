@@ -1,250 +1,133 @@
-import {
-  router,
-  useLocalSearchParams,
-} from 'expo-router';
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { SymbolView } from 'expo-symbols';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RestaurantRatingsSection } from '../../../../../components/RestaurantRatingsSection';
-import {
-  RestaurantStatusSection,
-  restaurantStatusPresentation,
-} from '../../../../../components/RestaurantStatusSection';
+import { RestaurantStatusSection, restaurantStatusPresentation } from '../../../../../components/RestaurantStatusSection';
 import { useAuth } from '../../../../../contexts/auth-context';
 import { getErrorMessage } from '../../../../../lib/api';
 import { getGroupRestaurant } from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
-import { GroupRestaurant } from '../../../../../types/restaurant';
+import type { GroupRestaurant } from '../../../../../types/restaurant';
 
 export default function RestaurantDetailScreen() {
-  const {
-    groupId,
-    groupRestaurantId,
-  } = useLocalSearchParams<{
+  const { groupId, groupRestaurantId } = useLocalSearchParams<{
     groupId: string;
     groupRestaurantId: string;
   }>();
-
   const { accessToken } = useAuth();
+  const [item, setItem] = useState<GroupRestaurant | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [
-    groupRestaurant,
-    setGroupRestaurant,
-  ] = useState<GroupRestaurant | null>(null);
-
-  const [isLoading, setIsLoading] =
-    useState(true);
-
-  const [loadError, setLoadError] =
-    useState<string | null>(null);
-
-  const loadRestaurant = useCallback(async () => {
-    if (
-      !accessToken
-      || !groupId
-      || !groupRestaurantId
-    ) {
-      setLoadError(
-        'No se ha podido recuperar el restaurante.',
-      );
-      setIsLoading(false);
+  const load = useCallback(async () => {
+    if (!accessToken || !groupId || !groupRestaurantId) {
+      setError('No se ha podido recuperar el restaurante.');
+      setLoading(false);
       return;
     }
 
     try {
-      setIsLoading(true);
-      setLoadError(null);
-
-      const response = await getGroupRestaurant(
-        groupId,
-        groupRestaurantId,
-        accessToken,
-      );
-
-      setGroupRestaurant(response);
-    } catch (error) {
-      setLoadError(getErrorMessage(error));
+      setLoading(true);
+      setError(null);
+      setItem(await getGroupRestaurant(groupId, groupRestaurantId, accessToken));
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [
-    accessToken,
-    groupId,
-    groupRestaurantId,
-  ]);
+  }, [accessToken, groupId, groupRestaurantId]);
 
-  useEffect(() => {
-    void loadRestaurant();
-  }, [loadRestaurant]);
+  useFocusEffect(useCallback(() => {
+    void load();
+  }, [load]));
 
-  const restaurant = groupRestaurant?.restaurant;
-
+  const restaurant = item?.restaurant;
+  const status = item ? restaurantStatusPresentation[item.status] : null;
   const location = restaurant
-    ? [
-        restaurant.address,
-        restaurant.city,
-        restaurant.country,
-      ]
-        .filter(Boolean)
-        .join(' · ')
+    ? [restaurant.address, restaurant.city, restaurant.country].filter(Boolean).join(' · ')
     : '';
 
-  const currentStatus = groupRestaurant
-    ? restaurantStatusPresentation[
-        groupRestaurant.status
-      ]
-    : null;
-
   return (
-    <SafeAreaView
-      edges={['top', 'right', 'bottom', 'left']}
-      style={styles.safeArea}
-    >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+    <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Text style={styles.backText}>‹</Text>
+          <Pressable onPress={() => router.back()} style={styles.iconButton}>
+            <SymbolView name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }} size={20} tintColor={colors.text} />
           </Pressable>
-
-          <Text style={styles.headerTitle}>
-            Restaurante
-          </Text>
-
-          <View style={styles.headerSpacer} />
+          <Text style={styles.headerTitle}>Restaurante</Text>
+          <Pressable
+            accessibilityLabel="Editar restaurante"
+            accessibilityRole="button"
+            disabled={!item}
+            onPress={() => router.push({
+              pathname: '/groups/[groupId]/restaurants/edit',
+              params: { groupId, groupRestaurantId },
+            })}
+            style={styles.iconButton}
+          >
+            <SymbolView name={{ ios: 'pencil', android: 'edit', web: 'edit' }} size={19} tintColor={colors.primary} />
+          </Pressable>
         </View>
 
-        {isLoading ? (
+        {loading ? (
           <View style={styles.loading}>
-            <ActivityIndicator
-              color={colors.primary}
-              size="large"
-            />
+            <ActivityIndicator color={colors.primary} size="large" />
           </View>
         ) : null}
 
-        {!isLoading && loadError ? (
+        {!loading && error ? (
           <View style={styles.errorCard}>
-            <Text style={styles.errorTitle}>
-              No hemos podido abrir el restaurante
-            </Text>
-
-            <Text style={styles.errorText}>
-              {loadError}
-            </Text>
-
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                void loadRestaurant();
-              }}
-            >
-              <Text style={styles.retryText}>
-                Volver a intentar
-              </Text>
+            <Text style={styles.errorTitle}>No hemos podido abrir el restaurante</Text>
+            <Text style={styles.errorText}>{error}</Text>
+            <Pressable onPress={() => void load()}>
+              <Text style={styles.retry}>Volver a intentar</Text>
             </Pressable>
           </View>
         ) : null}
 
-        {!isLoading
-        && !loadError
-        && groupRestaurant
-        && restaurant
-        && currentStatus
-        && accessToken ? (
+        {!loading && !error && item && restaurant && status && accessToken ? (
           <>
             <View style={styles.hero}>
-              <View style={styles.restaurantIcon}>
-                <Text style={styles.restaurantIconText}>
-                  {restaurant.name
-                    .charAt(0)
-                    .toUpperCase()}
-                </Text>
+              <View style={styles.artwork}>
+                <View style={styles.artworkIcon}>
+                  <SymbolView name={{ ios: 'fork.knife', android: 'restaurant', web: 'restaurant' }} size={38} tintColor={colors.primary} />
+                </View>
               </View>
-
-              <Text style={styles.restaurantName}>
-                {restaurant.name}
-              </Text>
-
-              {restaurant.category ? (
-                <Text style={styles.category}>
-                  {restaurant.category}
-                </Text>
-              ) : null}
-
-              <View
-                style={[
-                  styles.currentStatus,
-                  {
-                    backgroundColor:
-                      currentStatus.backgroundColor,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.currentStatusText,
-                    {
-                      color: currentStatus.textColor,
-                    },
-                  ]}
-                >
-                  {currentStatus.label}
-                </Text>
+              <View style={styles.heroBody}>
+                <Text style={styles.eyebrow}>{restaurant.category?.toUpperCase() ?? 'RESTAURANTE'}</Text>
+                <Text style={styles.name}>{restaurant.name}</Text>
+                <View style={[styles.status, { backgroundColor: status.backgroundColor }]}>
+                  <Text style={[styles.statusText, { color: status.textColor }]}>{status.label}</Text>
+                </View>
               </View>
             </View>
 
-            <View style={styles.informationCard}>
-              <Text style={styles.cardLabel}>
-                Ubicación
-              </Text>
-
-              <Text style={styles.cardValue}>
-                {location || 'Sin ubicación disponible'}
-              </Text>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Información</Text>
+              <View style={styles.infoCard}>
+                <View style={styles.infoRow}>
+                  <SymbolView name={{ ios: 'mappin.and.ellipse', android: 'location_on', web: 'location_on' }} size={19} tintColor={colors.primary} />
+                  <View style={styles.infoText}>
+                    <Text style={styles.infoLabel}>Ubicación</Text>
+                    <Text style={styles.infoValue}>{location || 'Sin ubicación disponible'}</Text>
+                  </View>
+                </View>
+                <View style={styles.divider} />
+                <View style={styles.infoRow}>
+                  <SymbolView name={{ ios: 'note.text', android: 'notes', web: 'notes' }} size={19} tintColor={colors.primary} />
+                  <View style={styles.infoText}>
+                    <Text style={styles.infoLabel}>Notas del grupo</Text>
+                    <Text style={styles.infoValue}>{item.groupNotes || 'Todavía no habéis añadido notas.'}</Text>
+                  </View>
+                </View>
+              </View>
             </View>
 
-            <View style={styles.informationCard}>
-              <Text style={styles.cardLabel}>
-                Notas del grupo
-              </Text>
-
-              <Text style={styles.cardValue}>
-                {groupRestaurant.groupNotes
-                  || 'El grupo todavía no ha añadido notas.'}
-              </Text>
-            </View>
-
-            <RestaurantRatingsSection
-              accessToken={accessToken}
-              groupId={groupId}
-              groupRestaurantId={groupRestaurantId}
-            />
-
-            <RestaurantStatusSection
-              accessToken={accessToken}
-              groupId={groupId}
-              groupRestaurant={groupRestaurant}
-              onUpdated={setGroupRestaurant}
-            />
+            <RestaurantRatingsSection accessToken={accessToken} groupId={groupId} groupRestaurantId={groupRestaurantId} />
+            <RestaurantStatusSection accessToken={accessToken} groupId={groupId} groupRestaurant={item} onUpdated={setItem} />
           </>
         ) : null}
       </ScrollView>
@@ -253,126 +136,30 @@ export default function RestaurantDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flexGrow: 1,
-    gap: 22,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 36,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-  },
-  backText: {
-    color: colors.text,
-    fontSize: 34,
-    lineHeight: 36,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  headerSpacer: {
-    width: 44,
-  },
-  loading: {
-    alignItems: 'center',
-    paddingVertical: 100,
-  },
-  hero: {
-    alignItems: 'center',
-    gap: 10,
-    paddingTop: 12,
-  },
-  restaurantIcon: {
-    width: 82,
-    height: 82,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 27,
-    backgroundColor: colors.primary,
-  },
-  restaurantIconText: {
-    color: colors.white,
-    fontSize: 34,
-    fontWeight: '800',
-  },
-  restaurantName: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 34,
-    textAlign: 'center',
-  },
-  category: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  currentStatus: {
-    borderRadius: 999,
-    paddingHorizontal: 13,
-    paddingVertical: 7,
-  },
-  currentStatusText: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  informationCard: {
-    gap: 7,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-    padding: 17,
-  },
-  cardLabel: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  cardValue: {
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  errorCard: {
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#F3C5BC',
-    borderRadius: 20,
-    backgroundColor: '#FFF1EE',
-    padding: 20,
-  },
-  errorTitle: {
-    color: colors.danger,
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  errorText: {
-    color: colors.muted,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  retryText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '800',
-  },
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  content: { flexGrow: 1, gap: 22, paddingHorizontal: 18, paddingTop: 8, paddingBottom: 36 },
+  header: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  iconButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 19 },
+  headerTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
+  loading: { alignItems: 'center', paddingVertical: 100 },
+  hero: { overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 24, backgroundColor: colors.surface },
+  artwork: { height: 170, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F1DED5' },
+  artworkIcon: { width: 88, height: 88, alignItems: 'center', justifyContent: 'center', borderRadius: 44, backgroundColor: colors.background },
+  heroBody: { alignItems: 'flex-start', gap: 8, padding: 18 },
+  eyebrow: { color: colors.primary, fontSize: 9, fontWeight: '900', letterSpacing: 1 },
+  name: { color: colors.text, fontSize: 25, lineHeight: 31, fontWeight: '900' },
+  status: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  statusText: { fontSize: 10, fontWeight: '900' },
+  section: { gap: 10 },
+  sectionTitle: { color: colors.text, fontSize: 17, fontWeight: '900' },
+  infoCard: { overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 20, backgroundColor: colors.surface },
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 15 },
+  infoText: { flex: 1, gap: 4 },
+  infoLabel: { color: colors.muted, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  infoValue: { color: colors.text, fontSize: 12, lineHeight: 18 },
+  divider: { height: StyleSheet.hairlineWidth, marginLeft: 46, backgroundColor: colors.border },
+  errorCard: { gap: 8, padding: 18, borderWidth: 1, borderColor: '#F3C5BC', borderRadius: 18, backgroundColor: '#FFF1EE' },
+  errorTitle: { color: colors.danger, fontSize: 15, fontWeight: '900' },
+  errorText: { color: colors.muted, fontSize: 12, lineHeight: 18 },
+  retry: { color: colors.primary, fontSize: 12, fontWeight: '900' },
 });

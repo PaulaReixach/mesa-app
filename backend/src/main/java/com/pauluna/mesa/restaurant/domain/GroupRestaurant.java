@@ -107,6 +107,21 @@ public class GroupRestaurant {
         );
     }
 
+    public void changeRestaurantId(
+            UUID restaurantId
+    ) {
+        this.restaurantId = Objects.requireNonNull(
+                restaurantId,
+                "El restaurante es obligatorio."
+        );
+    }
+
+    public void updateGroupNotes(
+            String groupNotes
+    ) {
+        this.groupNotes = groupNotes;
+    }
+
     public void changeProposedByUserId(
             UUID proposedByUserId
     ) {

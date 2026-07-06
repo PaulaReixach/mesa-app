@@ -119,6 +119,33 @@ public class GroupController {
         );
     }
 
+    @PutMapping("/{groupId}")
+    public ResponseEntity<GroupResponse>
+    updateGroup(
+            @PathVariable
+            UUID groupId,
+
+            @Valid
+            @RequestBody
+            UpdateGroupRequest request,
+
+            @AuthenticationPrincipal
+            Jwt jwt
+    ) {
+        UUID userId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
+
+        return ResponseEntity.ok(
+                groupService.updateGroup(
+                        groupId,
+                        request,
+                        userId
+                )
+        );
+    }
+
     @PutMapping(
             value = "/{groupId}/image",
             consumes =
