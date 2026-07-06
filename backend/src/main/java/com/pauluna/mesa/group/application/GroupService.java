@@ -41,12 +41,17 @@ public class GroupService {
     ) {
         validateUserExists(ownerUserId);
 
+        boolean acceptingCollaborators =
+                request.acceptingCollaborators() == null
+                        || request.acceptingCollaborators();
+
         RestaurantGroup restaurantGroup = new RestaurantGroup(
                 request.name().trim(),
                 normalizeOptionalValue(request.description()),
                 normalizeOptionalValue(request.imageUrl()),
                 normalizeOptionalValue(request.city()),
                 request.privacy(),
+                acceptingCollaborators,
                 ownerUserId
         );
 
@@ -78,11 +83,17 @@ public class GroupService {
                                 new GroupNotFoundException(groupId)
                         );
 
+        boolean acceptingCollaborators =
+                request.acceptingCollaborators() == null
+                        ? restaurantGroup.isAcceptingCollaborators()
+                        : request.acceptingCollaborators();
+
         restaurantGroup.updateDetails(
                 request.name().trim(),
                 normalizeOptionalValue(request.description()),
                 normalizeOptionalValue(request.city()),
-                request.privacy()
+                request.privacy(),
+                acceptingCollaborators
         );
 
         return GroupResponse.from(
