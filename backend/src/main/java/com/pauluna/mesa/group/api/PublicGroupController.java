@@ -51,6 +51,19 @@ public class PublicGroupController {
         );
     }
 
+    @GetMapping("/following")
+    public ResponseEntity<List<PublicGroupSummaryResponse>>
+    getFollowedGroups(
+            @AuthenticationPrincipal
+            Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        return ResponseEntity.ok(
+                publicGroupService.getFollowedGroups(userId)
+        );
+    }
+
     @GetMapping("/{groupId}")
     public ResponseEntity<PublicGroupDetailResponse>
     getPublicGroup(
