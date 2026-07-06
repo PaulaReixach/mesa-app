@@ -2,6 +2,12 @@ import type { GroupRestaurant } from './restaurant';
 
 export type GroupPrivacy = 'PRIVATE' | 'PUBLIC';
 
+export type CollaborationRequestStatus =
+  | 'PENDING'
+  | 'ACCEPTED'
+  | 'REJECTED'
+  | 'CANCELLED';
+
 export type RestaurantGroup = {
   id: string;
   name: string;
@@ -9,6 +15,7 @@ export type RestaurantGroup = {
   imageUrl: string | null;
   city: string | null;
   privacy: GroupPrivacy;
+  acceptingCollaborators: boolean;
   ownerUserId: string;
   createdAt: string;
   updatedAt: string;
@@ -20,6 +27,7 @@ export type CreateGroupPayload = {
   imageUrl: string | null;
   city: string | null;
   privacy: GroupPrivacy;
+  acceptingCollaborators?: boolean;
 };
 
 export type UpdateGroupPayload = {
@@ -27,6 +35,7 @@ export type UpdateGroupPayload = {
   description: string | null;
   city: string | null;
   privacy: GroupPrivacy;
+  acceptingCollaborators?: boolean;
 };
 
 export type GroupImageUploadFile = {
@@ -58,6 +67,32 @@ export type PublicGroupSummary = {
 export type PublicGroupDetail = {
   group: PublicGroupSummary;
   restaurants: GroupRestaurant[];
+};
+
+export type PublicGroupCollaborationState = {
+  acceptingCollaborators: boolean;
+  collaborating: boolean;
+  requestStatus: CollaborationRequestStatus | null;
+  retryAt: string | null;
+  pendingRequestCount: number;
+};
+
+export type CollaborationRequester = {
+  id: string;
+  name: string;
+  username: string;
+  avatarUrl: string | null;
+};
+
+export type CollaborationRequest = {
+  id: string;
+  groupId: string;
+  requester: CollaborationRequester;
+  message: string | null;
+  status: CollaborationRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+  retryAt: string | null;
 };
 
 export type CopyPublicRestaurantsPayload = {
