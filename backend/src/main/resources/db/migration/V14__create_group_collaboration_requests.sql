@@ -1,6 +1,13 @@
 ALTER TABLE restaurant_groups
     ADD COLUMN accepting_collaborators BOOLEAN NOT NULL DEFAULT TRUE;
 
+ALTER TABLE group_members
+    DROP CONSTRAINT ck_group_members_role;
+
+ALTER TABLE group_members
+    ADD CONSTRAINT ck_group_members_role
+        CHECK (role IN ('OWNER', 'MEMBER', 'COLLABORATOR'));
+
 CREATE TABLE group_collaboration_requests (
     id UUID PRIMARY KEY,
     group_id UUID NOT NULL,
