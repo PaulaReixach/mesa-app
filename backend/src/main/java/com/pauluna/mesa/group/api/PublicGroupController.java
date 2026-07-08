@@ -113,6 +113,16 @@ public class PublicGroupController {
         );
     }
 
+    @DeleteMapping("/{groupId}/collaborators/me")
+    public ResponseEntity<Void> leaveCollaboration(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        collaborationService.leaveCollaboration(groupId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{groupId}/collaboration-requests")
     public ResponseEntity<List<CollaborationRequestResponse>> getRequests(
             @PathVariable UUID groupId,
