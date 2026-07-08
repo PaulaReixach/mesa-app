@@ -1,3 +1,4 @@
+import type { GroupRole } from './group-member';
 import type { GroupRestaurant } from './restaurant';
 
 export type GroupPrivacy = 'PRIVATE' | 'PUBLIC';
@@ -16,6 +17,7 @@ export type RestaurantGroup = {
   city: string | null;
   privacy: GroupPrivacy;
   acceptingCollaborators: boolean;
+  currentUserRole: GroupRole | null;
   ownerUserId: string;
   createdAt: string;
   updatedAt: string;
