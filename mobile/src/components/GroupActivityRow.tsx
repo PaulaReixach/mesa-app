@@ -127,7 +127,7 @@ function activityBadge(item: GroupActivityItem): ActivityBadge {
     case 'MEMBER_LEFT':
       return {
         name: {
-          ios: 'person.crop.circle.badge.minus',
+          ios: 'person.fill.xmark',
           android: 'person_remove',
           web: 'person_remove',
         },
