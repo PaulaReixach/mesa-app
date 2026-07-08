@@ -137,7 +137,7 @@ public class GroupService {
             UUID groupId,
             UUID userId
     ) {
-        validateRestaurantManagementAccess(groupId, userId);
+        getAccessibleGroup(groupId, userId);
     }
 
     @Transactional(readOnly = true)
