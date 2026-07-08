@@ -76,6 +76,7 @@ export type PublicGroupDetail = {
 export type PublicGroupCollaborationState = {
   acceptingCollaborators: boolean;
   collaborating: boolean;
+  invitationPending: boolean;
   requestStatus: CollaborationRequestStatus | null;
   retryAt: string | null;
   pendingRequestCount: number;

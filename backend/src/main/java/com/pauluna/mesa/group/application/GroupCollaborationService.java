@@ -15,11 +15,13 @@ import com.pauluna.mesa.group.api.CollaborationRequesterResponse;
 import com.pauluna.mesa.group.api.CreateCollaborationRequest;
 import com.pauluna.mesa.group.domain.CollaborationRequestStatus;
 import com.pauluna.mesa.group.domain.GroupCollaborationRequest;
+import com.pauluna.mesa.group.domain.GroupInvitationStatus;
 import com.pauluna.mesa.group.domain.GroupMember;
 import com.pauluna.mesa.group.domain.GroupPrivacy;
 import com.pauluna.mesa.group.domain.GroupRole;
 import com.pauluna.mesa.group.domain.RestaurantGroup;
 import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository;
+import com.pauluna.mesa.group.infrastructure.GroupInvitationRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
 import com.pauluna.mesa.restaurant.application.RestaurantProposalService;
@@ -38,6 +40,7 @@ public class GroupCollaborationService {
 
     private final RestaurantGroupRepository restaurantGroupRepository;
     private final GroupCollaborationRequestRepository requestRepository;
+    private final GroupInvitationRepository invitationRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final GroupRestaurantRepository groupRestaurantRepository;
     private final RestaurantRatingRepository restaurantRatingRepository;
@@ -49,6 +52,7 @@ public class GroupCollaborationService {
     public GroupCollaborationService(
             RestaurantGroupRepository restaurantGroupRepository,
             GroupCollaborationRequestRepository requestRepository,
+            GroupInvitationRepository invitationRepository,
             GroupMemberRepository groupMemberRepository,
             GroupRestaurantRepository groupRestaurantRepository,
             RestaurantRatingRepository restaurantRatingRepository,
@@ -59,6 +63,7 @@ public class GroupCollaborationService {
     ) {
         this.restaurantGroupRepository = restaurantGroupRepository;
         this.requestRepository = requestRepository;
+        this.invitationRepository = invitationRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.groupRestaurantRepository = groupRestaurantRepository;
         this.restaurantRatingRepository = restaurantRatingRepository;
@@ -92,6 +97,19 @@ public class GroupCollaborationService {
                     "Ya formas parte de este grupo."
             );
         }
+
+        invitationRepository
+                .findByGroupIdAndInvitedUserIdAndStatus(
+                        groupId,
+                        userId,
+                        GroupInvitationStatus.PENDING
+                )
+                .ifPresent(existing -> {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            "Ya tienes una invitación pendiente para este grupo."
+                    );
+                });
 
         requestRepository
                 .findByGroupIdAndUserIdAndStatus(

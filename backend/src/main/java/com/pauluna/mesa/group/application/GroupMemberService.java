@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.pauluna.mesa.group.api.AddGroupMemberRequest;
 import com.pauluna.mesa.group.api.GroupMemberResponse;
 import com.pauluna.mesa.group.api.GroupResponse;
 import com.pauluna.mesa.group.domain.CollaborationRequestStatus;
@@ -24,8 +23,6 @@ import com.pauluna.mesa.restaurant.application.RestaurantProposalService;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
 import com.pauluna.mesa.restaurant.infrastructure.GroupRestaurantRepository;
 import com.pauluna.mesa.restaurant.infrastructure.RestaurantRatingRepository;
-import com.pauluna.mesa.user.application.PrivacyPreferencesService;
-import com.pauluna.mesa.user.application.UserNotFoundByUsernameException;
 import com.pauluna.mesa.user.application.UserNotFoundException;
 import com.pauluna.mesa.user.domain.User;
 import com.pauluna.mesa.user.infrastructure.UserRepository;
@@ -41,7 +38,6 @@ public class GroupMemberService {
     private final RestaurantRatingRepository restaurantRatingRepository;
     private final RestaurantProposalService restaurantProposalService;
     private final UserRepository userRepository;
-    private final PrivacyPreferencesService privacyPreferencesService;
 
     public GroupMemberService(
             GroupService groupService,
@@ -50,8 +46,7 @@ public class GroupMemberService {
             GroupRestaurantRepository groupRestaurantRepository,
             RestaurantRatingRepository restaurantRatingRepository,
             RestaurantProposalService restaurantProposalService,
-            UserRepository userRepository,
-            PrivacyPreferencesService privacyPreferencesService
+            UserRepository userRepository
     ) {
         this.groupService = groupService;
         this.groupMemberRepository = groupMemberRepository;
@@ -60,7 +55,6 @@ public class GroupMemberService {
         this.restaurantRatingRepository = restaurantRatingRepository;
         this.restaurantProposalService = restaurantProposalService;
         this.userRepository = userRepository;
-        this.privacyPreferencesService = privacyPreferencesService;
     }
 
     @Transactional(readOnly = true)
@@ -79,32 +73,25 @@ public class GroupMemberService {
                                 groupId
                         );
 
-        Set<UUID> userIds =
-                memberships
-                        .stream()
-                        .map(GroupMember::getUserId)
-                        .collect(
-                                Collectors.toSet()
-                        );
+        Set<UUID> userIds = memberships
+                .stream()
+                .map(GroupMember::getUserId)
+                .collect(Collectors.toSet());
 
-        Map<UUID, User> usersById =
-                userRepository
-                        .findAllById(userIds)
-                        .stream()
-                        .collect(
-                                Collectors.toMap(
-                                        User::getId,
-                                        Function.identity()
-                                )
-                        );
+        Map<UUID, User> usersById = userRepository
+                .findAllById(userIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        User::getId,
+                        Function.identity()
+                ));
 
         return memberships
                 .stream()
                 .sorted(
                         Comparator
                                 .comparingInt(
-                                        GroupMemberService
-                                                ::roleOrder
+                                        GroupMemberService::roleOrder
                                 )
                                 .thenComparing(
                                         GroupMember::getJoinedAt
@@ -120,71 +107,6 @@ public class GroupMemberService {
                         )
                 )
                 .toList();
-    }
-
-    public GroupMemberResponse addMember(
-            UUID groupId,
-            AddGroupMemberRequest request,
-            UUID requesterUserId
-    ) {
-        groupService.validateOwnerAccess(
-                groupId,
-                requesterUserId
-        );
-
-        GroupResponse group = groupService.getGroup(
-                groupId,
-                requesterUserId
-        );
-
-        String username = request.username().trim();
-
-        User invitedUser = userRepository
-                .findByUsernameIgnoreCase(username)
-                .orElseThrow(() ->
-                        new UserNotFoundByUsernameException(username)
-                );
-
-        boolean alreadyBelongsToGroup = groupMemberRepository
-                .existsByGroupIdAndUserId(
-                        groupId,
-                        invitedUser.getId()
-                );
-
-        if (alreadyBelongsToGroup) {
-            throw new GroupMemberAlreadyExistsException(
-                    groupId,
-                    invitedUser.getUsername()
-            );
-        }
-
-        boolean invitationsEnabled = privacyPreferencesService
-                .areGroupInvitationsEnabled(
-                        invitedUser.getId()
-                );
-
-        if (!invitationsEnabled) {
-            throw new GroupInvitationsDisabledException(
-                    invitedUser.getUsername()
-            );
-        }
-
-        GroupRole role = group.privacy() == GroupPrivacy.PUBLIC
-                ? GroupRole.CONTRIBUTOR
-                : GroupRole.MEMBER;
-
-        GroupMember savedMembership = groupMemberRepository.save(
-                new GroupMember(
-                        groupId,
-                        invitedUser.getId(),
-                        role
-                )
-        );
-
-        return GroupMemberResponse.from(
-                savedMembership,
-                invitedUser
-        );
     }
 
     public void removeMember(
@@ -259,9 +181,7 @@ public class GroupMemberService {
         groupMemberRepository.delete(membership);
     }
 
-    private static int roleOrder(
-            GroupMember membership
-    ) {
+    private static int roleOrder(GroupMember membership) {
         return membership.getRole() == GroupRole.OWNER
                 ? 0
                 : 1;

@@ -1,7 +1,5 @@
 package com.pauluna.mesa.group.application;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,12 +11,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.pauluna.mesa.group.api.AddGroupMemberRequest;
-import com.pauluna.mesa.group.api.GroupMemberResponse;
 import com.pauluna.mesa.group.api.GroupResponse;
 import com.pauluna.mesa.group.domain.CollaborationRequestStatus;
 import com.pauluna.mesa.group.domain.GroupCollaborationRequest;
@@ -30,8 +25,6 @@ import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.restaurant.application.RestaurantProposalService;
 import com.pauluna.mesa.restaurant.infrastructure.GroupRestaurantRepository;
 import com.pauluna.mesa.restaurant.infrastructure.RestaurantRatingRepository;
-import com.pauluna.mesa.user.application.PrivacyPreferencesService;
-import com.pauluna.mesa.user.domain.User;
 import com.pauluna.mesa.user.infrastructure.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,9 +55,6 @@ class GroupMemberServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    @Mock
-    private PrivacyPreferencesService privacyPreferencesService;
-
     private GroupMemberService service;
 
     @BeforeEach
@@ -76,43 +66,8 @@ class GroupMemberServiceTest {
                 groupRestaurantRepository,
                 restaurantRatingRepository,
                 restaurantProposalService,
-                userRepository,
-                privacyPreferencesService
+                userRepository
         );
-    }
-
-    @Test
-    void directInvitationToPublicGroupCreatesContributor() {
-        User invitedUser = mock(User.class);
-        GroupResponse publicGroup = groupResponse(GroupPrivacy.PUBLIC);
-
-        when(groupService.getGroup(GROUP_ID, OWNER_ID))
-                .thenReturn(publicGroup);
-        when(userRepository.findByUsernameIgnoreCase("paula"))
-                .thenReturn(Optional.of(invitedUser));
-        when(invitedUser.getId()).thenReturn(MEMBER_ID);
-        when(invitedUser.getName()).thenReturn("Paula");
-        when(invitedUser.getUsername()).thenReturn("paula");
-        when(privacyPreferencesService.areGroupInvitationsEnabled(MEMBER_ID))
-                .thenReturn(true);
-        when(memberRepository.save(any(GroupMember.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        GroupMemberResponse response = service.addMember(
-                GROUP_ID,
-                new AddGroupMemberRequest("paula"),
-                OWNER_ID
-        );
-
-        ArgumentCaptor<GroupMember> membershipCaptor =
-                ArgumentCaptor.forClass(GroupMember.class);
-        verify(memberRepository).save(membershipCaptor.capture());
-
-        assertEquals(
-                GroupRole.CONTRIBUTOR,
-                membershipCaptor.getValue().getRole()
-        );
-        assertEquals(GroupRole.CONTRIBUTOR, response.role());
     }
 
     @Test

@@ -91,6 +91,10 @@ export function PublicGroupCollaborationActions({
     );
   }
 
+  function openInvitations(): void {
+    router.push('/group-invitations' as Href);
+  }
+
   async function cancelRequest(): Promise<void> {
     if (!accessToken || cancelling) {
       return;
@@ -201,6 +205,42 @@ export function PublicGroupCollaborationActions({
     );
   }
 
+  if (state?.invitationPending) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.pendingBadge}>
+          <SymbolView
+            name={{
+              ios: 'envelope.badge.fill',
+              android: 'mark_email_unread',
+              web: 'mark_email_unread',
+            }}
+            size={16}
+            tintColor="#9A6A21"
+          />
+          <Text style={styles.pendingText}>
+            Tienes una invitación pendiente
+          </Text>
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={openInvitations}
+          style={({ pressed }) => [
+            styles.outlineButton,
+            pressed ? styles.pressed : null,
+          ]}
+        >
+          <Text style={styles.outlineButtonText}>
+            Ver invitación
+          </Text>
+        </Pressable>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      </View>
+    );
+  }
+
   const retryDate = state?.retryAt
     ? new Date(state.retryAt)
     : null;
@@ -267,13 +307,21 @@ export function PublicGroupCollaborationActions({
       <View style={styles.container}>
         <View style={styles.pendingBadge}>
           <SymbolView
-            name={{ ios: 'clock.fill', android: 'schedule', web: 'schedule' }}
+            name={{
+              ios: 'clock.fill',
+              android: 'schedule',
+              web: 'schedule',
+            }}
             size={16}
             tintColor="#9A6A21"
           />
           <Text style={styles.pendingText}>Solicitud pendiente</Text>
         </View>
-        <Pressable accessibilityRole="button" disabled={cancelling} onPress={confirmCancel}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={cancelling}
+          onPress={confirmCancel}
+        >
           <Text style={styles.cancelText}>
             {cancelling ? 'Cancelando...' : 'Cancelar solicitud'}
           </Text>
@@ -286,7 +334,9 @@ export function PublicGroupCollaborationActions({
   if (!state?.acceptingCollaborators) {
     return (
       <View style={styles.disabledBadge}>
-        <Text style={styles.disabledText}>No acepta nuevas colaboraciones</Text>
+        <Text style={styles.disabledText}>
+          No acepta nuevas colaboraciones
+        </Text>
       </View>
     );
   }
@@ -306,14 +356,23 @@ export function PublicGroupCollaborationActions({
       <Pressable
         accessibilityRole="button"
         onPress={openRequest}
-        style={({ pressed }) => [styles.outlineButton, pressed ? styles.pressed : null]}
+        style={({ pressed }) => [
+          styles.outlineButton,
+          pressed ? styles.pressed : null,
+        ]}
       >
         <SymbolView
-          name={{ ios: 'person.badge.plus', android: 'person_add', web: 'person_add' }}
+          name={{
+            ios: 'person.badge.plus',
+            android: 'person_add',
+            web: 'person_add',
+          }}
           size={17}
           tintColor={colors.primary}
         />
-        <Text style={styles.outlineButtonText}>Solicitar colaborar</Text>
+        <Text style={styles.outlineButtonText}>
+          Solicitar colaborar
+        </Text>
       </Pressable>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
@@ -342,7 +401,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: '#FFF4EF',
   },
-  outlineButtonText: { color: colors.primary, fontSize: 12, fontWeight: '900' },
+  outlineButtonText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '900',
+  },
   successBadge: {
     minHeight: 46,
     flexDirection: 'row',
@@ -352,7 +415,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: '#E8EEDD',
   },
-  successText: { color: '#607349', fontSize: 12, fontWeight: '900' },
+  successText: {
+    color: '#607349',
+    fontSize: 12,
+    fontWeight: '900',
+  },
   pendingBadge: {
     minHeight: 46,
     flexDirection: 'row',
@@ -362,9 +429,23 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: '#FFF0D9',
   },
-  pendingText: { color: '#9A6A21', fontSize: 12, fontWeight: '900' },
-  cancelText: { color: colors.danger, fontSize: 11, fontWeight: '900', textAlign: 'center' },
-  leaveText: { color: colors.danger, fontSize: 11, fontWeight: '900', textAlign: 'center' },
+  pendingText: {
+    color: '#9A6A21',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  cancelText: {
+    color: colors.danger,
+    fontSize: 11,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  leaveText: {
+    color: colors.danger,
+    fontSize: 11,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
   disabledBadge: {
     minHeight: 46,
     alignItems: 'center',
@@ -375,7 +456,17 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: colors.inputBackground,
   },
-  disabledText: { color: colors.muted, fontSize: 10, fontWeight: '800', textAlign: 'center' },
-  errorText: { color: colors.danger, fontSize: 10, lineHeight: 15, textAlign: 'center' },
+  disabledText: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 10,
+    lineHeight: 15,
+    textAlign: 'center',
+  },
   pressed: { opacity: 0.72 },
 });

@@ -10,10 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.pauluna.mesa.group.api.PublicGroupCollaborationStateResponse;
 import com.pauluna.mesa.group.domain.CollaborationRequestStatus;
 import com.pauluna.mesa.group.domain.GroupCollaborationRequest;
+import com.pauluna.mesa.group.domain.GroupInvitationStatus;
 import com.pauluna.mesa.group.domain.GroupPrivacy;
 import com.pauluna.mesa.group.domain.GroupRole;
 import com.pauluna.mesa.group.domain.RestaurantGroup;
 import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository;
+import com.pauluna.mesa.group.infrastructure.GroupInvitationRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
 import com.pauluna.mesa.user.application.UserNotFoundException;
@@ -28,17 +30,20 @@ public class PublicGroupCollaborationStateService {
     private final RestaurantGroupRepository groupRepository;
     private final GroupMemberRepository memberRepository;
     private final GroupCollaborationRequestRepository requestRepository;
+    private final GroupInvitationRepository invitationRepository;
     private final UserRepository userRepository;
 
     public PublicGroupCollaborationStateService(
             RestaurantGroupRepository groupRepository,
             GroupMemberRepository memberRepository,
             GroupCollaborationRequestRepository requestRepository,
+            GroupInvitationRepository invitationRepository,
             UserRepository userRepository
     ) {
         this.groupRepository = groupRepository;
         this.memberRepository = memberRepository;
         this.requestRepository = requestRepository;
+        this.invitationRepository = invitationRepository;
         this.userRepository = userRepository;
     }
 
@@ -66,6 +71,16 @@ public class PublicGroupCollaborationStateService {
                                 member.getRole() != GroupRole.OWNER
                         )
                         .orElse(false);
+
+        boolean invitationPending = !owner
+                && !collaborating
+                && invitationRepository
+                        .findByGroupIdAndInvitedUserIdAndStatus(
+                                groupId,
+                                userId,
+                                GroupInvitationStatus.PENDING
+                        )
+                        .isPresent();
 
         GroupCollaborationRequest latest = requestRepository
                 .findFirstByGroupIdAndUserIdOrderByCreatedAtDesc(
@@ -97,6 +112,7 @@ public class PublicGroupCollaborationStateService {
         return new PublicGroupCollaborationStateResponse(
                 group.isAcceptingCollaborators(),
                 collaborating,
+                invitationPending,
                 status,
                 retryAt,
                 pendingCount
