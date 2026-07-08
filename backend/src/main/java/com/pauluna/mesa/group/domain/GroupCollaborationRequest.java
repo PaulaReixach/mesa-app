@@ -68,6 +68,10 @@ public class GroupCollaborationRequest {
         this.status = CollaborationRequestStatus.CANCELLED;
     }
 
+    public void leave() {
+        this.status = CollaborationRequestStatus.LEFT;
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
