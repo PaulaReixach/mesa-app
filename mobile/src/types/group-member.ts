@@ -12,7 +12,3 @@ export type GroupMember = {
   role: GroupRole;
   joinedAt: string;
 };
-
-export type AddGroupMemberPayload = {
-  username: string;
-};
