@@ -1,5 +1,5 @@
 import { SymbolView } from 'expo-symbols';
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import {
   Pressable,
   StyleSheet,
@@ -195,10 +195,17 @@ export default function AppLayout() {
 
       <Tabs.Screen
         name="groups"
+        listeners={{
+          tabPress: event => {
+            event.preventDefault();
+            router.replace('/groups');
+          },
+        }}
         options={{
           title: 'Grupos',
           tabBarAccessibilityLabel:
             'Grupos',
+          popToTopOnBlur: true,
 
           tabBarIcon: ({
             focused,
@@ -296,7 +303,6 @@ export default function AppLayout() {
         name="about-mesa"
         options={hiddenScreenOptions}
       />
-      
     </Tabs>
   );
 }
