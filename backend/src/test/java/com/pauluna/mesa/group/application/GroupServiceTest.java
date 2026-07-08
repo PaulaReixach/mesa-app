@@ -181,6 +181,19 @@ class GroupServiceTest {
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
     }
 
+    @Test
+    void ownerCanDeleteGroup() {
+        RestaurantGroup group = mock(RestaurantGroup.class);
+        GroupMember owner = mock(GroupMember.class);
+
+        prepareOwnerAccess(group, owner);
+
+        service.deleteGroup(GROUP_ID, OWNER_ID);
+
+        verify(groupRepository).deleteById(GROUP_ID);
+        verify(groupRepository).flush();
+    }
+
     private void prepareOwnerAccess(
             RestaurantGroup group,
             GroupMember owner
