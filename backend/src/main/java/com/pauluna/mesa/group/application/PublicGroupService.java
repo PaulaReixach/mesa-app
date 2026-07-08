@@ -1,5 +1,7 @@
 package com.pauluna.mesa.group.application;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -23,7 +25,9 @@ import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
 import com.pauluna.mesa.restaurant.api.GroupRestaurantResponse;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
 import com.pauluna.mesa.restaurant.domain.Restaurant;
+import com.pauluna.mesa.restaurant.domain.RestaurantRating;
 import com.pauluna.mesa.restaurant.infrastructure.GroupRestaurantRepository;
+import com.pauluna.mesa.restaurant.infrastructure.RestaurantRatingRepository;
 import com.pauluna.mesa.restaurant.infrastructure.RestaurantRepository;
 import com.pauluna.mesa.user.application.UserNotFoundException;
 import com.pauluna.mesa.user.domain.User;
@@ -38,6 +42,7 @@ public class PublicGroupService {
     private final GroupFollowerRepository groupFollowerRepository;
     private final GroupRestaurantRepository groupRestaurantRepository;
     private final RestaurantRepository restaurantRepository;
+    private final RestaurantRatingRepository restaurantRatingRepository;
     private final UserRepository userRepository;
 
     public PublicGroupService(
@@ -46,6 +51,7 @@ public class PublicGroupService {
             GroupFollowerRepository groupFollowerRepository,
             GroupRestaurantRepository groupRestaurantRepository,
             RestaurantRepository restaurantRepository,
+            RestaurantRatingRepository restaurantRatingRepository,
             UserRepository userRepository
     ) {
         this.restaurantGroupRepository = restaurantGroupRepository;
@@ -53,6 +59,7 @@ public class PublicGroupService {
         this.groupFollowerRepository = groupFollowerRepository;
         this.groupRestaurantRepository = groupRestaurantRepository;
         this.restaurantRepository = restaurantRepository;
+        this.restaurantRatingRepository = restaurantRatingRepository;
         this.userRepository = userRepository;
     }
 
@@ -253,18 +260,44 @@ public class PublicGroupService {
                                 Function.identity()
                         ));
 
+        List<UUID> groupRestaurantIds = groupRestaurants
+                .stream()
+                .map(GroupRestaurant::getId)
+                .toList();
+
+        Map<UUID, RatingSummary> ratingsByGroupRestaurantId =
+                restaurantRatingRepository
+                        .findAllByGroupRestaurantIdIn(groupRestaurantIds)
+                        .stream()
+                        .collect(Collectors.groupingBy(
+                                RestaurantRating::getGroupRestaurantId
+                        ))
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> RatingSummary.from(entry.getValue())
+                        ));
+
         return groupRestaurants
                 .stream()
-                .map(groupRestaurant ->
-                        GroupRestaurantResponse.from(
-                                groupRestaurant,
-                                getRestaurantFromMap(
-                                        restaurantsById,
-                                        groupRestaurant
-                                                .getRestaurantId()
-                                )
-                        )
-                )
+                .map(groupRestaurant -> {
+                    RatingSummary ratingSummary =
+                            ratingsByGroupRestaurantId.getOrDefault(
+                                    groupRestaurant.getId(),
+                                    RatingSummary.empty()
+                            );
+
+                    return GroupRestaurantResponse.from(
+                            groupRestaurant,
+                            getRestaurantFromMap(
+                                    restaurantsById,
+                                    groupRestaurant.getRestaurantId()
+                            ),
+                            ratingSummary.averageScore(),
+                            ratingSummary.ratingsCount()
+                    );
+                })
                 .toList();
     }
 
@@ -335,6 +368,33 @@ public class PublicGroupService {
     private void validateUserExists(UUID userId) {
         if (!userRepository.existsById(userId)) {
             throw new UserNotFoundException(userId);
+        }
+    }
+
+    private record RatingSummary(
+            BigDecimal averageScore,
+            long ratingsCount
+    ) {
+
+        private static RatingSummary from(
+                List<RestaurantRating> ratings
+        ) {
+            double average = ratings
+                    .stream()
+                    .mapToInt(RestaurantRating::getScore)
+                    .average()
+                    .orElse(0);
+
+            return new RatingSummary(
+                    BigDecimal
+                            .valueOf(average)
+                            .setScale(1, RoundingMode.HALF_UP),
+                    ratings.size()
+            );
+        }
+
+        private static RatingSummary empty() {
+            return new RatingSummary(null, 0);
         }
     }
 }
