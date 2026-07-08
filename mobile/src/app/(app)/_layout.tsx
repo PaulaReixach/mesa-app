@@ -280,6 +280,11 @@ export default function AppLayout() {
       />
 
       <Tabs.Screen
+        name="group-invitations"
+        options={hiddenScreenOptions}
+      />
+
+      <Tabs.Screen
         name="notification-settings"
         options={hiddenScreenOptions}
       />
@@ -332,7 +337,6 @@ const styles = StyleSheet.create({
       navigationColors.background,
 
     borderRadius: 22,
-
     backgroundColor: colors.primary,
 
     shadowColor: '#7E3B2A',
