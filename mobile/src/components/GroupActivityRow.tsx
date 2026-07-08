@@ -161,6 +161,12 @@ function activityBadge(item: GroupActivityItem): ActivityBadge {
         tintColor: '#A46B16',
       };
   }
+
+  return {
+    name: { ios: 'circle.fill', android: 'circle', web: 'circle' },
+    backgroundColor: '#FBE9E2',
+    tintColor: colors.primary,
+  };
 }
 
 export function GroupActivityRow({ item }: { item: GroupActivityItem }) {
