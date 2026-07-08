@@ -1,6 +1,7 @@
 package com.pauluna.mesa.group.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -82,7 +83,7 @@ class PublicGroupMemberServiceTest {
         when(groupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
         when(memberRepository.findAllByGroupIdOrderByJoinedAtAsc(GROUP_ID))
                 .thenReturn(List.of(owner, contributor, member));
-        when(userRepository.findAllById(List.of(OWNER_ID, CONTRIBUTOR_ID)))
+        when(userRepository.findAllById(any()))
                 .thenReturn(List.of(ownerUser, contributorUser));
 
         List<GroupMemberResponse> result = service.getCollaborators(GROUP_ID);
