@@ -156,17 +156,30 @@ export default function GroupDetailScreen() {
   }, [loadGroupData]));
 
   useEffect(() => {
-    if (!groupId || group?.currentUserRole !== 'CONTRIBUTOR') {
+    if (
+      !groupId
+      || group?.privacy !== 'PUBLIC'
+      || group.currentUserRole === 'OWNER'
+    ) {
       return;
     }
 
     router.replace(`/groups/public/${groupId}` as Href);
-  }, [group?.currentUserRole, groupId]);
+  }, [group?.currentUserRole, group?.privacy, groupId]);
 
   const isOwner = Boolean(group && user?.id === group.ownerUserId);
-  const canManageRestaurants = group?.currentUserRole !== 'CONTRIBUTOR';
-  const isRedirectingToPublicGroup =
-    group?.currentUserRole === 'CONTRIBUTOR';
+  const canManageRestaurants = Boolean(
+    group
+    && (
+      group.privacy !== 'PUBLIC'
+      || group.currentUserRole === 'OWNER'
+    ),
+  );
+  const isRedirectingToPublicGroup = Boolean(
+    group
+    && group.privacy === 'PUBLIC'
+    && group.currentUserRole !== 'OWNER',
+  );
 
   function openCreateRestaurant(): void {
     router.push({ pathname: '/groups/[groupId]/restaurants/create', params: { groupId } });

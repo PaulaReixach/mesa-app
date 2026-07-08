@@ -63,7 +63,7 @@ public class PublicGroupCollaborationStateService {
                 && memberRepository
                         .findByGroupIdAndUserId(groupId, userId)
                         .map(member ->
-                                member.getRole() == GroupRole.CONTRIBUTOR
+                                member.getRole() != GroupRole.OWNER
                         )
                         .orElse(false);
 

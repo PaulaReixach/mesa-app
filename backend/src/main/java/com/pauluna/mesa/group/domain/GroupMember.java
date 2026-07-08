@@ -57,6 +57,18 @@ public class GroupMember {
         this.role = role;
     }
 
+    public void becomeMember() {
+        if (role != GroupRole.OWNER) {
+            this.role = GroupRole.MEMBER;
+        }
+    }
+
+    public void becomeContributor() {
+        if (role != GroupRole.OWNER) {
+            this.role = GroupRole.CONTRIBUTOR;
+        }
+    }
+
     @PrePersist
     void onCreate() {
         this.joinedAt = Instant.now();

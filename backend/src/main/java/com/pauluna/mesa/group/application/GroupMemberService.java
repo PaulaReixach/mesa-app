@@ -13,8 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.pauluna.mesa.group.api.AddGroupMemberRequest;
 import com.pauluna.mesa.group.api.GroupMemberResponse;
+import com.pauluna.mesa.group.api.GroupResponse;
+import com.pauluna.mesa.group.domain.CollaborationRequestStatus;
 import com.pauluna.mesa.group.domain.GroupMember;
+import com.pauluna.mesa.group.domain.GroupPrivacy;
 import com.pauluna.mesa.group.domain.GroupRole;
+import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.restaurant.application.RestaurantProposalService;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
@@ -31,41 +35,32 @@ import com.pauluna.mesa.user.infrastructure.UserRepository;
 public class GroupMemberService {
 
     private final GroupService groupService;
-
-    private final GroupMemberRepository
-            groupMemberRepository;
-
+    private final GroupMemberRepository groupMemberRepository;
+    private final GroupCollaborationRequestRepository collaborationRequestRepository;
     private final GroupRestaurantRepository groupRestaurantRepository;
     private final RestaurantRatingRepository restaurantRatingRepository;
     private final RestaurantProposalService restaurantProposalService;
-
     private final UserRepository userRepository;
-
-    private final PrivacyPreferencesService
-            privacyPreferencesService;
+    private final PrivacyPreferencesService privacyPreferencesService;
 
     public GroupMemberService(
             GroupService groupService,
             GroupMemberRepository groupMemberRepository,
+            GroupCollaborationRequestRepository collaborationRequestRepository,
             GroupRestaurantRepository groupRestaurantRepository,
             RestaurantRatingRepository restaurantRatingRepository,
             RestaurantProposalService restaurantProposalService,
             UserRepository userRepository,
-            PrivacyPreferencesService
-                    privacyPreferencesService
+            PrivacyPreferencesService privacyPreferencesService
     ) {
         this.groupService = groupService;
-
-        this.groupMemberRepository =
-                groupMemberRepository;
-
+        this.groupMemberRepository = groupMemberRepository;
+        this.collaborationRequestRepository = collaborationRequestRepository;
         this.groupRestaurantRepository = groupRestaurantRepository;
         this.restaurantRatingRepository = restaurantRatingRepository;
         this.restaurantProposalService = restaurantProposalService;
         this.userRepository = userRepository;
-
-        this.privacyPreferencesService =
-                privacyPreferencesService;
+        this.privacyPreferencesService = privacyPreferencesService;
     }
 
     @Transactional(readOnly = true)
@@ -137,26 +132,24 @@ public class GroupMemberService {
                 requesterUserId
         );
 
-        String username =
-                request.username().trim();
+        GroupResponse group = groupService.getGroup(
+                groupId,
+                requesterUserId
+        );
 
-        User invitedUser =
-                userRepository
-                        .findByUsernameIgnoreCase(
-                                username
-                        )
-                        .orElseThrow(() ->
-                                new UserNotFoundByUsernameException(
-                                        username
-                                )
-                        );
+        String username = request.username().trim();
 
-        boolean alreadyBelongsToGroup =
-                groupMemberRepository
-                        .existsByGroupIdAndUserId(
-                                groupId,
-                                invitedUser.getId()
-                        );
+        User invitedUser = userRepository
+                .findByUsernameIgnoreCase(username)
+                .orElseThrow(() ->
+                        new UserNotFoundByUsernameException(username)
+                );
+
+        boolean alreadyBelongsToGroup = groupMemberRepository
+                .existsByGroupIdAndUserId(
+                        groupId,
+                        invitedUser.getId()
+                );
 
         if (alreadyBelongsToGroup) {
             throw new GroupMemberAlreadyExistsException(
@@ -165,11 +158,10 @@ public class GroupMemberService {
             );
         }
 
-        boolean invitationsEnabled =
-                privacyPreferencesService
-                        .areGroupInvitationsEnabled(
-                                invitedUser.getId()
-                        );
+        boolean invitationsEnabled = privacyPreferencesService
+                .areGroupInvitationsEnabled(
+                        invitedUser.getId()
+                );
 
         if (!invitationsEnabled) {
             throw new GroupInvitationsDisabledException(
@@ -177,16 +169,17 @@ public class GroupMemberService {
             );
         }
 
-        GroupMember groupMember =
+        GroupRole role = group.privacy() == GroupPrivacy.PUBLIC
+                ? GroupRole.CONTRIBUTOR
+                : GroupRole.MEMBER;
+
+        GroupMember savedMembership = groupMemberRepository.save(
                 new GroupMember(
                         groupId,
                         invitedUser.getId(),
-                        GroupRole.MEMBER
-                );
-
-        GroupMember savedMembership =
-                groupMemberRepository
-                        .save(groupMember);
+                        role
+                )
+        );
 
         return GroupMemberResponse.from(
                 savedMembership,
@@ -204,29 +197,31 @@ public class GroupMemberService {
                 requesterUserId
         );
 
-        GroupMember membership =
-                groupMemberRepository
-                        .findByGroupIdAndUserId(
+        GroupResponse group = groupService.getGroup(
+                groupId,
+                requesterUserId
+        );
+
+        GroupMember membership = groupMemberRepository
+                .findByGroupIdAndUserId(
+                        groupId,
+                        memberUserId
+                )
+                .orElseThrow(() ->
+                        new GroupMemberNotFoundException(
                                 groupId,
                                 memberUserId
                         )
-                        .orElseThrow(() ->
-                                new GroupMemberNotFoundException(
-                                        groupId,
-                                        memberUserId
-                                )
-                        );
+                );
 
-        if (
-                membership.getRole()
-                        == GroupRole.OWNER
-        ) {
-            throw new GroupOwnerCannotBeRemovedException(
-                    groupId
-            );
+        if (membership.getRole() == GroupRole.OWNER) {
+            throw new GroupOwnerCannotBeRemovedException(groupId);
         }
 
-        if (membership.getRole() == GroupRole.CONTRIBUTOR) {
+        boolean publicCollaborator =
+                group.privacy() == GroupPrivacy.PUBLIC;
+
+        if (publicCollaborator) {
             List<UUID> groupRestaurantIds = groupRestaurantRepository
                     .findAllByGroupIdOrderByCreatedAtDesc(groupId)
                     .stream()
@@ -247,16 +242,27 @@ public class GroupMemberService {
             );
         }
 
-        groupMemberRepository.delete(
-                membership
-        );
+        collaborationRequestRepository
+                .findFirstByGroupIdAndUserIdOrderByCreatedAtDesc(
+                        groupId,
+                        memberUserId
+                )
+                .filter(request ->
+                        request.getStatus()
+                                == CollaborationRequestStatus.ACCEPTED
+                )
+                .ifPresent(request -> {
+                    request.leave();
+                    collaborationRequestRepository.save(request);
+                });
+
+        groupMemberRepository.delete(membership);
     }
 
     private static int roleOrder(
             GroupMember membership
     ) {
-        return membership.getRole()
-                == GroupRole.OWNER
+        return membership.getRole() == GroupRole.OWNER
                 ? 0
                 : 1;
     }
@@ -265,13 +271,10 @@ public class GroupMemberService {
             Map<UUID, User> usersById,
             UUID userId
     ) {
-        User user =
-                usersById.get(userId);
+        User user = usersById.get(userId);
 
         if (user == null) {
-            throw new UserNotFoundException(
-                    userId
-            );
+            throw new UserNotFoundException(userId);
         }
 
         return user;
