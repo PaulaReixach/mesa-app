@@ -4,5 +4,6 @@ public enum CollaborationRequestStatus {
     PENDING,
     ACCEPTED,
     REJECTED,
-    CANCELLED
+    CANCELLED,
+    LEFT
 }
