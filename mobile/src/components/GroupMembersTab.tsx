@@ -50,9 +50,7 @@ export function GroupMembersTab({
       ) : null}
 
       <View style={styles.heading}>
-        <Text style={styles.headingTitle}>
-          {publicGroup ? 'Colaboradores del grupo' : 'Miembros del grupo'}
-        </Text>
+        <Text style={styles.headingTitle}>Miembros del grupo</Text>
         <Pressable
           accessibilityRole={publicGroup ? 'button' : undefined}
           disabled={!publicGroup}
