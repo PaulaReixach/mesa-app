@@ -3,7 +3,6 @@ import type { Href } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -40,19 +39,11 @@ export function GroupMembersTab({
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const { accessToken, user } = useAuth();
   const [leaving, setLeaving] = useState(false);
-  const publicGroup = privacy === 'PUBLIC';
   const participantCount = members.filter(member => member.role !== 'OWNER').length;
   const currentMembership = members.find(member => member.userId === user?.id);
   const canLeavePrivateGroup = privacy === 'PRIVATE'
     && currentMembership != null
     && currentMembership.role !== 'OWNER';
-
-  function openAll(): void {
-    if (!publicGroup || !groupId) return;
-    router.push(
-      `/groups/public/${groupId}/collaborators` as Href,
-    );
-  }
 
   async function leavePrivateGroup(): Promise<void> {
     if (!accessToken || !groupId || leaving) return;
@@ -100,15 +91,6 @@ export function GroupMembersTab({
 
       <View style={styles.heading}>
         <Text style={styles.headingTitle}>Miembros del grupo</Text>
-        <Pressable
-          accessibilityRole={publicGroup ? 'button' : undefined}
-          disabled={!publicGroup}
-          hitSlop={8}
-          onPress={openAll}
-          style={({ pressed }) => pressed ? styles.pressed : null}
-        >
-          <Text style={styles.headingCount}>Ver todos ({members.length}) ›</Text>
-        </Pressable>
       </View>
 
       <View style={styles.list}>
@@ -140,9 +122,7 @@ export function GroupMembersTab({
 
 const styles = StyleSheet.create({
   container: { gap: 12 },
-  heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  heading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headingTitle: { flex: 1, color: colors.text, fontSize: 12, fontWeight: '900' },
-  headingCount: { color: '#607349', fontSize: 9, fontWeight: '900' },
   list: { overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 17, backgroundColor: colors.surface },
-  pressed: { opacity: 0.65 },
 });
