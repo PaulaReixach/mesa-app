@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import type { Href } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GroupInfoBanner } from './GroupDetailPrimitives';
 import { GroupMemberRow } from './GroupMemberRow';
@@ -24,8 +26,16 @@ export function GroupMembersTab({
   onManageInvitations,
   onMemberPress,
 }: Props) {
+  const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const publicGroup = privacy === 'PUBLIC';
   const participantCount = members.filter(member => member.role !== 'OWNER').length;
+
+  function openAll(): void {
+    if (!publicGroup || !groupId) return;
+    router.push(
+      `/groups/public/${groupId}/collaborators` as Href,
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -43,7 +53,15 @@ export function GroupMembersTab({
         <Text style={styles.headingTitle}>
           {publicGroup ? 'Colaboradores del grupo' : 'Miembros del grupo'}
         </Text>
-        <Text style={styles.headingCount}>Ver todos ({members.length}) ›</Text>
+        <Pressable
+          accessibilityRole={publicGroup ? 'button' : undefined}
+          disabled={!publicGroup}
+          hitSlop={8}
+          onPress={openAll}
+          style={({ pressed }) => pressed ? styles.pressed : null}
+        >
+          <Text style={styles.headingCount}>Ver todos ({members.length}) ›</Text>
+        </Pressable>
       </View>
 
       <View style={styles.list}>
@@ -71,4 +89,5 @@ const styles = StyleSheet.create({
   headingTitle: { flex: 1, color: colors.text, fontSize: 12, fontWeight: '900' },
   headingCount: { color: '#607349', fontSize: 9, fontWeight: '900' },
   list: { overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 17, backgroundColor: colors.surface },
+  pressed: { opacity: 0.65 },
 });
