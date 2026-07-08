@@ -67,7 +67,7 @@ class GroupCollaborationNotificationServiceTest {
 
     @Test
     void notifiesOwnerWhenCollaborationIsRequested() {
-        RestaurantGroup group = group();
+        RestaurantGroup group = requestGroup();
         User requester = user(REQUESTER_ID, "Laura");
 
         when(groupRepository.findById(GROUP_ID))
@@ -98,7 +98,7 @@ class GroupCollaborationNotificationServiceTest {
 
     @Test
     void notifiesRequesterWhenCollaborationIsAccepted() {
-        RestaurantGroup group = group();
+        RestaurantGroup group = decisionGroup();
         User owner = user(OWNER_ID, "Paula");
 
         when(groupRepository.findById(GROUP_ID))
@@ -135,9 +135,14 @@ class GroupCollaborationNotificationServiceTest {
         return captor.getValue();
     }
 
-    private RestaurantGroup group() {
-        RestaurantGroup group = mock(RestaurantGroup.class);
+    private RestaurantGroup requestGroup() {
+        RestaurantGroup group = decisionGroup();
         when(group.getOwnerUserId()).thenReturn(OWNER_ID);
+        return group;
+    }
+
+    private RestaurantGroup decisionGroup() {
+        RestaurantGroup group = mock(RestaurantGroup.class);
         when(group.getName()).thenReturn("Rutas de Girona");
         return group;
     }
