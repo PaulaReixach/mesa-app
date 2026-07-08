@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.pauluna.mesa.group.application.GroupService;
 import com.pauluna.mesa.notification.application.NotificationService;
 import com.pauluna.mesa.restaurant.application.RestaurantService;
 
@@ -32,15 +33,20 @@ public class RestaurantController {
     private final NotificationService
             notificationService;
 
+    private final GroupService groupService;
+
     public RestaurantController(
             RestaurantService restaurantService,
-            NotificationService notificationService
+            NotificationService notificationService,
+            GroupService groupService
     ) {
         this.restaurantService =
                 restaurantService;
 
         this.notificationService =
                 notificationService;
+
+        this.groupService = groupService;
     }
 
     @PostMapping
@@ -59,6 +65,11 @@ public class RestaurantController {
                 UUID.fromString(
                         jwt.getSubject()
                 );
+
+        groupService.validateRestaurantManagementAccess(
+                groupId,
+                userId
+        );
 
         GroupRestaurantResponse createdRestaurant =
                 restaurantService.addRestaurant(
@@ -146,6 +157,11 @@ public class RestaurantController {
                         jwt.getSubject()
                 );
 
+        groupService.validateRestaurantManagementAccess(
+                groupId,
+                userId
+        );
+
         return ResponseEntity.ok(
                 restaurantService.updateRestaurant(
                         groupId,
@@ -175,6 +191,11 @@ public class RestaurantController {
                 UUID.fromString(
                         jwt.getSubject()
                 );
+
+        groupService.validateRestaurantManagementAccess(
+                groupId,
+                userId
+        );
 
         GroupRestaurantResponse response =
                 restaurantService.updateStatus(
