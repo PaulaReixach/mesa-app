@@ -31,6 +31,11 @@ public interface GroupMemberRepository
             UUID userId
     );
 
+    long deleteByGroupIdAndUserId(
+            UUID groupId,
+            UUID userId
+    );
+
     long deleteAllByUserId(
             UUID userId
     );
