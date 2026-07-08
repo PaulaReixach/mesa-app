@@ -1,10 +1,8 @@
 import { StyleSheet } from 'react-native';
 
-if (!('absoluteFillObject' in StyleSheet)) {
-  Object.assign(StyleSheet, {
-    absoluteFillObject: StyleSheet.absoluteFill,
-  });
-}
+Object.assign(StyleSheet, {
+  absoluteFillObject: StyleSheet.absoluteFill,
+});
 
 export const colors = {
   background: '#FFF8F3',
