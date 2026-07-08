@@ -1,9 +1,28 @@
 import { SymbolView } from 'expo-symbols';
-import { StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { GroupActivityRow } from './GroupActivityRow';
+import { useAuth } from '../contexts/auth-context';
+import { getGroupActivity } from '../services/group-activity-service';
 import { colors } from '../theme/colors';
+import type { GroupMember } from '../types/group-member';
 import type { GroupActivityItem } from '../types/group-activity';
+import type { GroupRestaurant } from '../types/restaurant';
+
+type Props = {
+  activity?: GroupActivityItem[];
+  groupCreatedAt?: string;
+  members?: GroupMember[];
+  owner?: unknown;
+  restaurants?: GroupRestaurant[];
+};
 
 function sectionLabel(value: string): string {
   const date = new Date(value);
@@ -17,10 +36,44 @@ function sectionLabel(value: string): string {
 }
 
 export function GroupActivityTab({
-  activity,
-}: {
-  activity: GroupActivityItem[];
-}) {
+  activity: initialActivity = [],
+  members,
+  restaurants,
+}: Props) {
+  const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  const { accessToken } = useAuth();
+  const [activity, setActivity] = useState(initialActivity);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (): Promise<void> => {
+    if (!accessToken || !groupId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setError(null);
+      setActivity(await getGroupActivity(groupId, accessToken));
+    } catch {
+      setError('No se ha podido actualizar la actividad.');
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken, groupId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
+
+  useEffect(() => {
+    if (!loading) {
+      void load();
+    }
+  }, [members, restaurants]);
+
   const recentActivity = activity.slice(0, 12);
   const sections = recentActivity.reduce<Record<string, GroupActivityItem[]>>(
     (result, item) => {
@@ -53,30 +106,40 @@ export function GroupActivityTab({
         </View>
       </View>
 
-      {recentActivity.length === 0 ? (
+      {loading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator color={colors.primary} size="small" />
+        </View>
+      ) : null}
+
+      {!loading && recentActivity.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Todavía no hay actividad</Text>
           <Text style={styles.emptyText}>
             Invitaciones, incorporaciones, puntuaciones y cambios aparecerán aquí.
           </Text>
         </View>
-      ) : (
-        ['Hoy', 'Ayer', 'Anteriores'].map(label => {
-          const items = sections[label];
-          if (!items?.length) return null;
+      ) : null}
 
-          return (
-            <View key={label} style={styles.section}>
-              <Text style={styles.sectionTitle}>{label}</Text>
-              <View style={styles.rows}>
-                {items.map(item => (
-                  <GroupActivityRow item={item} key={item.id} />
-                ))}
+      {!loading
+        ? ['Hoy', 'Ayer', 'Anteriores'].map(label => {
+            const items = sections[label];
+            if (!items?.length) return null;
+
+            return (
+              <View key={label} style={styles.section}>
+                <Text style={styles.sectionTitle}>{label}</Text>
+                <View style={styles.rows}>
+                  {items.map(item => (
+                    <GroupActivityRow item={item} key={item.id} />
+                  ))}
+                </View>
               </View>
-            </View>
-          );
-        })
-      )}
+            );
+          })
+        : null}
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }
@@ -115,6 +178,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 8,
   },
+  loading: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
   section: {
     gap: 8,
   },
@@ -144,6 +211,11 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 9,
     lineHeight: 14,
+    textAlign: 'center',
+  },
+  error: {
+    color: colors.danger,
+    fontSize: 8,
     textAlign: 'center',
   },
 });
