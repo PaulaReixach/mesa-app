@@ -15,6 +15,7 @@ import com.pauluna.mesa.group.domain.GroupMember;
 import com.pauluna.mesa.group.domain.GroupPrivacy;
 import com.pauluna.mesa.group.domain.GroupRole;
 import com.pauluna.mesa.group.domain.RestaurantGroup;
+import com.pauluna.mesa.group.infrastructure.GroupFollowerRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
 import com.pauluna.mesa.user.application.UserNotFoundException;
@@ -26,15 +27,18 @@ public class GroupService {
 
     private final RestaurantGroupRepository restaurantGroupRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final GroupFollowerRepository groupFollowerRepository;
     private final UserRepository userRepository;
 
     public GroupService(
             RestaurantGroupRepository restaurantGroupRepository,
             GroupMemberRepository groupMemberRepository,
+            GroupFollowerRepository groupFollowerRepository,
             UserRepository userRepository
     ) {
         this.restaurantGroupRepository = restaurantGroupRepository;
         this.groupMemberRepository = groupMemberRepository;
+        this.groupFollowerRepository = groupFollowerRepository;
         this.userRepository = userRepository;
     }
 
@@ -69,7 +73,11 @@ public class GroupService {
 
         groupMemberRepository.save(ownerMembership);
 
-        return GroupResponse.from(savedGroup, GroupRole.OWNER);
+        return GroupResponse.from(
+                savedGroup,
+                GroupRole.OWNER,
+                0
+        );
     }
 
     public GroupResponse updateGroup(
@@ -99,11 +107,15 @@ public class GroupService {
                 acceptingCollaborators
         );
 
-        return GroupResponse.from(
+        RestaurantGroup savedGroup =
                 restaurantGroupRepository.saveAndFlush(
                         restaurantGroup
-                ),
-                GroupRole.OWNER
+                );
+
+        return GroupResponse.from(
+                savedGroup,
+                GroupRole.OWNER,
+                getFollowerCount(savedGroup)
         );
     }
 
@@ -116,7 +128,8 @@ public class GroupService {
                 .stream()
                 .map(group -> GroupResponse.from(
                         group,
-                        getMembership(group.getId(), userId).getRole()
+                        getMembership(group.getId(), userId).getRole(),
+                        getFollowerCount(group)
                 ))
                 .toList();
     }
@@ -129,7 +142,11 @@ public class GroupService {
         RestaurantGroup group = getAccessibleGroup(groupId, userId);
         GroupMember membership = getMembership(groupId, userId);
 
-        return GroupResponse.from(group, membership.getRole());
+        return GroupResponse.from(
+                group,
+                membership.getRole(),
+                getFollowerCount(group)
+        );
     }
 
     @Transactional(readOnly = true)
@@ -202,6 +219,14 @@ public class GroupService {
                 .orElseThrow(() ->
                         new GroupAccessDeniedException(groupId)
                 );
+    }
+
+    private long getFollowerCount(RestaurantGroup group) {
+        if (group.getPrivacy() != GroupPrivacy.PUBLIC) {
+            return 0;
+        }
+
+        return groupFollowerRepository.countByGroupId(group.getId());
     }
 
     private void validateUserExists(UUID userId) {
