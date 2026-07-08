@@ -1,6 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import type { Href } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -154,8 +155,18 @@ export default function GroupDetailScreen() {
     void loadGroupData();
   }, [loadGroupData]));
 
+  useEffect(() => {
+    if (!groupId || group?.currentUserRole !== 'CONTRIBUTOR') {
+      return;
+    }
+
+    router.replace(`/groups/public/${groupId}` as Href);
+  }, [group?.currentUserRole, groupId]);
+
   const isOwner = Boolean(group && user?.id === group.ownerUserId);
   const canManageRestaurants = group?.currentUserRole !== 'CONTRIBUTOR';
+  const isRedirectingToPublicGroup =
+    group?.currentUserRole === 'CONTRIBUTOR';
 
   function openCreateRestaurant(): void {
     router.push({ pathname: '/groups/[groupId]/restaurants/create', params: { groupId } });
@@ -202,6 +213,19 @@ export default function GroupDetailScreen() {
   }
 
   const groupImageUri = group?.imageUrl ? resolveApiUrl(group.imageUrl) : null;
+
+  if (isRedirectingToPublicGroup) {
+    return (
+      <SafeAreaView
+        edges={['top', 'right', 'bottom', 'left']}
+        style={styles.safeArea}
+      >
+        <View style={styles.loading}>
+          <ActivityIndicator color={colors.primary} size="large" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
