@@ -1,17 +1,13 @@
-import { SymbolView } from 'expo-symbols';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
-  Pressable,
   RefreshControl,
   ScrollView,
   Share,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,11 +22,11 @@ import {
   GroupTabs,
   MemberPreview,
   PrimaryGroupAction,
-} from '../components/GroupDetailPrimitives';
+} from '../components/GroupDetailPrimitivesTuned';
 import { useAuth } from '../contexts/auth-context';
 import { getErrorMessage, resolveApiUrl } from '../lib/api';
 import { getGroupInvitations } from '../services/group-invitation-service';
-import { getGroupMembers, removeGroupMember } from '../services/group-member-service';
+import { getGroupMembers } from '../services/group-member-service';
 import { getGroup } from '../services/group-service';
 import { getRestaurantProposalPendingCount } from '../services/restaurant-proposal-service';
 import { getGroupRestaurants } from '../services/restaurant-service';
@@ -47,99 +43,6 @@ const tabs = [
   { key: 'activity' as const, label: 'Actividad' },
 ];
 
-function roleLabel(member: GroupMember): string {
-  if (member.role === 'OWNER') {
-    return 'Creadora';
-  }
-  if (member.role === 'CONTRIBUTOR') {
-    return 'Colaboradora';
-  }
-  return 'Miembro';
-}
-
-function MemberRow({
-  member,
-  canRemove,
-  removing,
-  onRemove,
-}: {
-  member: GroupMember;
-  canRemove: boolean;
-  removing: boolean;
-  onRemove: () => void;
-}) {
-  const avatarUri = member.avatarUrl
-    ? resolveApiUrl(member.avatarUrl)
-    : null;
-  const owner = member.role === 'OWNER';
-  const collaborator = member.role === 'CONTRIBUTOR';
-
-  return (
-    <View style={styles.memberRow}>
-      <View style={styles.memberAvatar}>
-        {avatarUri ? (
-          <Image source={{ uri: avatarUri }} style={styles.memberAvatarImage} />
-        ) : (
-          <Text style={styles.memberAvatarText}>
-            {member.name.charAt(0).toUpperCase()}
-          </Text>
-        )}
-      </View>
-
-      <View style={styles.memberCopy}>
-        <Text style={styles.memberName}>{member.name}</Text>
-        <Text style={styles.memberUsername}>@{member.username}</Text>
-      </View>
-
-      <View
-        style={[
-          styles.roleBadge,
-          owner ? styles.roleBadgeOwner : null,
-          collaborator ? styles.roleBadgeCollaborator : null,
-        ]}
-      >
-        <Text
-          style={[
-            styles.roleBadgeText,
-            owner ? styles.roleBadgeTextOwner : null,
-            collaborator ? styles.roleBadgeTextCollaborator : null,
-          ]}
-        >
-          {roleLabel(member)}
-        </Text>
-      </View>
-
-      {canRemove ? (
-        <Pressable
-          accessibilityLabel={`Eliminar a ${member.name}`}
-          accessibilityRole="button"
-          disabled={removing}
-          hitSlop={8}
-          onPress={onRemove}
-          style={({ pressed }) => [
-            styles.removeButton,
-            pressed ? styles.pressed : null,
-          ]}
-        >
-          {removing ? (
-            <ActivityIndicator color={colors.danger} size="small" />
-          ) : (
-            <SymbolView
-              name={{
-                ios: 'trash',
-                android: 'delete_outline',
-                web: 'delete_outline',
-              }}
-              size={16}
-              tintColor={colors.danger}
-            />
-          )}
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
 export default function PrivateGroupDetailScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const { accessToken, user } = useAuth();
@@ -150,7 +53,6 @@ export default function PrivateGroupDetailScreen() {
   const [pendingInvitationCount, setPendingInvitationCount] = useState(0);
   const [pendingProposalCount, setPendingProposalCount] = useState(0);
   const [activeTab, setActiveTab] = useState<DetailTab>('restaurants');
-  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -222,9 +124,10 @@ export default function PrivateGroupDetailScreen() {
   }, [group?.currentUserRole, group?.privacy, groupId]);
 
   const isOwner = Boolean(group && user?.id === group.ownerUserId);
-  const imageUri = group?.imageUrl
+  const groupImageUri = group?.imageUrl
     ? resolveApiUrl(group.imageUrl)
     : null;
+  const previewRestaurants = restaurants.slice(0, 3);
 
   const thirdStat = useMemo(() => {
     if (isOwner) {
@@ -315,47 +218,9 @@ export default function PrivateGroupDetailScreen() {
     );
   }
 
-  function confirmRemove(member: GroupMember): void {
-    Alert.alert(
-      'Eliminar miembro',
-      `¿Quieres eliminar a ${member.name} del grupo?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: () => void removeMember(member),
-        },
-      ],
-    );
-  }
-
-  async function removeMember(member: GroupMember): Promise<void> {
-    if (!accessToken || !groupId) {
-      return;
-    }
-
-    try {
-      setRemovingUserId(member.userId);
-      await removeGroupMember(groupId, member.userId, accessToken);
-      setMembers(current =>
-        current.filter(item => item.userId !== member.userId),
-      );
-      await load(true);
-    } catch (removeError) {
-      Alert.alert('No se ha podido eliminar', getErrorMessage(removeError));
-    } finally {
-      setRemovingUserId(null);
-    }
-  }
-
-  const redirecting = Boolean(
-    group
+  if (group
     && group.privacy === 'PUBLIC'
-    && group.currentUserRole !== 'OWNER',
-  );
-
-  if (redirecting) {
+    && group.currentUserRole !== 'OWNER') {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingWrap}>
@@ -387,21 +252,11 @@ export default function PrivateGroupDetailScreen() {
           </View>
         ) : null}
 
-        {!loading && error ? (
-          <View style={styles.errorWrap}>
-            <Text style={styles.errorTitle}>No hemos podido abrir el grupo</Text>
-            <Text style={styles.errorText}>{error}</Text>
-            <Pressable onPress={() => void load()}>
-              <Text style={styles.retryText}>Volver a intentar</Text>
-            </Pressable>
-          </View>
-        ) : null}
-
         {!loading && !error && group ? (
           <>
             <GroupHero
               fallbackInitial={group.name.charAt(0).toUpperCase()}
-              imageUri={imageUri}
+              imageUri={groupImageUri}
               onBack={() => router.back()}
               onMenu={openMenu}
               onShare={() => void shareGroup()}
@@ -507,7 +362,7 @@ export default function PrivateGroupDetailScreen() {
                       />
                     ) : null}
 
-                    {restaurants.length === 0 ? (
+                    {previewRestaurants.length === 0 ? (
                       <EmptyTab
                         icon={{
                           ios: 'fork.knife',
@@ -519,7 +374,7 @@ export default function PrivateGroupDetailScreen() {
                       />
                     ) : (
                       <View style={styles.restaurantList}>
-                        {restaurants.map(item => (
+                        {previewRestaurants.map(item => (
                           <GroupRestaurantListCard
                             item={item}
                             key={item.id}
@@ -543,31 +398,24 @@ export default function PrivateGroupDetailScreen() {
 
                 {activeTab === 'members' ? (
                   <>
-                    {isOwner ? (
-                      <GroupInfoBanner
-                        actionLabel="Invitar"
-                        icon={{
-                          ios: 'person.badge.plus',
-                          android: 'person_add',
-                          web: 'person_add',
-                        }}
-                        onPress={openInvitations}
-                        subtitle="Entrarán en el grupo cuando acepten."
-                        title="Haz crecer vuestro grupo"
-                      />
-                    ) : null}
+                    <GroupInfoBanner
+                      actionLabel="Invitar"
+                      icon={{
+                        ios: 'person.badge.plus',
+                        android: 'person_add',
+                        web: 'person_add',
+                      }}
+                      onPress={openInvitations}
+                      subtitle="Entrarán en el grupo cuando acepten."
+                      title="Haz crecer vuestro grupo"
+                    />
 
-                    <View style={styles.memberList}>
-                      {members.map(member => (
-                        <MemberRow
-                          canRemove={isOwner && member.role !== 'OWNER'}
-                          key={member.id}
-                          member={member}
-                          onRemove={() => confirmRemove(member)}
-                          removing={removingUserId === member.userId}
-                        />
-                      ))}
-                    </View>
+                    <MemberPreview
+                      actionLabel={`Ver todos (${members.length})`}
+                      members={members}
+                      onAction={openInvitations}
+                      title="Miembros del grupo"
+                    />
                   </>
                 ) : null}
 
@@ -605,30 +453,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 100,
   },
-  errorWrap: {
-    gap: 7,
-    margin: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#F3C5BC',
-    borderRadius: 17,
-    backgroundColor: '#FFF1EE',
-  },
-  errorTitle: {
-    color: colors.danger,
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  errorText: {
-    color: colors.muted,
-    fontSize: 11,
-    lineHeight: 16,
-  },
-  retryText: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: '900',
-  },
   sheet: {
     minHeight: 520,
     marginTop: -22,
@@ -638,7 +462,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   summary: {
-    gap: 14,
+    gap: 13,
     paddingHorizontal: 18,
     paddingTop: 20,
     paddingBottom: 12,
@@ -664,81 +488,5 @@ const styles = StyleSheet.create({
   },
   restaurantList: {
     gap: 6,
-  },
-  memberList: {
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-  },
-  memberRow: {
-    minHeight: 62,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-    padding: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  memberAvatar: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    borderRadius: 20,
-    backgroundColor: '#FBE9E2',
-  },
-  memberAvatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  memberAvatarText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '900',
-  },
-  memberCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  memberName: {
-    color: colors.text,
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  memberUsername: {
-    color: colors.muted,
-    fontSize: 9,
-  },
-  roleBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: '#ECE8E6',
-  },
-  roleBadgeOwner: {
-    backgroundColor: '#FBE9E2',
-  },
-  roleBadgeCollaborator: {
-    backgroundColor: '#E8EEDD',
-  },
-  roleBadgeText: {
-    color: colors.muted,
-    fontSize: 7,
-    fontWeight: '900',
-  },
-  roleBadgeTextOwner: {
-    color: colors.primary,
-  },
-  roleBadgeTextCollaborator: {
-    color: '#607349',
-  },
-  removeButton: {
-    padding: 4,
-  },
-  pressed: {
-    opacity: 0.72,
   },
 });
