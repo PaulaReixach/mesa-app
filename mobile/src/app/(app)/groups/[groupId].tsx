@@ -1,1 +1,1 @@
-export { default } from '../../../../screens/PrivateGroupDetailScreen';
+export { default } from '../../../screens/PrivateGroupDetailScreen';
