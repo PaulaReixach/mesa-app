@@ -1,10 +1,21 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
+import { GroupExitAction } from './GroupExitAction';
 import { GroupInfoBanner } from './GroupDetailPrimitives';
 import { GroupMemberRow } from './GroupMemberRow';
 import { GroupMembersSummary } from './GroupMembersSummary';
+import { useAuth } from '../contexts/auth-context';
+import { getErrorMessage } from '../lib/api';
+import { leaveGroup } from '../services/group-member-service';
 import { colors } from '../theme/colors';
 import type { GroupPrivacy } from '../types/group';
 import type { GroupMember } from '../types/group-member';
@@ -27,13 +38,51 @@ export function GroupMembersTab({
   onMemberPress,
 }: Props) {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  const { accessToken, user } = useAuth();
+  const [leaving, setLeaving] = useState(false);
   const publicGroup = privacy === 'PUBLIC';
   const participantCount = members.filter(member => member.role !== 'OWNER').length;
+  const currentMembership = members.find(member => member.userId === user?.id);
+  const canLeavePrivateGroup = privacy === 'PRIVATE'
+    && currentMembership != null
+    && currentMembership.role !== 'OWNER';
 
   function openAll(): void {
     if (!publicGroup || !groupId) return;
     router.push(
       `/groups/public/${groupId}/collaborators` as Href,
+    );
+  }
+
+  async function leavePrivateGroup(): Promise<void> {
+    if (!accessToken || !groupId || leaving) return;
+
+    try {
+      setLeaving(true);
+      await leaveGroup(groupId, accessToken);
+      router.replace('/groups' as Href);
+    } catch (requestError) {
+      Alert.alert(
+        'No se ha podido salir del grupo',
+        getErrorMessage(requestError),
+      );
+    } finally {
+      setLeaving(false);
+    }
+  }
+
+  function confirmLeavePrivateGroup(): void {
+    Alert.alert(
+      'Salir del grupo',
+      'Dejarás de ver sus restaurantes, miembros y actividad. Para volver, la creadora tendrá que invitarte otra vez.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Salir del grupo',
+          style: 'destructive',
+          onPress: () => void leavePrivateGroup(),
+        },
+      ],
     );
   }
 
@@ -77,6 +126,14 @@ export function GroupMembersTab({
         participantCount={participantCount}
         privacy={privacy}
       />
+
+      {canLeavePrivateGroup ? (
+        <GroupExitAction
+          label="Salir del grupo"
+          loading={leaving}
+          onPress={confirmLeavePrivateGroup}
+        />
+      ) : null}
     </View>
   );
 }
