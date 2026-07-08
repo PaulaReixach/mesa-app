@@ -146,7 +146,7 @@ class GroupInvitationServiceTest {
                 "Ana",
                 "ana"
         );
-        GroupInvitation invitation = pendingInvitation();
+        GroupInvitation invitation = responseInvitation();
 
         prepareInvitationAcceptance(
                 invitation,
@@ -182,7 +182,7 @@ class GroupInvitationServiceTest {
                 "Ana",
                 "ana"
         );
-        GroupInvitation invitation = pendingInvitation();
+        GroupInvitation invitation = responseInvitation();
 
         prepareInvitationAcceptance(
                 invitation,
@@ -212,8 +212,10 @@ class GroupInvitationServiceTest {
                 "Ana",
                 "ana"
         );
-        GroupInvitation invitation = pendingInvitation();
+        GroupInvitation invitation = responseInvitation();
 
+        when(userRepository.existsById(INVITED_USER_ID))
+                .thenReturn(true);
         when(invitationRepository.findByIdAndInvitedUserId(
                 INVITATION_ID,
                 INVITED_USER_ID
@@ -240,8 +242,9 @@ class GroupInvitationServiceTest {
 
     @Test
     void ownerCanCancelPendingInvitation() {
-        GroupInvitation invitation = pendingInvitation();
-
+        GroupInvitation invitation = mock(GroupInvitation.class);
+        when(invitation.getStatus())
+                .thenReturn(GroupInvitationStatus.PENDING);
         when(invitationRepository.findByIdAndGroupId(
                 INVITATION_ID,
                 GROUP_ID
@@ -264,6 +267,8 @@ class GroupInvitationServiceTest {
             User owner,
             User invitedUser
     ) {
+        when(userRepository.existsById(INVITED_USER_ID))
+                .thenReturn(true);
         when(invitationRepository.findByIdAndInvitedUserId(
                 INVITATION_ID,
                 INVITED_USER_ID
@@ -282,7 +287,7 @@ class GroupInvitationServiceTest {
                 .thenReturn(invitation);
     }
 
-    private GroupInvitation pendingInvitation() {
+    private GroupInvitation responseInvitation() {
         GroupInvitation invitation = mock(GroupInvitation.class);
         when(invitation.getId()).thenReturn(INVITATION_ID);
         when(invitation.getGroupId()).thenReturn(GROUP_ID);
