@@ -32,7 +32,6 @@ class PublicGroupMemberServiceTest {
     private static final UUID GROUP_ID = UUID.randomUUID();
     private static final UUID OWNER_ID = UUID.randomUUID();
     private static final UUID CONTRIBUTOR_ID = UUID.randomUUID();
-    private static final UUID MEMBER_ID = UUID.randomUUID();
 
     @Mock
     private RestaurantGroupRepository groupRepository;
@@ -57,32 +56,28 @@ class PublicGroupMemberServiceTest {
     @Test
     void returnsOnlyOwnerAndContributorsForPublicGroup() {
         RestaurantGroup group = mock(RestaurantGroup.class);
-        GroupMember owner = membership(
+        GroupMember owner = publicMembership(
                 UUID.randomUUID(),
                 OWNER_ID,
                 GroupRole.OWNER,
                 Instant.parse("2026-01-01T10:00:00Z")
         );
-        GroupMember contributor = membership(
+        GroupMember contributor = publicMembership(
                 UUID.randomUUID(),
                 CONTRIBUTOR_ID,
                 GroupRole.CONTRIBUTOR,
                 Instant.parse("2026-01-02T10:00:00Z")
         );
-        GroupMember member = membership(
-                UUID.randomUUID(),
-                MEMBER_ID,
-                GroupRole.MEMBER,
-                Instant.parse("2026-01-03T10:00:00Z")
-        );
+        GroupMember legacyPrivateMember = mock(GroupMember.class);
         User ownerUser = user(OWNER_ID, "Paula", "paula");
         User contributorUser = user(CONTRIBUTOR_ID, "Marc", "marc");
 
         when(group.getId()).thenReturn(GROUP_ID);
         when(group.getPrivacy()).thenReturn(GroupPrivacy.PUBLIC);
+        when(legacyPrivateMember.getRole()).thenReturn(GroupRole.MEMBER);
         when(groupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
         when(memberRepository.findAllByGroupIdOrderByJoinedAtAsc(GROUP_ID))
-                .thenReturn(List.of(owner, contributor, member));
+                .thenReturn(List.of(owner, contributor, legacyPrivateMember));
         when(userRepository.findAllById(any()))
                 .thenReturn(List.of(ownerUser, contributorUser));
 
@@ -93,7 +88,7 @@ class PublicGroupMemberServiceTest {
         assertEquals(GroupRole.CONTRIBUTOR, result.get(1).role());
     }
 
-    private GroupMember membership(
+    private GroupMember publicMembership(
             UUID id,
             UUID userId,
             GroupRole role,
