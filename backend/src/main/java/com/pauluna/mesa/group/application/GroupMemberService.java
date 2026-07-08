@@ -124,7 +124,44 @@ public class GroupMemberService {
                 requesterUserId
         );
 
-        GroupMember membership = groupMemberRepository
+        GroupMember membership = findMembership(
+                groupId,
+                memberUserId
+        );
+
+        removeMembership(
+                group,
+                membership,
+                memberUserId
+        );
+    }
+
+    public void leaveGroup(
+            UUID groupId,
+            UUID requesterUserId
+    ) {
+        GroupResponse group = groupService.getGroup(
+                groupId,
+                requesterUserId
+        );
+
+        GroupMember membership = findMembership(
+                groupId,
+                requesterUserId
+        );
+
+        removeMembership(
+                group,
+                membership,
+                requesterUserId
+        );
+    }
+
+    private GroupMember findMembership(
+            UUID groupId,
+            UUID memberUserId
+    ) {
+        return groupMemberRepository
                 .findByGroupIdAndUserId(
                         groupId,
                         memberUserId
@@ -135,9 +172,17 @@ public class GroupMemberService {
                                 memberUserId
                         )
                 );
+    }
 
+    private void removeMembership(
+            GroupResponse group,
+            GroupMember membership,
+            UUID memberUserId
+    ) {
         if (membership.getRole() == GroupRole.OWNER) {
-            throw new GroupOwnerCannotBeRemovedException(groupId);
+            throw new GroupOwnerCannotBeRemovedException(
+                    membership.getGroupId()
+            );
         }
 
         boolean publicCollaborator =
@@ -145,7 +190,9 @@ public class GroupMemberService {
 
         if (publicCollaborator) {
             List<UUID> groupRestaurantIds = groupRestaurantRepository
-                    .findAllByGroupIdOrderByCreatedAtDesc(groupId)
+                    .findAllByGroupIdOrderByCreatedAtDesc(
+                            group.id()
+                    )
                     .stream()
                     .map(GroupRestaurant::getId)
                     .toList();
@@ -159,14 +206,14 @@ public class GroupMemberService {
             }
 
             restaurantProposalService.cancelPendingForCollaborator(
-                    groupId,
+                    group.id(),
                     memberUserId
             );
         }
 
         collaborationRequestRepository
                 .findFirstByGroupIdAndUserIdOrderByCreatedAtDesc(
-                        groupId,
+                        group.id(),
                         memberUserId
                 )
                 .filter(request ->

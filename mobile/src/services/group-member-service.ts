@@ -32,6 +32,19 @@ export function addGroupMember(
   );
 }
 
+export function leaveGroup(
+  groupId: string,
+  accessToken: string,
+): Promise<void> {
+  return apiRequest<void>(
+    `/groups/${groupId}/members/me`,
+    {
+      method: 'DELETE',
+    },
+    accessToken,
+  );
+}
+
 export function removeGroupMember(
   groupId: string,
   memberUserId: string,

@@ -1,16 +1,12 @@
 import { SymbolView } from 'expo-symbols';
-import {
-  router,
-  useFocusEffect,
-} from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import type { Href } from 'expo-router';
-import {
-  useCallback,
-  useState,
-} from 'react';
+import type { ComponentProps } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  type LayoutChangeEvent,
   Pressable,
   StyleSheet,
   Text,
@@ -27,24 +23,29 @@ import {
 import { colors } from '../theme/colors';
 import type { PublicGroupCollaborationState } from '../types/group';
 
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
+
 type Props = {
   groupId: string;
   ownedByCurrentUser: boolean;
+  hideWhenCollaborating?: boolean;
 };
 
 export function PublicGroupCollaborationActions({
   groupId,
   ownedByCurrentUser,
+  hideWhenCollaborating = false,
 }: Props) {
   const { accessToken } = useAuth();
-  const [state, setState] =
-    useState<PublicGroupCollaborationState | null>(null);
+  const [state, setState] = useState<PublicGroupCollaborationState | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [width, setWidth] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const compact = width === 0 || width < 340;
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<void> => {
     if (!accessToken) {
       setLoading(false);
       return;
@@ -53,12 +54,7 @@ export function PublicGroupCollaborationActions({
     try {
       setLoading(true);
       setError(null);
-      setState(
-        await getPublicGroupCollaborationState(
-          groupId,
-          accessToken,
-        ),
-      );
+      setState(await getPublicGroupCollaborationState(groupId, accessToken));
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -72,10 +68,12 @@ export function PublicGroupCollaborationActions({
     }, [load]),
   );
 
+  function measure(event: LayoutChangeEvent): void {
+    setWidth(event.nativeEvent.layout.width);
+  }
+
   function openRequest(): void {
-    router.push(
-      `/groups/public/${groupId}/collaborate` as Href,
-    );
+    router.push(`/groups/public/${groupId}/collaborate` as Href);
   }
 
   function openManagement(): void {
@@ -86,9 +84,7 @@ export function PublicGroupCollaborationActions({
   }
 
   function openCollaborationSpace(): void {
-    router.push(
-      `/groups/${groupId}/collaboration` as Href,
-    );
+    router.push(`/groups/${groupId}/collaboration` as Href);
   }
 
   function openInvitations(): void {
@@ -96,17 +92,12 @@ export function PublicGroupCollaborationActions({
   }
 
   async function cancelRequest(): Promise<void> {
-    if (!accessToken || cancelling) {
-      return;
-    }
+    if (!accessToken || cancelling) return;
 
     try {
       setCancelling(true);
       setError(null);
-      await cancelPublicGroupCollaborationRequest(
-        groupId,
-        accessToken,
-      );
+      await cancelPublicGroupCollaborationRequest(groupId, accessToken);
       await load();
     } catch (requestError) {
       setError(getErrorMessage(requestError));
@@ -116,17 +107,12 @@ export function PublicGroupCollaborationActions({
   }
 
   async function leaveCollaboration(): Promise<void> {
-    if (!accessToken || leaving) {
-      return;
-    }
+    if (!accessToken || leaving) return;
 
     try {
       setLeaving(true);
       setError(null);
-      await leavePublicGroupCollaboration(
-        groupId,
-        accessToken,
-      );
+      await leavePublicGroupCollaboration(groupId, accessToken);
       router.replace(`/groups/public/${groupId}` as Href);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
@@ -153,7 +139,7 @@ export function PublicGroupCollaborationActions({
   function confirmLeave(): void {
     Alert.alert(
       'Dejar de colaborar',
-      'Dejarás de formar parte del grupo y tus valoraciones dejarán de contar en sus medias. Seguirás siguiendo el grupo si ya lo seguías.',
+      'Dejarás de formar parte del grupo y tus valoraciones dejarán de contar en sus medias. Seguirás siguiéndolo si ya lo hacías.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -165,127 +151,141 @@ export function PublicGroupCollaborationActions({
     );
   }
 
+  function renderCompactButton({
+    title,
+    icon,
+    tone = 'primary',
+    onPress,
+    disabled = false,
+  }: {
+    title: string;
+    icon: SymbolName;
+    tone?: 'primary' | 'green' | 'muted' | 'warm';
+    onPress?: () => void;
+    disabled?: boolean;
+  }) {
+    const tint = tone === 'green'
+      ? '#607349'
+      : tone === 'muted'
+        ? colors.muted
+        : tone === 'warm'
+          ? '#9A6A21'
+          : colors.primary;
+
+    return (
+      <View onLayout={measure} style={styles.container}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={disabled || !onPress}
+          onPress={onPress}
+          style={({ pressed }) => [
+            styles.compactButton,
+            tone === 'green' ? styles.compactGreen : null,
+            tone === 'warm' ? styles.compactWarm : null,
+            tone === 'muted' ? styles.compactMuted : null,
+            pressed ? styles.pressed : null,
+          ]}
+        >
+          <SymbolView
+            name={icon}
+            size={18}
+            tintColor={tint}
+          />
+          <Text style={[styles.compactText, { color: tint }]} numberOfLines={1}>
+            {title}
+          </Text>
+        </Pressable>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      </View>
+    );
+  }
+
   if (loading) {
     return (
-      <View style={styles.loadingCard}>
+      <View onLayout={measure} style={styles.loadingCard}>
         <ActivityIndicator color={colors.primary} size="small" />
       </View>
     );
   }
 
   if (ownedByCurrentUser) {
-    return (
-      <View style={styles.container}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={openManagement}
-          style={({ pressed }) => [
-            styles.outlineButton,
-            pressed ? styles.pressed : null,
-          ]}
-        >
-          <SymbolView
-            name={{
-              ios: 'person.2.badge.gearshape',
-              android: 'manage_accounts',
-              web: 'manage_accounts',
-            }}
-            size={17}
-            tintColor={colors.primary}
-          />
-          <Text style={styles.outlineButtonText}>
-            Gestionar colaboración
-            {state?.pendingRequestCount
-              ? ` · ${state.pendingRequestCount}`
-              : ''}
-          </Text>
-        </Pressable>
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      </View>
-    );
+    return renderCompactButton({
+      title: state?.pendingRequestCount
+        ? `Gestionar · ${state.pendingRequestCount}`
+        : 'Gestionar colaboración',
+      icon: {
+        ios: 'person.2.badge.gearshape',
+        android: 'manage_accounts',
+        web: 'manage_accounts',
+      },
+      onPress: openManagement,
+    });
   }
 
   if (state?.invitationPending) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.pendingBadge}>
-          <SymbolView
-            name={{
-              ios: 'envelope.badge.fill',
-              android: 'mark_email_unread',
-              web: 'mark_email_unread',
-            }}
-            size={16}
-            tintColor="#9A6A21"
-          />
-          <Text style={styles.pendingText}>
-            Tienes una invitación pendiente
-          </Text>
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={openInvitations}
-          style={({ pressed }) => [
-            styles.outlineButton,
-            pressed ? styles.pressed : null,
-          ]}
-        >
-          <Text style={styles.outlineButtonText}>
-            Ver invitación
-          </Text>
-        </Pressable>
-
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      </View>
-    );
+    return renderCompactButton({
+      title: 'Ver invitación',
+      icon: {
+        ios: 'envelope.badge.fill',
+        android: 'mark_email_unread',
+        web: 'mark_email_unread',
+      },
+      tone: 'warm',
+      onPress: openInvitations,
+    });
   }
 
-  const retryDate = state?.retryAt
-    ? new Date(state.retryAt)
-    : null;
+  const retryDate = state?.retryAt ? new Date(state.retryAt) : null;
   const retryBlocked = Boolean(
     retryDate && retryDate.getTime() > Date.now(),
   );
 
+  if (state?.collaborating && hideWhenCollaborating) {
+    return null;
+  }
+
+  if (state?.collaborating && compact) {
+    return renderCompactButton({
+      title: 'Colaborando',
+      icon: {
+        ios: 'checkmark.circle.fill',
+        android: 'check_circle',
+        web: 'check_circle',
+      },
+      tone: 'green',
+      onPress: openCollaborationSpace,
+    });
+  }
+
   if (state?.collaborating) {
     return (
-      <View style={styles.container}>
-        <View style={styles.successBadge}>
-          <SymbolView
-            name={{
-              ios: 'checkmark.circle.fill',
-              android: 'check_circle',
-              web: 'check_circle',
-            }}
-            size={17}
-            tintColor="#607349"
-          />
-          <Text style={styles.successText}>
-            Colaborando
-          </Text>
+      <View onLayout={measure} style={styles.successCard}>
+        <View style={styles.stateRow}>
+          <View style={styles.greenIcon}>
+            <SymbolView
+              name={{
+                ios: 'checkmark.circle.fill',
+                android: 'check_circle',
+                web: 'check_circle',
+              }}
+              size={18}
+              tintColor="#607349"
+            />
+          </View>
+          <View style={styles.stateText}>
+            <Text style={styles.successTitle}>Tu espacio de colaboración</Text>
+            <Text style={styles.stateSubtitle}>
+              Propón restaurantes y comparte tus valoraciones.
+            </Text>
+          </View>
         </View>
 
         <Pressable
           accessibilityRole="button"
           onPress={openCollaborationSpace}
-          style={({ pressed }) => [
-            styles.outlineButton,
-            pressed ? styles.pressed : null,
-          ]}
+          style={({ pressed }) => [styles.greenButton, pressed ? styles.pressed : null]}
         >
-          <SymbolView
-            name={{
-              ios: 'star.bubble',
-              android: 'rate_review',
-              web: 'rate_review',
-            }}
-            size={17}
-            tintColor={colors.primary}
-          />
-          <Text style={styles.outlineButtonText}>
-            Abrir y valorar restaurantes
-          </Text>
+          <Text style={styles.greenButtonText}>Proponer o valorar</Text>
         </Pressable>
 
         <Pressable
@@ -297,31 +297,45 @@ export function PublicGroupCollaborationActions({
             {leaving ? 'Saliendo...' : 'Dejar de colaborar'}
           </Text>
         </Pressable>
+
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
     );
   }
 
   if (state?.requestStatus === 'PENDING') {
+    if (compact) {
+      return renderCompactButton({
+        title: cancelling ? 'Cancelando...' : 'Solicitud pendiente',
+        icon: {
+          ios: 'clock.fill',
+          android: 'schedule',
+          web: 'schedule',
+        },
+        tone: 'warm',
+        onPress: confirmCancel,
+        disabled: cancelling,
+      });
+    }
+
     return (
-      <View style={styles.container}>
-        <View style={styles.pendingBadge}>
-          <SymbolView
-            name={{
-              ios: 'clock.fill',
-              android: 'schedule',
-              web: 'schedule',
-            }}
-            size={16}
-            tintColor="#9A6A21"
-          />
-          <Text style={styles.pendingText}>Solicitud pendiente</Text>
+      <View onLayout={measure} style={styles.pendingCard}>
+        <View style={styles.stateRow}>
+          <View style={styles.pendingIcon}>
+            <SymbolView
+              name={{ ios: 'clock.fill', android: 'schedule', web: 'schedule' }}
+              size={18}
+              tintColor="#9A6A21"
+            />
+          </View>
+          <View style={styles.stateText}>
+            <Text style={styles.pendingTitle}>Solicitud pendiente</Text>
+            <Text style={styles.stateSubtitle}>
+              La creadora todavía debe responder.
+            </Text>
+          </View>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          disabled={cancelling}
-          onPress={confirmCancel}
-        >
+        <Pressable disabled={cancelling} onPress={confirmCancel}>
           <Text style={styles.cancelText}>
             {cancelling ? 'Cancelando...' : 'Cancelar solicitud'}
           </Text>
@@ -332,141 +346,189 @@ export function PublicGroupCollaborationActions({
   }
 
   if (!state?.acceptingCollaborators) {
-    return (
-      <View style={styles.disabledBadge}>
-        <Text style={styles.disabledText}>
-          No acepta nuevas colaboraciones
-        </Text>
-      </View>
-    );
+    return renderCompactButton({
+      title: 'Colaboración cerrada',
+      icon: {
+        ios: 'person.crop.circle.badge.xmark',
+        android: 'person_off',
+        web: 'person_off',
+      },
+      tone: 'muted',
+      disabled: true,
+    });
   }
 
   if (retryBlocked && retryDate) {
-    return (
-      <View style={styles.disabledBadge}>
-        <Text style={styles.disabledText}>
-          Podrás volver a solicitar el {retryDate.toLocaleDateString('es-ES')}
-        </Text>
-      </View>
-    );
+    return renderCompactButton({
+      title: `Disponible el ${retryDate.toLocaleDateString('es-ES')}`,
+      icon: {
+        ios: 'calendar.badge.clock',
+        android: 'event_busy',
+        web: 'event_busy',
+      },
+      tone: 'muted',
+      disabled: true,
+    });
   }
 
-  return (
-    <View style={styles.container}>
-      <Pressable
-        accessibilityRole="button"
-        onPress={openRequest}
-        style={({ pressed }) => [
-          styles.outlineButton,
-          pressed ? styles.pressed : null,
-        ]}
-      >
-        <SymbolView
-          name={{
-            ios: 'person.badge.plus',
-            android: 'person_add',
-            web: 'person_add',
-          }}
-          size={17}
-          tintColor={colors.primary}
-        />
-        <Text style={styles.outlineButtonText}>
-          Solicitar colaborar
-        </Text>
-      </Pressable>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </View>
-  );
+  return renderCompactButton({
+    title: 'Solicitar colaborar',
+    icon: {
+      ios: 'person.badge.plus',
+      android: 'person_add',
+      web: 'person_add',
+    },
+    onPress: openRequest,
+  });
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 8 },
+  container: {
+    gap: 7,
+  },
   loadingCard: {
-    minHeight: 46,
+    minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 15,
-    backgroundColor: colors.inputBackground,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
   },
-  outlineButton: {
-    minHeight: 46,
+  compactButton: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+  },
+  compactGreen: {
+    borderColor: '#B8C69D',
+    backgroundColor: '#F1F3E9',
+  },
+  compactWarm: {
+    borderColor: '#E6CDA7',
+    backgroundColor: '#FFF7EC',
+  },
+  compactMuted: {
+    borderColor: colors.border,
+    backgroundColor: '#F7F5F3',
+  },
+  compactText: {
+    flexShrink: 1,
+    fontSize: 11,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  exitButton: {
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: '#E7B8B0',
     borderRadius: 15,
-    backgroundColor: '#FFF4EF',
+    backgroundColor: '#FFF7F5',
   },
-  outlineButtonText: {
-    color: colors.primary,
-    fontSize: 12,
+  exitButtonText: {
+    color: colors.danger,
+    fontSize: 10,
     fontWeight: '900',
   },
-  successBadge: {
-    minHeight: 46,
+  successCard: {
+    gap: 10,
+    padding: 12,
+    borderRadius: 17,
+    backgroundColor: '#F1F3E9',
+  },
+  pendingCard: {
+    gap: 10,
+    padding: 12,
+    borderRadius: 17,
+    backgroundColor: '#FFF7EC',
+  },
+  stateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    borderRadius: 15,
-    backgroundColor: '#E8EEDD',
+    gap: 9,
   },
-  successText: {
+  greenIcon: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: '#E0E9CF',
+  },
+  pendingIcon: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: '#FFE5C2',
+  },
+  stateText: {
+    flex: 1,
+    gap: 2,
+  },
+  successTitle: {
     color: '#607349',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
   },
-  pendingBadge: {
-    minHeight: 46,
-    flexDirection: 'row',
+  pendingTitle: {
+    color: '#9A6A21',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  stateSubtitle: {
+    color: colors.muted,
+    fontSize: 8,
+    lineHeight: 12,
+  },
+  greenButton: {
+    minHeight: 38,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 7,
-    borderRadius: 15,
-    backgroundColor: '#FFF0D9',
+    borderWidth: 1,
+    borderColor: '#607349',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.58)',
   },
-  pendingText: {
-    color: '#9A6A21',
-    fontSize: 12,
+  greenButtonText: {
+    color: '#607349',
+    fontSize: 10,
     fontWeight: '900',
   },
   cancelText: {
     color: colors.danger,
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '900',
     textAlign: 'center',
   },
   leaveText: {
     color: colors.danger,
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '900',
-    textAlign: 'center',
-  },
-  disabledBadge: {
-    minHeight: 46,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 15,
-    backgroundColor: colors.inputBackground,
-  },
-  disabledText: {
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: '800',
     textAlign: 'center',
   },
   errorText: {
     color: colors.danger,
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: 8,
+    lineHeight: 12,
     textAlign: 'center',
   },
-  pressed: { opacity: 0.72 },
+  pressed: {
+    opacity: 0.72,
+  },
+  disabled: {
+    opacity: 0.55,
+  },
 });

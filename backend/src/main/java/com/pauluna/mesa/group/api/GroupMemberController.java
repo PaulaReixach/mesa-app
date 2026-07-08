@@ -41,6 +41,21 @@ public class GroupMemberController {
         );
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> leaveGroup(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        groupMemberService.leaveGroup(
+                groupId,
+                userId
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{memberUserId}")
     public ResponseEntity<Void> removeMember(
             @PathVariable UUID groupId,

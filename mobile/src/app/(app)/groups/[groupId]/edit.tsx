@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DeleteGroupAction } from '../../../../components/DeleteGroupAction';
 import { FormField } from '../../../../components/FormField';
 import { useAuth } from '../../../../contexts/auth-context';
 import {
@@ -534,6 +535,11 @@ export default function EditGroupScreen() {
                   </Text>
                 )}
               </Pressable>
+
+              <DeleteGroupAction
+                groupId={groupId}
+                groupName={group.name}
+              />
             </>
           ) : null}
         </ScrollView>

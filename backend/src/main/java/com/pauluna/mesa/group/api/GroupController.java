@@ -146,6 +146,18 @@ public class GroupController {
         );
     }
 
+    @DeleteMapping("/{groupId}")
+    public ResponseEntity<Void> deleteGroup(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        groupService.deleteGroup(groupId, userId);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping(
             value = "/{groupId}/image",
             consumes =

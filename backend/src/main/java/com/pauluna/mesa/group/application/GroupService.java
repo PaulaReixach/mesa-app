@@ -143,6 +143,15 @@ public class GroupService {
         );
     }
 
+    public void deleteGroup(
+            UUID groupId,
+            UUID userId
+    ) {
+        validateOwnerAccess(groupId, userId);
+        restaurantGroupRepository.deleteById(groupId);
+        restaurantGroupRepository.flush();
+    }
+
     @Transactional(readOnly = true)
     public List<GroupResponse> getGroups(UUID userId) {
         validateUserExists(userId);
