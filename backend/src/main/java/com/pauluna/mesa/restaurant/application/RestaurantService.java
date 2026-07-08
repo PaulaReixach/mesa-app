@@ -44,7 +44,7 @@ public class RestaurantService {
             CreateGroupRestaurantRequest request,
             UUID userId
     ) {
-        groupService.validateMemberAccess(groupId, userId);
+        groupService.validateRestaurantManagementAccess(groupId, userId);
 
         String provider =
                 normalizeOptionalValue(request.provider());
@@ -213,7 +213,7 @@ public class RestaurantService {
             UpdateGroupRestaurantRequest request,
             UUID userId
     ) {
-        groupService.validateMemberAccess(groupId, userId);
+        groupService.validateRestaurantManagementAccess(groupId, userId);
 
         GroupRestaurant groupRestaurant =
                 findGroupRestaurant(
@@ -292,7 +292,7 @@ public class RestaurantService {
             UpdateGroupRestaurantStatusRequest request,
             UUID userId
     ) {
-        groupService.validateMemberAccess(groupId, userId);
+        groupService.validateRestaurantManagementAccess(groupId, userId);
 
         GroupRestaurant groupRestaurant =
                 findGroupRestaurant(
