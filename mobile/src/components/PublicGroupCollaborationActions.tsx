@@ -241,34 +241,7 @@ export function PublicGroupCollaborationActions({
   );
 
   if (state?.collaborating && hideWhenCollaborating) {
-    return (
-      <View style={styles.container}>
-        <Pressable
-          accessibilityRole="button"
-          disabled={leaving}
-          onPress={confirmLeave}
-          style={({ pressed }) => [
-            styles.exitButton,
-            pressed ? styles.pressed : null,
-            leaving ? styles.disabled : null,
-          ]}
-        >
-          <SymbolView
-            name={{
-              ios: 'rectangle.portrait.and.arrow.right',
-              android: 'logout',
-              web: 'logout',
-            }}
-            size={17}
-            tintColor={colors.danger}
-          />
-          <Text style={styles.exitButtonText}>
-            {leaving ? 'Saliendo...' : 'Dejar de colaborar'}
-          </Text>
-        </Pressable>
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      </View>
-    );
+    return null;
   }
 
   if (state?.collaborating && compact) {
