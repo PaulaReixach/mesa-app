@@ -83,6 +83,13 @@ export function PublicGroupCollaborationActions({
     });
   }
 
+  function openCollaborationSpace(): void {
+    router.push({
+      pathname: '/groups/[groupId]',
+      params: { groupId },
+    });
+  }
+
   async function cancelRequest(): Promise<void> {
     if (!accessToken || cancelling) {
       return;
@@ -167,19 +174,43 @@ export function PublicGroupCollaborationActions({
 
   if (state?.collaborating) {
     return (
-      <View style={styles.successBadge}>
-        <SymbolView
-          name={{
-            ios: 'checkmark.circle.fill',
-            android: 'check_circle',
-            web: 'check_circle',
-          }}
-          size={17}
-          tintColor="#607349"
-        />
-        <Text style={styles.successText}>
-          Colaborando
-        </Text>
+      <View style={styles.container}>
+        <View style={styles.successBadge}>
+          <SymbolView
+            name={{
+              ios: 'checkmark.circle.fill',
+              android: 'check_circle',
+              web: 'check_circle',
+            }}
+            size={17}
+            tintColor="#607349"
+          />
+          <Text style={styles.successText}>
+            Colaborando
+          </Text>
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={openCollaborationSpace}
+          style={({ pressed }) => [
+            styles.outlineButton,
+            pressed ? styles.pressed : null,
+          ]}
+        >
+          <SymbolView
+            name={{
+              ios: 'star.bubble',
+              android: 'rate_review',
+              web: 'rate_review',
+            }}
+            size={17}
+            tintColor={colors.primary}
+          />
+          <Text style={styles.outlineButtonText}>
+            Abrir y valorar restaurantes
+          </Text>
+        </Pressable>
       </View>
     );
   }
