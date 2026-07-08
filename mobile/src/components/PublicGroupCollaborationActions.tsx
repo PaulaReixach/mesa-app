@@ -22,6 +22,7 @@ import { getErrorMessage } from '../lib/api';
 import {
   cancelPublicGroupCollaborationRequest,
   getPublicGroupCollaborationState,
+  leavePublicGroupCollaboration,
 } from '../services/group-service';
 import { colors } from '../theme/colors';
 import type { PublicGroupCollaborationState } from '../types/group';
@@ -40,6 +41,7 @@ export function PublicGroupCollaborationActions({
     useState<PublicGroupCollaborationState | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -109,6 +111,26 @@ export function PublicGroupCollaborationActions({
     }
   }
 
+  async function leaveCollaboration(): Promise<void> {
+    if (!accessToken || leaving) {
+      return;
+    }
+
+    try {
+      setLeaving(true);
+      setError(null);
+      await leavePublicGroupCollaboration(
+        groupId,
+        accessToken,
+      );
+      router.replace(`/groups/public/${groupId}` as Href);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    } finally {
+      setLeaving(false);
+    }
+  }
+
   function confirmCancel(): void {
     Alert.alert(
       'Cancelar solicitud',
@@ -119,6 +141,21 @@ export function PublicGroupCollaborationActions({
           text: 'Cancelar solicitud',
           style: 'destructive',
           onPress: () => void cancelRequest(),
+        },
+      ],
+    );
+  }
+
+  function confirmLeave(): void {
+    Alert.alert(
+      'Dejar de colaborar',
+      'Dejarás de formar parte del grupo y tus valoraciones dejarán de contar en sus medias. Seguirás siguiendo el grupo si ya lo seguías.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Dejar de colaborar',
+          style: 'destructive',
+          onPress: () => void leaveCollaboration(),
         },
       ],
     );
@@ -210,6 +247,17 @@ export function PublicGroupCollaborationActions({
             Abrir y valorar restaurantes
           </Text>
         </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          disabled={leaving}
+          onPress={confirmLeave}
+        >
+          <Text style={styles.leaveText}>
+            {leaving ? 'Saliendo...' : 'Dejar de colaborar'}
+          </Text>
+        </Pressable>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
     );
   }
@@ -219,24 +267,13 @@ export function PublicGroupCollaborationActions({
       <View style={styles.container}>
         <View style={styles.pendingBadge}>
           <SymbolView
-            name={{
-              ios: 'clock.fill',
-              android: 'schedule',
-              web: 'schedule',
-            }}
+            name={{ ios: 'clock.fill', android: 'schedule', web: 'schedule' }}
             size={16}
             tintColor="#9A6A21"
           />
-          <Text style={styles.pendingText}>
-            Solicitud pendiente
-          </Text>
+          <Text style={styles.pendingText}>Solicitud pendiente</Text>
         </View>
-
-        <Pressable
-          accessibilityRole="button"
-          disabled={cancelling}
-          onPress={confirmCancel}
-        >
+        <Pressable accessibilityRole="button" disabled={cancelling} onPress={confirmCancel}>
           <Text style={styles.cancelText}>
             {cancelling ? 'Cancelando...' : 'Cancelar solicitud'}
           </Text>
@@ -249,9 +286,7 @@ export function PublicGroupCollaborationActions({
   if (!state?.acceptingCollaborators) {
     return (
       <View style={styles.disabledBadge}>
-        <Text style={styles.disabledText}>
-          No acepta nuevas colaboraciones
-        </Text>
+        <Text style={styles.disabledText}>No acepta nuevas colaboraciones</Text>
       </View>
     );
   }
@@ -260,8 +295,7 @@ export function PublicGroupCollaborationActions({
     return (
       <View style={styles.disabledBadge}>
         <Text style={styles.disabledText}>
-          Podrás volver a solicitar el{' '}
-          {retryDate.toLocaleDateString('es-ES')}
+          Podrás volver a solicitar el {retryDate.toLocaleDateString('es-ES')}
         </Text>
       </View>
     );
@@ -272,23 +306,14 @@ export function PublicGroupCollaborationActions({
       <Pressable
         accessibilityRole="button"
         onPress={openRequest}
-        style={({ pressed }) => [
-          styles.outlineButton,
-          pressed ? styles.pressed : null,
-        ]}
+        style={({ pressed }) => [styles.outlineButton, pressed ? styles.pressed : null]}
       >
         <SymbolView
-          name={{
-            ios: 'person.badge.plus',
-            android: 'person_add',
-            web: 'person_add',
-          }}
+          name={{ ios: 'person.badge.plus', android: 'person_add', web: 'person_add' }}
           size={17}
           tintColor={colors.primary}
         />
-        <Text style={styles.outlineButtonText}>
-          Solicitar colaborar
-        </Text>
+        <Text style={styles.outlineButtonText}>Solicitar colaborar</Text>
       </Pressable>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
@@ -296,9 +321,7 @@ export function PublicGroupCollaborationActions({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 8,
-  },
+  container: { gap: 8 },
   loadingCard: {
     minHeight: 46,
     alignItems: 'center',
@@ -319,11 +342,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: '#FFF4EF',
   },
-  outlineButtonText: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '900',
-  },
+  outlineButtonText: { color: colors.primary, fontSize: 12, fontWeight: '900' },
   successBadge: {
     minHeight: 46,
     flexDirection: 'row',
@@ -333,11 +352,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: '#E8EEDD',
   },
-  successText: {
-    color: '#607349',
-    fontSize: 12,
-    fontWeight: '900',
-  },
+  successText: { color: '#607349', fontSize: 12, fontWeight: '900' },
   pendingBadge: {
     minHeight: 46,
     flexDirection: 'row',
@@ -347,17 +362,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: '#FFF0D9',
   },
-  pendingText: {
-    color: '#9A6A21',
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  cancelText: {
-    color: colors.danger,
-    fontSize: 11,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
+  pendingText: { color: '#9A6A21', fontSize: 12, fontWeight: '900' },
+  cancelText: { color: colors.danger, fontSize: 11, fontWeight: '900', textAlign: 'center' },
+  leaveText: { color: colors.danger, fontSize: 11, fontWeight: '900', textAlign: 'center' },
   disabledBadge: {
     minHeight: 46,
     alignItems: 'center',
@@ -368,19 +375,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: colors.inputBackground,
   },
-  disabledText: {
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 10,
-    lineHeight: 15,
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.72,
-  },
+  disabledText: { color: colors.muted, fontSize: 10, fontWeight: '800', textAlign: 'center' },
+  errorText: { color: colors.danger, fontSize: 10, lineHeight: 15, textAlign: 'center' },
+  pressed: { opacity: 0.72 },
 });
