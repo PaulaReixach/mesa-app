@@ -1,9 +1,18 @@
 import { SymbolView } from 'expo-symbols';
+import type { ComponentProps } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { resolveApiUrl } from '../lib/api';
 import { colors } from '../theme/colors';
 import type { GroupActivityItem } from '../types/group-activity';
+
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
+
+type ActivityBadge = {
+  name: SymbolName;
+  backgroundColor: string;
+  tintColor: string;
+};
 
 const statusLabel: Record<
   NonNullable<GroupActivityItem['restaurantStatus']>,
@@ -63,41 +72,131 @@ function sentence(item: GroupActivityItem): string {
   return 'actualizó el grupo';
 }
 
-function fallbackIcon(item: GroupActivityItem) {
+function fallbackIcon(item: GroupActivityItem): SymbolName {
   if (
     item.type === 'RESTAURANT_ADDED'
     || item.type === 'RESTAURANT_RATED'
     || item.type === 'RESTAURANT_STATUS_CHANGED'
   ) {
-    return { ios: 'fork.knife', android: 'restaurant', web: 'restaurant' } as const;
+    return {
+      ios: 'fork.knife',
+      android: 'restaurant',
+      web: 'restaurant',
+    };
   }
 
   if (item.type === 'MEMBER_INVITED') {
-    return { ios: 'envelope.fill', android: 'mail', web: 'mail' } as const;
+    return {
+      ios: 'envelope.fill',
+      android: 'mail',
+      web: 'mail',
+    };
   }
 
-  return { ios: 'person.fill', android: 'person', web: 'person' } as const;
+  return {
+    ios: 'person.fill',
+    android: 'person',
+    web: 'person',
+  };
+}
+
+function activityBadge(item: GroupActivityItem): ActivityBadge {
+  switch (item.type) {
+    case 'GROUP_CREATED':
+      return {
+        name: { ios: 'flag.fill', android: 'flag', web: 'flag' },
+        backgroundColor: colors.primary,
+        tintColor: '#FFFFFF',
+      };
+    case 'MEMBER_INVITED':
+      return {
+        name: { ios: 'envelope.fill', android: 'mail', web: 'mail' },
+        backgroundColor: '#FFE5C2',
+        tintColor: colors.primary,
+      };
+    case 'MEMBER_JOINED':
+      return {
+        name: {
+          ios: 'person.badge.plus',
+          android: 'person_add',
+          web: 'person_add',
+        },
+        backgroundColor: '#DCE8CB',
+        tintColor: '#607349',
+      };
+    case 'MEMBER_LEFT':
+      return {
+        name: {
+          ios: 'person.crop.circle.badge.minus',
+          android: 'person_remove',
+          web: 'person_remove',
+        },
+        backgroundColor: '#F7DDD8',
+        tintColor: colors.danger,
+      };
+    case 'RESTAURANT_ADDED':
+      return {
+        name: {
+          ios: 'fork.knife',
+          android: 'restaurant',
+          web: 'restaurant',
+        },
+        backgroundColor: colors.primary,
+        tintColor: '#FFFFFF',
+      };
+    case 'RESTAURANT_RATED':
+      return {
+        name: { ios: 'star.fill', android: 'star', web: 'star' },
+        backgroundColor: '#F4B13D',
+        tintColor: '#FFFFFF',
+      };
+    case 'RESTAURANT_STATUS_CHANGED':
+      return {
+        name: {
+          ios: 'arrow.triangle.2.circlepath',
+          android: 'sync',
+          web: 'sync',
+        },
+        backgroundColor: '#FFF0D9',
+        tintColor: '#A46B16',
+      };
+  }
 }
 
 export function GroupActivityRow({ item }: { item: GroupActivityItem }) {
   const avatarUrl = item.actorAvatarUrl ?? item.subjectAvatarUrl;
   const avatar = avatarUrl ? resolveApiUrl(avatarUrl) : null;
   const displayName = item.actorName ?? item.subjectName;
+  const badge = activityBadge(item);
   const showStatus = item.type === 'RESTAURANT_STATUS_CHANGED'
     && item.restaurantStatus;
 
   return (
     <View style={styles.card}>
-      <View style={styles.avatar}>
-        {avatar ? (
-          <Image source={{ uri: avatar }} style={styles.avatarImage} />
-        ) : (
+      <View style={styles.avatarWrap}>
+        <View style={styles.avatar}>
+          {avatar ? (
+            <Image source={{ uri: avatar }} style={styles.avatarImage} />
+          ) : (
+            <SymbolView
+              name={fallbackIcon(item)}
+              size={19}
+              tintColor={colors.primary}
+            />
+          )}
+        </View>
+        <View
+          style={[
+            styles.activityBadge,
+            { backgroundColor: badge.backgroundColor },
+          ]}
+        >
           <SymbolView
-            name={fallbackIcon(item)}
-            size={19}
-            tintColor={colors.primary}
+            name={badge.name}
+            size={10}
+            tintColor={badge.tintColor}
           />
-        )}
+        </View>
       </View>
 
       <View style={styles.copy}>
@@ -135,6 +234,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: colors.surface,
   },
+  avatarWrap: {
+    position: 'relative',
+    width: 45,
+    height: 45,
+  },
   avatar: {
     width: 42,
     height: 42,
@@ -147,6 +251,18 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: '100%',
     height: '100%',
+  },
+  activityBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 19,
+    height: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.surface,
+    borderRadius: 10,
   },
   copy: {
     flex: 1,
