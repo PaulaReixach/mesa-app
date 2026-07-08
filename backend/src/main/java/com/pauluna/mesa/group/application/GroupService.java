@@ -21,6 +21,9 @@ import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository
 import com.pauluna.mesa.group.infrastructure.GroupFollowerRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
+import com.pauluna.mesa.restaurant.domain.RestaurantProposal;
+import com.pauluna.mesa.restaurant.domain.RestaurantProposalStatus;
+import com.pauluna.mesa.restaurant.infrastructure.RestaurantProposalRepository;
 import com.pauluna.mesa.user.application.UserNotFoundException;
 import com.pauluna.mesa.user.infrastructure.UserRepository;
 
@@ -32,6 +35,7 @@ public class GroupService {
     private final GroupMemberRepository groupMemberRepository;
     private final GroupFollowerRepository groupFollowerRepository;
     private final GroupCollaborationRequestRepository collaborationRequestRepository;
+    private final RestaurantProposalRepository restaurantProposalRepository;
     private final UserRepository userRepository;
 
     public GroupService(
@@ -39,12 +43,14 @@ public class GroupService {
             GroupMemberRepository groupMemberRepository,
             GroupFollowerRepository groupFollowerRepository,
             GroupCollaborationRequestRepository collaborationRequestRepository,
+            RestaurantProposalRepository restaurantProposalRepository,
             UserRepository userRepository
     ) {
         this.restaurantGroupRepository = restaurantGroupRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.groupFollowerRepository = groupFollowerRepository;
         this.collaborationRequestRepository = collaborationRequestRepository;
+        this.restaurantProposalRepository = restaurantProposalRepository;
         this.userRepository = userRepository;
     }
 
@@ -121,6 +127,7 @@ public class GroupService {
 
             if (newPrivacy == GroupPrivacy.PRIVATE) {
                 cancelPendingCollaborationRequests(groupId);
+                cancelPendingRestaurantProposals(groupId);
             }
         }
 
@@ -253,6 +260,21 @@ public class GroupService {
         if (!pendingRequests.isEmpty()) {
             collaborationRequestRepository.saveAll(pendingRequests);
             collaborationRequestRepository.flush();
+        }
+    }
+
+    private void cancelPendingRestaurantProposals(UUID groupId) {
+        List<RestaurantProposal> pendingProposals =
+                restaurantProposalRepository.findAllByGroupIdAndStatus(
+                        groupId,
+                        RestaurantProposalStatus.PENDING
+                );
+
+        pendingProposals.forEach(RestaurantProposal::cancel);
+
+        if (!pendingProposals.isEmpty()) {
+            restaurantProposalRepository.saveAll(pendingProposals);
+            restaurantProposalRepository.flush();
         }
     }
 
