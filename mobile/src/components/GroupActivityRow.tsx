@@ -35,7 +35,12 @@ function sentence(item: GroupActivityItem): string {
   if (item.kind === 'RESTAURANT_ADDED') {
     return `añadió “${item.restaurantName ?? 'un restaurante'}”`;
   }
-  return `marcó “${item.restaurantName ?? 'un restaurante'}” como ${item.status ? statusLabel[item.status].toLowerCase() : 'actualizado'}`;
+
+  const status = item.status
+    ? statusLabel[item.status].toLowerCase()
+    : 'actualizado';
+
+  return `“${item.restaurantName ?? 'Un restaurante'}” está marcado como ${status}`;
 }
 
 export function GroupActivityRow({ item }: { item: GroupActivityItem }) {
