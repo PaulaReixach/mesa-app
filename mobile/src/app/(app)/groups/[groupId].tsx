@@ -156,17 +156,30 @@ export default function GroupDetailScreen() {
   }, [loadGroupData]));
 
   useEffect(() => {
-    if (!groupId || group?.currentUserRole !== 'CONTRIBUTOR') {
+    if (
+      !groupId
+      || group?.privacy !== 'PUBLIC'
+      || group.currentUserRole === 'OWNER'
+    ) {
       return;
     }
 
     router.replace(`/groups/public/${groupId}` as Href);
-  }, [group?.currentUserRole, groupId]);
+  }, [group?.currentUserRole, group?.privacy, groupId]);
 
   const isOwner = Boolean(group && user?.id === group.ownerUserId);
-  const canManageRestaurants = group?.currentUserRole !== 'CONTRIBUTOR';
-  const isRedirectingToPublicGroup =
-    group?.currentUserRole === 'CONTRIBUTOR';
+  const canManageRestaurants = Boolean(
+    group
+    && (
+      group.privacy !== 'PUBLIC'
+      || group.currentUserRole === 'OWNER'
+    ),
+  );
+  const isRedirectingToPublicGroup = Boolean(
+    group
+    && group.privacy === 'PUBLIC'
+    && group.currentUserRole !== 'OWNER',
+  );
 
   function openCreateRestaurant(): void {
     router.push({ pathname: '/groups/[groupId]/restaurants/create', params: { groupId } });
@@ -371,7 +384,7 @@ const styles = StyleSheet.create({
   headerTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
   loading: { alignItems: 'center', paddingVertical: 90 },
   heroCard: { overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 24, backgroundColor: colors.surface },
-  heroArtwork: { height: 160, backgroundColor: '#F2DED5' },
+  heroArtwork: { height: 160, backgroundColor: '#F2E2DA' },
   heroImage: { width: '100%', height: '100%' },
   heroFallback: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   heroInitial: { color: colors.primary, fontSize: 58, fontWeight: '900' },
