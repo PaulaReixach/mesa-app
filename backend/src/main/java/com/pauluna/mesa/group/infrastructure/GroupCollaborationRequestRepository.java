@@ -35,6 +35,11 @@ public interface GroupCollaborationRequestRepository
             UUID groupId
     );
 
+    List<GroupCollaborationRequest> findAllByGroupIdAndStatus(
+            UUID groupId,
+            CollaborationRequestStatus status
+    );
+
     long countByGroupIdAndStatus(
             UUID groupId,
             CollaborationRequestStatus status
