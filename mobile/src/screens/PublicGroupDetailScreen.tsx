@@ -21,7 +21,6 @@ import {
   EmptyTab,
   GroupHeading,
   GroupHero,
-  GroupInfoBanner,
   GroupRestaurantListCard,
   GroupStat,
   GroupTabs,
@@ -52,63 +51,78 @@ const tabs = [
 ];
 
 function CommunitySummary({
-  ownerName,
-  ownerAvatar,
-  collaborators,
-  followers,
+  members,
+  onViewAll,
 }: {
-  ownerName: string;
-  ownerAvatar: string | null;
-  collaborators: number;
-  followers: number;
+  members: GroupMember[];
+  onViewAll: () => void;
 }) {
-  const avatarUri = ownerAvatar ? resolveApiUrl(ownerAvatar) : null;
+  const visibleMembers = members.slice(0, 5);
 
   return (
     <View style={styles.communityCard}>
       <View style={styles.communityHeader}>
         <Text style={styles.communityTitle}>Colaboradores destacados</Text>
-        <Text style={styles.communityAction}>Ver todos ({collaborators}) ›</Text>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={onViewAll}
+          style={({ pressed }) => pressed ? styles.pressed : null}
+        >
+          <Text style={styles.communityAction}>
+            Ver todos ({members.length}) ›
+          </Text>
+        </Pressable>
       </View>
 
       <View style={styles.communityRow}>
-        <View style={styles.communityOwner}>
-          <View style={styles.communityAvatar}>
-            {avatarUri ? (
-              <Image source={{ uri: avatarUri }} style={styles.communityAvatarImage} />
-            ) : (
-              <Text style={styles.communityAvatarText}>
-                {ownerName.charAt(0).toUpperCase()}
+        {visibleMembers.map(member => {
+          const avatarUri = member.avatarUrl
+            ? resolveApiUrl(member.avatarUrl)
+            : null;
+          const owner = member.role === 'OWNER';
+
+          return (
+            <View key={member.id} style={styles.communityPerson}>
+              <View style={styles.communityAvatarWrap}>
+                <View style={styles.communityAvatar}>
+                  {avatarUri ? (
+                    <Image
+                      source={{ uri: avatarUri }}
+                      style={styles.communityAvatarImage}
+                    />
+                  ) : (
+                    <Text style={styles.communityAvatarText}>
+                      {member.name.charAt(0).toUpperCase()}
+                    </Text>
+                  )}
+                </View>
+                {owner ? (
+                  <View style={styles.communityOwnerBadge}>
+                    <SymbolView
+                      name={{
+                        ios: 'crown.fill',
+                        android: 'workspace_premium',
+                        web: 'workspace_premium',
+                      }}
+                      size={9}
+                      tintColor="#FFFFFF"
+                    />
+                  </View>
+                ) : null}
+              </View>
+              <Text numberOfLines={1} style={styles.communityName}>
+                {member.name}
               </Text>
-            )}
-          </View>
-          <Text numberOfLines={1} style={styles.communityName}>{ownerName}</Text>
-          <Text style={styles.communityRole}>Creadora</Text>
-        </View>
-
-        <View style={styles.communityMetric}>
-          <View style={styles.communityMetricGreen}>
-            <SymbolView
-              name={{ ios: 'person.3.fill', android: 'groups', web: 'groups' }}
-              size={17}
-              tintColor="#607349"
-            />
-          </View>
-          <Text style={styles.communityMetricValue}>{collaborators}</Text>
-          <Text style={styles.communityMetricLabel}>colaboran</Text>
-        </View>
-
-        <View style={styles.communityMetric}>
-          <View style={styles.communityMetricWarm}>
-            <SymbolView
-              name={{ ios: 'heart.fill', android: 'favorite', web: 'favorite' }}
-              size={17}
-              tintColor={colors.primary}
-            />
-          </View>
-          <Text style={styles.communityMetricValue}>{followers}</Text>
-          <Text style={styles.communityMetricLabel}>siguen</Text>
-        </View>
+              <Text
+                numberOfLines={1}
+                style={owner ? styles.communityOwnerRole : styles.communityRole}
+              >
+                {owner ? 'Creadora' : 'Colaborador'}
+              </Text>
+            </View>
+          );
+        })}
       </View>
     </View>
   );
@@ -188,7 +202,11 @@ export default function PublicGroupDetailScreen() {
       'El grupo dejará de aparecer entre tus grupos seguidos.',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Dejar de seguir', style: 'destructive', onPress: () => void updateFollow(false) },
+        {
+          text: 'Dejar de seguir',
+          style: 'destructive',
+          onPress: () => void updateFollow(false),
+        },
       ],
     );
   }
@@ -300,21 +318,49 @@ export default function PublicGroupDetailScreen() {
 
             <View style={styles.sheet}>
               <View style={styles.summary}>
-                <GroupHeading city={group.city} privacyLabel="Grupo público" title={group.name} />
+                <GroupHeading
+                  city={group.city}
+                  privacyLabel="Grupo público"
+                  title={group.name}
+                />
 
                 <View style={styles.statsRow}>
-                  <GroupStat kind="restaurants" label="restaurantes" value={group.restaurantCount} />
-                  <GroupStat kind="collaborators" label="colaboradores" value={group.collaboratorCount} />
-                  <GroupStat kind="followers" label="seguidores" value={group.followerCount} />
+                  <GroupStat
+                    kind="restaurants"
+                    label="restaurantes"
+                    value={group.restaurantCount}
+                  />
+                  <GroupStat
+                    kind="collaborators"
+                    label="colaboradores"
+                    value={group.collaboratorCount}
+                  />
+                  <GroupStat
+                    kind="followers"
+                    label="seguidores"
+                    value={group.followerCount}
+                  />
                 </View>
 
                 <View style={styles.actionsRow}>
                   <View style={styles.followAction}>
                     <PrimaryGroupAction
                       icon={{
-                        ios: group.ownedByCurrentUser ? 'arrow.up.right.square.fill' : group.following ? 'heart.fill' : 'plus',
-                        android: group.ownedByCurrentUser ? 'open_in_new' : group.following ? 'favorite' : 'add',
-                        web: group.ownedByCurrentUser ? 'open_in_new' : group.following ? 'favorite' : 'add',
+                        ios: group.ownedByCurrentUser
+                          ? 'arrow.up.right.square.fill'
+                          : group.following
+                            ? 'heart.fill'
+                            : 'plus',
+                        android: group.ownedByCurrentUser
+                          ? 'open_in_new'
+                          : group.following
+                            ? 'favorite'
+                            : 'add',
+                        web: group.ownedByCurrentUser
+                          ? 'open_in_new'
+                          : group.following
+                            ? 'favorite'
+                            : 'add',
                       }}
                       loading={updatingFollow}
                       onPress={group.ownedByCurrentUser ? openOwnedGroup : followPress}
@@ -344,14 +390,22 @@ export default function PublicGroupDetailScreen() {
                 />
               </View>
 
-              <GroupTabs activeTab={activeTab} onChange={setActiveTab} tabs={tabs} />
+              <GroupTabs
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                tabs={tabs}
+              />
 
               <View style={styles.tabContent}>
                 {activeTab === 'restaurants' ? (
                   <>
                     {detail.restaurants.length === 0 ? (
                       <EmptyTab
-                        icon={{ ios: 'fork.knife', android: 'restaurant', web: 'restaurant' }}
+                        icon={{
+                          ios: 'fork.knife',
+                          android: 'restaurant',
+                          web: 'restaurant',
+                        }}
                         text="Vuelve pronto para descubrir los primeros restaurantes."
                         title="La lista está empezando"
                       />
@@ -368,21 +422,50 @@ export default function PublicGroupDetailScreen() {
                       </View>
                     )}
 
-                    <GroupInfoBanner
-                      actionLabel="Cómo funciona"
-                      icon={{ ios: 'person.3.fill', android: 'groups', web: 'groups' }}
-                      onPress={() => setActiveTab('collaboration')}
-                      subtitle="Valoran, recomiendan y proponen nuevos restaurantes."
-                      title="Colabora y descubre lo mejor juntos"
-                      tone="green"
-                    />
+                    {detail.restaurants.length > 0 ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={openCopy}
+                        style={({ pressed }) => [
+                          styles.copyAction,
+                          pressed ? styles.pressed : null,
+                        ]}
+                      >
+                        <View style={styles.copyIcon}>
+                          <SymbolView
+                            name={{
+                              ios: 'square.on.square',
+                              android: 'content_copy',
+                              web: 'content_copy',
+                            }}
+                            size={18}
+                            tintColor={colors.primary}
+                          />
+                        </View>
+                        <View style={styles.copyText}>
+                          <Text style={styles.copyTitle}>Copiar restaurantes</Text>
+                          <Text style={styles.copySubtitle}>
+                            Guarda tus favoritos en uno de tus grupos.
+                          </Text>
+                        </View>
+                        <SymbolView
+                          name={{
+                            ios: 'chevron.right',
+                            android: 'chevron_right',
+                            web: 'chevron_right',
+                          }}
+                          size={16}
+                          tintColor={colors.muted}
+                        />
+                      </Pressable>
+                    ) : null}
 
-                    <CommunitySummary
-                      collaborators={group.collaboratorCount}
-                      followers={group.followerCount}
-                      ownerAvatar={group.owner.avatarUrl}
-                      ownerName={group.owner.name}
-                    />
+                    {collaborators.length > 0 ? (
+                      <CommunitySummary
+                        members={collaborators}
+                        onViewAll={() => setActiveTab('collaboration')}
+                      />
+                    ) : null}
                   </>
                 ) : null}
 
@@ -390,6 +473,7 @@ export default function PublicGroupDetailScreen() {
                   <>
                     <PublicGroupCollaborationActions
                       groupId={groupId}
+                      hideWhenCollaborating
                       ownedByCurrentUser={group.ownedByCurrentUser}
                     />
 
@@ -398,31 +482,6 @@ export default function PublicGroupDetailScreen() {
                       onMemberPress={showCollaborator}
                       privacy="PUBLIC"
                     />
-
-                    {detail.restaurants.length > 0 ? (
-                      <Pressable
-                        accessibilityRole="button"
-                        onPress={openCopy}
-                        style={({ pressed }) => [styles.copyAction, pressed ? styles.pressed : null]}
-                      >
-                        <View style={styles.copyIcon}>
-                          <SymbolView
-                            name={{ ios: 'square.on.square', android: 'content_copy', web: 'content_copy' }}
-                            size={18}
-                            tintColor={colors.primary}
-                          />
-                        </View>
-                        <View style={styles.copyText}>
-                          <Text style={styles.copyTitle}>Copiar restaurantes</Text>
-                          <Text style={styles.copySubtitle}>Guarda tus favoritos en uno de tus grupos.</Text>
-                        </View>
-                        <SymbolView
-                          name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-                          size={16}
-                          tintColor={colors.muted}
-                        />
-                      </Pressable>
-                    ) : null}
                   </>
                 ) : null}
 
@@ -450,43 +509,212 @@ export default function PublicGroupDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
-  scrollContent: { flexGrow: 1, paddingBottom: 18 },
-  loadingWrap: { alignItems: 'center', justifyContent: 'center', paddingVertical: 100 },
-  errorWrap: { gap: 7, margin: 18, padding: 16, borderWidth: 1, borderColor: '#F3C5BC', borderRadius: 17, backgroundColor: '#FFF1EE' },
-  errorTitle: { color: colors.danger, fontSize: 14, fontWeight: '900' },
-  errorText: { color: colors.muted, fontSize: 11, lineHeight: 16 },
-  retryText: { color: colors.primary, fontSize: 11, fontWeight: '900' },
-  sheet: { minHeight: 540, marginTop: -22, overflow: 'hidden', borderTopLeftRadius: 27, borderTopRightRadius: 27, backgroundColor: colors.background },
-  summary: { gap: 13, paddingHorizontal: 18, paddingTop: 20, paddingBottom: 12 },
-  statsRow: { flexDirection: 'row', gap: 8 },
-  actionsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  followAction: { flex: 0.9 },
-  collaborationAction: { flex: 1.1 },
-  tabContent: { gap: 10, paddingHorizontal: 18, paddingTop: 12 },
-  restaurantList: { gap: 6 },
-  communityCard: { gap: 11, padding: 13, borderRadius: 18, backgroundColor: '#FFF8EE' },
-  communityHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  communityTitle: { color: colors.text, fontSize: 11, fontWeight: '900' },
-  communityAction: { color: '#607349', fontSize: 9, fontWeight: '900' },
-  communityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 24 },
-  communityOwner: { width: 58, alignItems: 'center' },
-  communityAvatar: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 21, backgroundColor: '#FBE9E2' },
-  communityAvatarImage: { width: '100%', height: '100%' },
-  communityAvatarText: { color: colors.primary, fontSize: 13, fontWeight: '900' },
-  communityName: { maxWidth: '100%', marginTop: 4, color: colors.text, fontSize: 8, fontWeight: '800' },
-  communityRole: { color: colors.primary, fontSize: 7, fontWeight: '800' },
-  communityMetric: { alignItems: 'center', gap: 2 },
-  communityMetricGreen: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: '#E0E9CF' },
-  communityMetricWarm: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: '#FBE9E2' },
-  communityMetricValue: { color: colors.text, fontSize: 9, fontWeight: '900' },
-  communityMetricLabel: { color: colors.muted, fontSize: 7 },
-  copyAction: { minHeight: 62, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderWidth: 1, borderColor: colors.border, borderRadius: 17, backgroundColor: colors.surface },
-  copyIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: '#FBE9E2' },
-  copyText: { flex: 1, gap: 2 },
-  copyTitle: { color: colors.text, fontSize: 11, fontWeight: '900' },
-  copySubtitle: { color: colors.muted, fontSize: 8, lineHeight: 12 },
-  inlineError: { padding: 10, borderRadius: 13, backgroundColor: '#FFF1EE' },
-  inlineErrorText: { color: colors.danger, fontSize: 9, lineHeight: 13, textAlign: 'center' },
-  pressed: { opacity: 0.72 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 18,
+  },
+  loadingWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 100,
+  },
+  errorWrap: {
+    gap: 7,
+    margin: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F3C5BC',
+    borderRadius: 17,
+    backgroundColor: '#FFF1EE',
+  },
+  errorTitle: {
+    color: colors.danger,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  errorText: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  retryText: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  sheet: {
+    minHeight: 540,
+    marginTop: -22,
+    overflow: 'hidden',
+    borderTopLeftRadius: 27,
+    borderTopRightRadius: 27,
+    backgroundColor: colors.background,
+  },
+  summary: {
+    gap: 13,
+    paddingHorizontal: 18,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  followAction: {
+    flex: 0.9,
+  },
+  collaborationAction: {
+    flex: 1.1,
+  },
+  tabContent: {
+    gap: 10,
+    paddingHorizontal: 18,
+    paddingTop: 12,
+  },
+  restaurantList: {
+    gap: 6,
+  },
+  communityCard: {
+    gap: 12,
+    padding: 13,
+    borderRadius: 18,
+    backgroundColor: '#FFF8EE',
+  },
+  communityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  communityTitle: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  communityAction: {
+    color: '#607349',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  communityRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-around',
+    gap: 6,
+  },
+  communityPerson: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+  },
+  communityAvatarWrap: {
+    position: 'relative',
+  },
+  communityAvatar: {
+    width: 42,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderRadius: 21,
+    backgroundColor: '#FBE9E2',
+  },
+  communityAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  communityAvatarText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  communityOwnerBadge: {
+    position: 'absolute',
+    right: -3,
+    bottom: -2,
+    width: 17,
+    height: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF8EE',
+    borderRadius: 9,
+    backgroundColor: colors.primary,
+  },
+  communityName: {
+    width: '100%',
+    marginTop: 5,
+    color: colors.text,
+    fontSize: 8,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  communityOwnerRole: {
+    color: colors.primary,
+    fontSize: 7,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  communityRole: {
+    color: '#607349',
+    fontSize: 7,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  copyAction: {
+    minHeight: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 17,
+    backgroundColor: colors.surface,
+  },
+  copyIcon: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    backgroundColor: '#FBE9E2',
+  },
+  copyText: {
+    flex: 1,
+    gap: 2,
+  },
+  copyTitle: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  copySubtitle: {
+    color: colors.muted,
+    fontSize: 8,
+    lineHeight: 12,
+  },
+  inlineError: {
+    padding: 10,
+    borderRadius: 13,
+    backgroundColor: '#FFF1EE',
+  },
+  inlineErrorText: {
+    color: colors.danger,
+    fontSize: 9,
+    lineHeight: 13,
+    textAlign: 'center',
+  },
+  pressed: {
+    opacity: 0.72,
+  },
 });
