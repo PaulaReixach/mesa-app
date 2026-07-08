@@ -38,7 +38,7 @@ export function GroupActivityTab({
     owner,
     members,
     restaurants,
-  });
+  }).slice(0, 8);
   const sections = activity.reduce<Record<string, GroupActivityItem[]>>(
     (result, item) => {
       const label = sectionLabel(item.createdAt);
