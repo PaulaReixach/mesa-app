@@ -1,6 +1,7 @@
 package com.pauluna.mesa.group.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -86,6 +87,19 @@ class PublicGroupMemberServiceTest {
         assertEquals(2, result.size());
         assertEquals(GroupRole.OWNER, result.get(0).role());
         assertEquals(GroupRole.CONTRIBUTOR, result.get(1).role());
+    }
+
+    @Test
+    void rejectsPrivateGroups() {
+        RestaurantGroup group = mock(RestaurantGroup.class);
+
+        when(group.getPrivacy()).thenReturn(GroupPrivacy.PRIVATE);
+        when(groupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
+
+        assertThrows(
+                GroupNotFoundException.class,
+                () -> service.getCollaborators(GROUP_ID)
+        );
     }
 
     private GroupMember publicMembership(
