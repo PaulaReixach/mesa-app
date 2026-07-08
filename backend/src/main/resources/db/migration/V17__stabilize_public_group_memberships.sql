@@ -20,6 +20,14 @@ WHERE request.group_id = restaurant_group.id
   AND restaurant_group.privacy = 'PRIVATE'
   AND request.status = 'PENDING';
 
+UPDATE restaurant_proposals AS proposal
+SET status = 'CANCELLED',
+    updated_at = CURRENT_TIMESTAMP
+FROM restaurant_groups AS restaurant_group
+WHERE proposal.group_id = restaurant_group.id
+  AND restaurant_group.privacy = 'PRIVATE'
+  AND proposal.status = 'PENDING';
+
 UPDATE group_collaboration_requests AS request
 SET status = 'LEFT',
     updated_at = CURRENT_TIMESTAMP
