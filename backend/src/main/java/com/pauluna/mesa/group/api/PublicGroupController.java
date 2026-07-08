@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.pauluna.mesa.group.application.GroupCollaborationService;
 import com.pauluna.mesa.group.application.PublicGroupCollaborationStateService;
 import com.pauluna.mesa.group.application.PublicGroupCopyService;
+import com.pauluna.mesa.group.application.PublicGroupMemberService;
 import com.pauluna.mesa.group.application.PublicGroupService;
 
 import jakarta.validation.Valid;
@@ -30,17 +31,20 @@ public class PublicGroupController {
     private final PublicGroupCopyService publicGroupCopyService;
     private final GroupCollaborationService collaborationService;
     private final PublicGroupCollaborationStateService collaborationStateService;
+    private final PublicGroupMemberService publicGroupMemberService;
 
     public PublicGroupController(
             PublicGroupService publicGroupService,
             PublicGroupCopyService publicGroupCopyService,
             GroupCollaborationService collaborationService,
-            PublicGroupCollaborationStateService collaborationStateService
+            PublicGroupCollaborationStateService collaborationStateService,
+            PublicGroupMemberService publicGroupMemberService
     ) {
         this.publicGroupService = publicGroupService;
         this.publicGroupCopyService = publicGroupCopyService;
         this.collaborationService = collaborationService;
         this.collaborationStateService = collaborationStateService;
+        this.publicGroupMemberService = publicGroupMemberService;
     }
 
     @GetMapping
@@ -71,6 +75,15 @@ public class PublicGroupController {
         UUID userId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(
                 publicGroupService.getPublicGroup(groupId, userId)
+        );
+    }
+
+    @GetMapping("/{groupId}/collaborators")
+    public ResponseEntity<List<GroupMemberResponse>> getCollaborators(
+            @PathVariable UUID groupId
+    ) {
+        return ResponseEntity.ok(
+                publicGroupMemberService.getCollaborators(groupId)
         );
     }
 
