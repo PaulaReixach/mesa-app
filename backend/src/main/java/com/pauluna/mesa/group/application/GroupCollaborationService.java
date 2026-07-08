@@ -42,6 +42,7 @@ public class GroupCollaborationService {
     private final GroupRestaurantRepository groupRestaurantRepository;
     private final RestaurantRatingRepository restaurantRatingRepository;
     private final RestaurantProposalService restaurantProposalService;
+    private final GroupCollaborationNotificationService notificationService;
     private final UserRepository userRepository;
     private final GroupService groupService;
 
@@ -52,6 +53,7 @@ public class GroupCollaborationService {
             GroupRestaurantRepository groupRestaurantRepository,
             RestaurantRatingRepository restaurantRatingRepository,
             RestaurantProposalService restaurantProposalService,
+            GroupCollaborationNotificationService notificationService,
             UserRepository userRepository,
             GroupService groupService
     ) {
@@ -61,6 +63,7 @@ public class GroupCollaborationService {
         this.groupRestaurantRepository = groupRestaurantRepository;
         this.restaurantRatingRepository = restaurantRatingRepository;
         this.restaurantProposalService = restaurantProposalService;
+        this.notificationService = notificationService;
         this.userRepository = userRepository;
         this.groupService = groupService;
     }
@@ -130,6 +133,8 @@ public class GroupCollaborationService {
                                 normalizeMessage(request.message())
                         )
                 );
+
+        notificationService.notifyRequestCreated(groupId, userId);
 
         return toResponse(collaborationRequest);
     }
@@ -254,7 +259,16 @@ public class GroupCollaborationService {
         }
 
         request.accept();
-        return toResponse(requestRepository.saveAndFlush(request));
+        GroupCollaborationRequest savedRequest =
+                requestRepository.saveAndFlush(request);
+
+        notificationService.notifyRequestAccepted(
+                groupId,
+                request.getUserId(),
+                ownerUserId
+        );
+
+        return toResponse(savedRequest);
     }
 
     public CollaborationRequestResponse rejectRequest(
@@ -268,7 +282,16 @@ public class GroupCollaborationService {
                 getPendingRequest(groupId, requestId);
 
         request.reject();
-        return toResponse(requestRepository.saveAndFlush(request));
+        GroupCollaborationRequest savedRequest =
+                requestRepository.saveAndFlush(request);
+
+        notificationService.notifyRequestRejected(
+                groupId,
+                request.getUserId(),
+                ownerUserId
+        );
+
+        return toResponse(savedRequest);
     }
 
     private GroupCollaborationRequest getPendingRequest(
