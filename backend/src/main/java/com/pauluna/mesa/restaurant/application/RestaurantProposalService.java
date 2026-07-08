@@ -192,6 +192,7 @@ public class RestaurantProposalService {
         if (isRestaurantAlreadyInGroup(groupId, data)) {
             proposal.markDuplicate(ownerUserId);
             RestaurantProposal saved = proposalRepository.saveAndFlush(proposal);
+            closeDuplicatePendingProposals(saved, ownerUserId);
             notificationService.notifyProposalDuplicate(saved, ownerUserId);
             return toResponse(saved);
         }
@@ -204,6 +205,7 @@ public class RestaurantProposalService {
         )) {
             proposal.markDuplicate(ownerUserId);
             RestaurantProposal saved = proposalRepository.saveAndFlush(proposal);
+            closeDuplicatePendingProposals(saved, ownerUserId);
             notificationService.notifyProposalDuplicate(saved, ownerUserId);
             return toResponse(saved);
         }
@@ -264,17 +266,17 @@ public class RestaurantProposalService {
     }
 
     private void closeDuplicatePendingProposals(
-            RestaurantProposal accepted,
+            RestaurantProposal resolved,
             UUID ownerUserId
     ) {
         List<RestaurantProposal> duplicates = proposalRepository
                 .findAllByGroupIdAndRestaurantIdentityKeyAndStatus(
-                        accepted.getGroupId(),
-                        accepted.getRestaurantIdentityKey(),
+                        resolved.getGroupId(),
+                        resolved.getRestaurantIdentityKey(),
                         RestaurantProposalStatus.PENDING
                 )
                 .stream()
-                .filter(proposal -> !proposal.getId().equals(accepted.getId()))
+                .filter(proposal -> !proposal.getId().equals(resolved.getId()))
                 .toList();
 
         duplicates.forEach(proposal ->
