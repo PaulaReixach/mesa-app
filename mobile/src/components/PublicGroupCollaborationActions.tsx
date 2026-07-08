@@ -84,10 +84,9 @@ export function PublicGroupCollaborationActions({
   }
 
   function openCollaborationSpace(): void {
-    router.push({
-      pathname: '/groups/[groupId]',
-      params: { groupId },
-    });
+    router.push(
+      `/groups/${groupId}/collaboration` as Href,
+    );
   }
 
   async function cancelRequest(): Promise<void> {
