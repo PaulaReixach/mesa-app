@@ -28,11 +28,13 @@ type SymbolName = ComponentProps<typeof SymbolView>['name'];
 type Props = {
   groupId: string;
   ownedByCurrentUser: boolean;
+  hideWhenCollaborating?: boolean;
 };
 
 export function PublicGroupCollaborationActions({
   groupId,
   ownedByCurrentUser,
+  hideWhenCollaborating = false,
 }: Props) {
   const { accessToken } = useAuth();
   const [state, setState] = useState<PublicGroupCollaborationState | null>(null);
@@ -237,6 +239,10 @@ export function PublicGroupCollaborationActions({
   const retryBlocked = Boolean(
     retryDate && retryDate.getTime() > Date.now(),
   );
+
+  if (state?.collaborating && hideWhenCollaborating) {
+    return null;
+  }
 
   if (state?.collaborating && compact) {
     return renderCompactButton({
