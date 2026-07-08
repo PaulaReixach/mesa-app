@@ -139,7 +139,7 @@ export function PublicGroupCollaborationActions({
   function confirmLeave(): void {
     Alert.alert(
       'Dejar de colaborar',
-      'Tus valoraciones dejarán de contar en las medias del grupo. Seguirás siguiéndolo si ya lo hacías.',
+      'Dejarás de formar parte del grupo y tus valoraciones dejarán de contar en sus medias. Seguirás siguiéndolo si ya lo hacías.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -241,7 +241,34 @@ export function PublicGroupCollaborationActions({
   );
 
   if (state?.collaborating && hideWhenCollaborating) {
-    return null;
+    return (
+      <View style={styles.container}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={leaving}
+          onPress={confirmLeave}
+          style={({ pressed }) => [
+            styles.exitButton,
+            pressed ? styles.pressed : null,
+            leaving ? styles.disabled : null,
+          ]}
+        >
+          <SymbolView
+            name={{
+              ios: 'rectangle.portrait.and.arrow.right',
+              android: 'logout',
+              web: 'logout',
+            }}
+            size={17}
+            tintColor={colors.danger}
+          />
+          <Text style={styles.exitButtonText}>
+            {leaving ? 'Saliendo...' : 'Dejar de colaborar'}
+          </Text>
+        </Pressable>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      </View>
+    );
   }
 
   if (state?.collaborating && compact) {
@@ -425,6 +452,22 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     textAlign: 'center',
   },
+  exitButton: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#E7B8B0',
+    borderRadius: 15,
+    backgroundColor: '#FFF7F5',
+  },
+  exitButtonText: {
+    color: colors.danger,
+    fontSize: 10,
+    fontWeight: '900',
+  },
   successCard: {
     gap: 10,
     padding: 12,
@@ -511,5 +554,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.72,
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });
