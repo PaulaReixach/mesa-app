@@ -3,13 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { GroupActivityRow } from './GroupActivityRow';
 import { colors } from '../theme/colors';
-import type { PublicGroupOwner } from '../types/group';
-import type { GroupMember } from '../types/group-member';
-import {
-  buildGroupActivity,
-  type GroupActivityItem,
-} from '../types/group-activity';
-import type { GroupRestaurant } from '../types/restaurant';
+import type { GroupActivityItem } from '../types/group-activity';
 
 function sectionLabel(value: string): string {
   const date = new Date(value);
@@ -23,23 +17,12 @@ function sectionLabel(value: string): string {
 }
 
 export function GroupActivityTab({
-  groupCreatedAt,
-  owner,
-  members,
-  restaurants,
+  activity,
 }: {
-  groupCreatedAt: string;
-  owner: PublicGroupOwner;
-  members: GroupMember[];
-  restaurants: GroupRestaurant[];
+  activity: GroupActivityItem[];
 }) {
-  const activity = buildGroupActivity({
-    groupCreatedAt,
-    owner,
-    members,
-    restaurants,
-  }).slice(0, 8);
-  const sections = activity.reduce<Record<string, GroupActivityItem[]>>(
+  const recentActivity = activity.slice(0, 12);
+  const sections = recentActivity.reduce<Record<string, GroupActivityItem[]>>(
     (result, item) => {
       const label = sectionLabel(item.createdAt);
       result[label] = [...(result[label] ?? []), item];
@@ -53,21 +36,29 @@ export function GroupActivityTab({
       <View style={styles.banner}>
         <View style={styles.bannerIcon}>
           <SymbolView
-            name={{ ios: 'waveform.path.ecg', android: 'monitor_heart', web: 'monitor_heart' }}
+            name={{
+              ios: 'waveform.path.ecg',
+              android: 'monitor_heart',
+              web: 'monitor_heart',
+            }}
             size={19}
             tintColor={colors.primary}
           />
         </View>
         <View style={styles.bannerCopy}>
           <Text style={styles.bannerTitle}>Actividad reciente</Text>
-          <Text style={styles.bannerText}>Todo lo que pasa en tu grupo, en un vistazo.</Text>
+          <Text style={styles.bannerText}>
+            Todo lo que pasa en tu grupo, en un vistazo.
+          </Text>
         </View>
       </View>
 
-      {activity.length === 0 ? (
+      {recentActivity.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Todavía no hay actividad</Text>
-          <Text style={styles.emptyText}>Las nuevas incorporaciones y restaurantes aparecerán aquí.</Text>
+          <Text style={styles.emptyText}>
+            Invitaciones, incorporaciones, puntuaciones y cambios aparecerán aquí.
+          </Text>
         </View>
       ) : (
         ['Hoy', 'Ayer', 'Anteriores'].map(label => {
@@ -91,16 +82,68 @@ export function GroupActivityTab({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 13 },
-  banner: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 16, backgroundColor: '#FFF8EE' },
-  bannerIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: '#FFE8C8' },
-  bannerCopy: { flex: 1, gap: 2 },
-  bannerTitle: { color: colors.text, fontSize: 11, fontWeight: '900' },
-  bannerText: { color: colors.muted, fontSize: 8 },
-  section: { gap: 8 },
-  sectionTitle: { color: colors.text, fontSize: 12, fontWeight: '900' },
-  rows: { gap: 6 },
-  empty: { gap: 5, padding: 20, borderWidth: 1, borderColor: colors.border, borderRadius: 16, backgroundColor: colors.surface },
-  emptyTitle: { color: colors.text, fontSize: 12, fontWeight: '900', textAlign: 'center' },
-  emptyText: { color: colors.muted, fontSize: 9, lineHeight: 14, textAlign: 'center' },
+  container: {
+    gap: 13,
+  },
+  banner: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 10,
+    borderRadius: 16,
+    backgroundColor: '#FFF8EE',
+  },
+  bannerIcon: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    backgroundColor: '#FFE8C8',
+  },
+  bannerCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  bannerTitle: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  bannerText: {
+    color: colors.muted,
+    fontSize: 8,
+  },
+  section: {
+    gap: 8,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  rows: {
+    gap: 6,
+  },
+  empty: {
+    gap: 5,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  emptyText: {
+    color: colors.muted,
+    fontSize: 9,
+    lineHeight: 14,
+    textAlign: 'center',
+  },
 });
