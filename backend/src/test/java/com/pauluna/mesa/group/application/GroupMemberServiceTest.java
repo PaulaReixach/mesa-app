@@ -1,5 +1,6 @@
 package com.pauluna.mesa.group.application;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -106,6 +107,42 @@ class GroupMemberServiceTest {
         verify(acceptedRequest).leave();
         verify(collaborationRequestRepository).save(acceptedRequest);
         verify(memberRepository).delete(membership);
+    }
+
+    @Test
+    void privateMemberCanLeaveGroup() {
+        GroupMember membership = mock(GroupMember.class);
+
+        when(groupService.getGroup(GROUP_ID, MEMBER_ID))
+                .thenReturn(groupResponse(GroupPrivacy.PRIVATE));
+        when(memberRepository.findByGroupIdAndUserId(
+                GROUP_ID,
+                MEMBER_ID
+        )).thenReturn(Optional.of(membership));
+        when(membership.getRole()).thenReturn(GroupRole.MEMBER);
+
+        service.leaveGroup(GROUP_ID, MEMBER_ID);
+
+        verify(memberRepository).delete(membership);
+    }
+
+    @Test
+    void ownerCannotLeaveGroup() {
+        GroupMember membership = mock(GroupMember.class);
+
+        when(groupService.getGroup(GROUP_ID, OWNER_ID))
+                .thenReturn(groupResponse(GroupPrivacy.PRIVATE));
+        when(memberRepository.findByGroupIdAndUserId(
+                GROUP_ID,
+                OWNER_ID
+        )).thenReturn(Optional.of(membership));
+        when(membership.getRole()).thenReturn(GroupRole.OWNER);
+        when(membership.getGroupId()).thenReturn(GROUP_ID);
+
+        assertThrows(
+                GroupOwnerCannotBeRemovedException.class,
+                () -> service.leaveGroup(GROUP_ID, OWNER_ID)
+        );
     }
 
     private GroupResponse groupResponse(GroupPrivacy privacy) {
