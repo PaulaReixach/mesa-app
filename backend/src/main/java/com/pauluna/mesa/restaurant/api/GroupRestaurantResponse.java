@@ -1,5 +1,6 @@
 package com.pauluna.mesa.restaurant.api;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -15,12 +16,28 @@ public record GroupRestaurantResponse(
         String groupNotes,
         Instant createdAt,
         Instant updatedAt,
+        BigDecimal averageScore,
+        long ratingsCount,
         RestaurantResponse restaurant
 ) {
 
     public static GroupRestaurantResponse from(
             GroupRestaurant groupRestaurant,
             Restaurant restaurant
+    ) {
+        return from(
+                groupRestaurant,
+                restaurant,
+                null,
+                0
+        );
+    }
+
+    public static GroupRestaurantResponse from(
+            GroupRestaurant groupRestaurant,
+            Restaurant restaurant,
+            BigDecimal averageScore,
+            long ratingsCount
     ) {
         return new GroupRestaurantResponse(
                 groupRestaurant.getId(),
@@ -30,6 +47,8 @@ public record GroupRestaurantResponse(
                 groupRestaurant.getGroupNotes(),
                 groupRestaurant.getCreatedAt(),
                 groupRestaurant.getUpdatedAt(),
+                averageScore,
+                ratingsCount,
                 RestaurantResponse.from(restaurant)
         );
     }
