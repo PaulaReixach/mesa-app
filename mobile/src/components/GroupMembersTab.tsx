@@ -12,6 +12,7 @@ import { GroupExitAction } from './GroupExitAction';
 import { GroupInfoBanner } from './GroupDetailPrimitives';
 import { GroupMemberRow } from './GroupMemberRow';
 import { GroupMembersSummary } from './GroupMembersSummary';
+import { PublicGroupLeaveAction } from './PublicGroupLeaveAction';
 import { useAuth } from '../contexts/auth-context';
 import { getErrorMessage } from '../lib/api';
 import { leaveGroup } from '../services/group-member-service';
@@ -42,6 +43,9 @@ export function GroupMembersTab({
   const participantCount = members.filter(member => member.role !== 'OWNER').length;
   const currentMembership = members.find(member => member.userId === user?.id);
   const canLeavePrivateGroup = privacy === 'PRIVATE'
+    && currentMembership != null
+    && currentMembership.role !== 'OWNER';
+  const canLeavePublicGroup = privacy === 'PUBLIC'
     && currentMembership != null
     && currentMembership.role !== 'OWNER';
 
@@ -115,6 +119,10 @@ export function GroupMembersTab({
           loading={leaving}
           onPress={confirmLeavePrivateGroup}
         />
+      ) : null}
+
+      {canLeavePublicGroup ? (
+        <PublicGroupLeaveAction groupId={groupId} />
       ) : null}
     </View>
   );
