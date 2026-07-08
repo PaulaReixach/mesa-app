@@ -16,18 +16,27 @@ public record GroupResponse(
         GroupPrivacy privacy,
         boolean acceptingCollaborators,
         GroupRole currentUserRole,
+        long followerCount,
         UUID ownerUserId,
         Instant createdAt,
         Instant updatedAt
 ) {
 
     public static GroupResponse from(RestaurantGroup restaurantGroup) {
-        return from(restaurantGroup, null);
+        return from(restaurantGroup, null, 0);
     }
 
     public static GroupResponse from(
             RestaurantGroup restaurantGroup,
             GroupRole currentUserRole
+    ) {
+        return from(restaurantGroup, currentUserRole, 0);
+    }
+
+    public static GroupResponse from(
+            RestaurantGroup restaurantGroup,
+            GroupRole currentUserRole,
+            long followerCount
     ) {
         return new GroupResponse(
                 restaurantGroup.getId(),
@@ -38,6 +47,7 @@ public record GroupResponse(
                 restaurantGroup.getPrivacy(),
                 restaurantGroup.isAcceptingCollaborators(),
                 currentUserRole,
+                followerCount,
                 restaurantGroup.getOwnerUserId(),
                 restaurantGroup.getCreatedAt(),
                 restaurantGroup.getUpdatedAt()
