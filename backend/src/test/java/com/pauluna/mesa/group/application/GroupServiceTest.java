@@ -29,6 +29,9 @@ import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository
 import com.pauluna.mesa.group.infrastructure.GroupFollowerRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
+import com.pauluna.mesa.restaurant.domain.RestaurantProposal;
+import com.pauluna.mesa.restaurant.domain.RestaurantProposalStatus;
+import com.pauluna.mesa.restaurant.infrastructure.RestaurantProposalRepository;
 import com.pauluna.mesa.user.infrastructure.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,6 +54,9 @@ class GroupServiceTest {
     private GroupCollaborationRequestRepository collaborationRequestRepository;
 
     @Mock
+    private RestaurantProposalRepository restaurantProposalRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     private GroupService service;
@@ -62,6 +68,7 @@ class GroupServiceTest {
                 memberRepository,
                 followerRepository,
                 collaborationRequestRepository,
+                restaurantProposalRepository,
                 userRepository
         );
     }
@@ -97,12 +104,14 @@ class GroupServiceTest {
     }
 
     @Test
-    void privatizingPublicGroupConvertsCollaboratorsAndCancelsPendingRequests() {
+    void privatizingPublicGroupConvertsMembersAndCancelsPendingWork() {
         RestaurantGroup group = mock(RestaurantGroup.class);
         GroupMember owner = mock(GroupMember.class);
         GroupMember collaborator = mock(GroupMember.class);
         GroupCollaborationRequest pendingRequest =
                 mock(GroupCollaborationRequest.class);
+        RestaurantProposal pendingProposal =
+                mock(RestaurantProposal.class);
 
         prepareOwnerAccess(group, owner);
         when(group.getPrivacy()).thenReturn(GroupPrivacy.PUBLIC);
@@ -113,6 +122,10 @@ class GroupServiceTest {
                 GROUP_ID,
                 CollaborationRequestStatus.PENDING
         )).thenReturn(List.of(pendingRequest));
+        when(restaurantProposalRepository.findAllByGroupIdAndStatus(
+                GROUP_ID,
+                RestaurantProposalStatus.PENDING
+        )).thenReturn(List.of(pendingProposal));
 
         service.updateGroup(
                 GROUP_ID,
@@ -132,6 +145,10 @@ class GroupServiceTest {
         verify(collaborationRequestRepository)
                 .saveAll(List.of(pendingRequest));
         verify(collaborationRequestRepository).flush();
+        verify(pendingProposal).cancel();
+        verify(restaurantProposalRepository)
+                .saveAll(List.of(pendingProposal));
+        verify(restaurantProposalRepository).flush();
     }
 
     @Test
