@@ -187,6 +187,7 @@ export default function CollaborationWorkspaceScreen() {
                     <RestaurantCard
                       key={item.id}
                       groupRestaurant={item}
+                      presentation="rating"
                     />
                   ))}
                 </View>
