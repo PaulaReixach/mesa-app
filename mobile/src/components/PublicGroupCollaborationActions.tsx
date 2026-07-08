@@ -1,13 +1,7 @@
 import { SymbolView } from 'expo-symbols';
-import {
-  router,
-  useFocusEffect,
-} from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import type { Href } from 'expo-router';
-import {
-  useCallback,
-  useState,
-} from 'react';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -37,14 +31,13 @@ export function PublicGroupCollaborationActions({
   ownedByCurrentUser,
 }: Props) {
   const { accessToken } = useAuth();
-  const [state, setState] =
-    useState<PublicGroupCollaborationState | null>(null);
+  const [state, setState] = useState<PublicGroupCollaborationState | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<void> => {
     if (!accessToken) {
       setLoading(false);
       return;
@@ -153,7 +146,7 @@ export function PublicGroupCollaborationActions({
   function confirmLeave(): void {
     Alert.alert(
       'Dejar de colaborar',
-      'Dejarás de formar parte del grupo y tus valoraciones dejarán de contar en sus medias. Seguirás siguiendo el grupo si ya lo seguías.',
+      'Tus valoraciones dejarán de contar en las medias del grupo. Seguirás siguiéndolo si ya lo hacías.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -190,7 +183,7 @@ export function PublicGroupCollaborationActions({
               android: 'manage_accounts',
               web: 'manage_accounts',
             }}
-            size={17}
+            size={18}
             tintColor={colors.primary}
           />
           <Text style={styles.outlineButtonText}>
@@ -207,33 +200,38 @@ export function PublicGroupCollaborationActions({
 
   if (state?.invitationPending) {
     return (
-      <View style={styles.container}>
-        <View style={styles.pendingBadge}>
-          <SymbolView
-            name={{
-              ios: 'envelope.badge.fill',
-              android: 'mark_email_unread',
-              web: 'mark_email_unread',
-            }}
-            size={16}
-            tintColor="#9A6A21"
-          />
-          <Text style={styles.pendingText}>
-            Tienes una invitación pendiente
-          </Text>
+      <View style={styles.invitationCard}>
+        <View style={styles.stateRow}>
+          <View style={styles.warmIcon}>
+            <SymbolView
+              name={{
+                ios: 'envelope.badge.fill',
+                android: 'mark_email_unread',
+                web: 'mark_email_unread',
+              }}
+              size={18}
+              tintColor={colors.primary}
+            />
+          </View>
+          <View style={styles.stateText}>
+            <Text style={styles.stateTitle}>
+              Invitación pendiente
+            </Text>
+            <Text style={styles.stateSubtitle}>
+              Puedes aceptar o rechazarla ahora.
+            </Text>
+          </View>
         </View>
 
         <Pressable
           accessibilityRole="button"
           onPress={openInvitations}
           style={({ pressed }) => [
-            styles.outlineButton,
+            styles.smallOutlineButton,
             pressed ? styles.pressed : null,
           ]}
         >
-          <Text style={styles.outlineButtonText}>
-            Ver invitación
-          </Text>
+          <Text style={styles.smallOutlineText}>Ver invitación</Text>
         </Pressable>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -250,42 +248,36 @@ export function PublicGroupCollaborationActions({
 
   if (state?.collaborating) {
     return (
-      <View style={styles.container}>
-        <View style={styles.successBadge}>
-          <SymbolView
-            name={{
-              ios: 'checkmark.circle.fill',
-              android: 'check_circle',
-              web: 'check_circle',
-            }}
-            size={17}
-            tintColor="#607349"
-          />
-          <Text style={styles.successText}>
-            Colaborando
-          </Text>
+      <View style={styles.successCard}>
+        <View style={styles.stateRow}>
+          <View style={styles.greenIcon}>
+            <SymbolView
+              name={{
+                ios: 'checkmark.circle.fill',
+                android: 'check_circle',
+                web: 'check_circle',
+              }}
+              size={18}
+              tintColor="#607349"
+            />
+          </View>
+          <View style={styles.stateText}>
+            <Text style={styles.successTitle}>Colaborando</Text>
+            <Text style={styles.stateSubtitle}>
+              Valora y propón nuevos restaurantes.
+            </Text>
+          </View>
         </View>
 
         <Pressable
           accessibilityRole="button"
           onPress={openCollaborationSpace}
           style={({ pressed }) => [
-            styles.outlineButton,
+            styles.greenButton,
             pressed ? styles.pressed : null,
           ]}
         >
-          <SymbolView
-            name={{
-              ios: 'star.bubble',
-              android: 'rate_review',
-              web: 'rate_review',
-            }}
-            size={17}
-            tintColor={colors.primary}
-          />
-          <Text style={styles.outlineButtonText}>
-            Abrir y valorar restaurantes
-          </Text>
+          <Text style={styles.greenButtonText}>Abrir colaboración</Text>
         </Pressable>
 
         <Pressable
@@ -297,6 +289,7 @@ export function PublicGroupCollaborationActions({
             {leaving ? 'Saliendo...' : 'Dejar de colaborar'}
           </Text>
         </Pressable>
+
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
     );
@@ -304,19 +297,27 @@ export function PublicGroupCollaborationActions({
 
   if (state?.requestStatus === 'PENDING') {
     return (
-      <View style={styles.container}>
-        <View style={styles.pendingBadge}>
-          <SymbolView
-            name={{
-              ios: 'clock.fill',
-              android: 'schedule',
-              web: 'schedule',
-            }}
-            size={16}
-            tintColor="#9A6A21"
-          />
-          <Text style={styles.pendingText}>Solicitud pendiente</Text>
+      <View style={styles.pendingCard}>
+        <View style={styles.stateRow}>
+          <View style={styles.pendingIcon}>
+            <SymbolView
+              name={{
+                ios: 'clock.fill',
+                android: 'schedule',
+                web: 'schedule',
+              }}
+              size={18}
+              tintColor="#9A6A21"
+            />
+          </View>
+          <View style={styles.stateText}>
+            <Text style={styles.pendingTitle}>Solicitud pendiente</Text>
+            <Text style={styles.stateSubtitle}>
+              La creadora todavía debe responder.
+            </Text>
+          </View>
         </View>
+
         <Pressable
           accessibilityRole="button"
           disabled={cancelling}
@@ -326,6 +327,7 @@ export function PublicGroupCollaborationActions({
             {cancelling ? 'Cancelando...' : 'Cancelar solicitud'}
           </Text>
         </Pressable>
+
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
     );
@@ -333,7 +335,16 @@ export function PublicGroupCollaborationActions({
 
   if (!state?.acceptingCollaborators) {
     return (
-      <View style={styles.disabledBadge}>
+      <View style={styles.disabledCard}>
+        <SymbolView
+          name={{
+            ios: 'person.crop.circle.badge.xmark',
+            android: 'person_off',
+            web: 'person_off',
+          }}
+          size={18}
+          tintColor={colors.muted}
+        />
         <Text style={styles.disabledText}>
           No acepta nuevas colaboraciones
         </Text>
@@ -343,9 +354,19 @@ export function PublicGroupCollaborationActions({
 
   if (retryBlocked && retryDate) {
     return (
-      <View style={styles.disabledBadge}>
+      <View style={styles.disabledCard}>
+        <SymbolView
+          name={{
+            ios: 'calendar.badge.clock',
+            android: 'event_busy',
+            web: 'event_busy',
+          }}
+          size={18}
+          tintColor={colors.muted}
+        />
         <Text style={styles.disabledText}>
-          Podrás volver a solicitar el {retryDate.toLocaleDateString('es-ES')}
+          Podrás solicitar de nuevo el{' '}
+          {retryDate.toLocaleDateString('es-ES')}
         </Text>
       </View>
     );
@@ -367,7 +388,7 @@ export function PublicGroupCollaborationActions({
             android: 'person_add',
             web: 'person_add',
           }}
-          size={17}
+          size={18}
           tintColor={colors.primary}
         />
         <Text style={styles.outlineButtonText}>
@@ -380,93 +401,173 @@ export function PublicGroupCollaborationActions({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 8 },
+  container: {
+    gap: 7,
+  },
   loadingCard: {
-    minHeight: 46,
+    minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 15,
-    backgroundColor: colors.inputBackground,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
   },
   outlineButton: {
-    minHeight: 46,
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: colors.primary,
-    borderRadius: 15,
-    backgroundColor: '#FFF4EF',
+    borderRadius: 16,
+    backgroundColor: colors.surface,
   },
   outlineButtonText: {
     color: colors.primary,
     fontSize: 12,
     fontWeight: '900',
+    textAlign: 'center',
   },
-  successBadge: {
-    minHeight: 46,
+  invitationCard: {
+    gap: 10,
+    padding: 12,
+    borderRadius: 17,
+    backgroundColor: '#FFF7EC',
+  },
+  successCard: {
+    gap: 10,
+    padding: 12,
+    borderRadius: 17,
+    backgroundColor: '#F1F3E9',
+  },
+  pendingCard: {
+    gap: 10,
+    padding: 12,
+    borderRadius: 17,
+    backgroundColor: '#FFF7EC',
+  },
+  stateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    borderRadius: 15,
-    backgroundColor: '#E8EEDD',
+    gap: 9,
   },
-  successText: {
-    color: '#607349',
-    fontSize: 12,
+  warmIcon: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: '#FFE5C2',
+  },
+  greenIcon: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: '#E0E9CF',
+  },
+  pendingIcon: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: '#FFE5C2',
+  },
+  stateText: {
+    flex: 1,
+    gap: 2,
+  },
+  stateTitle: {
+    color: colors.text,
+    fontSize: 11,
     fontWeight: '900',
   },
-  pendingBadge: {
-    minHeight: 46,
-    flexDirection: 'row',
+  successTitle: {
+    color: '#607349',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  pendingTitle: {
+    color: '#9A6A21',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  stateSubtitle: {
+    color: colors.muted,
+    fontSize: 8,
+    lineHeight: 12,
+  },
+  smallOutlineButton: {
+    minHeight: 35,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 7,
-    borderRadius: 15,
-    backgroundColor: '#FFF0D9',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.62)',
   },
-  pendingText: {
-    color: '#9A6A21',
-    fontSize: 12,
+  smallOutlineText: {
+    color: colors.primary,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  greenButton: {
+    minHeight: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#607349',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.58)',
+  },
+  greenButtonText: {
+    color: '#607349',
+    fontSize: 10,
     fontWeight: '900',
   },
   cancelText: {
     color: colors.danger,
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '900',
     textAlign: 'center',
   },
   leaveText: {
     color: colors.danger,
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '900',
     textAlign: 'center',
   },
-  disabledBadge: {
-    minHeight: 46,
+  disabledCard: {
+    minHeight: 52,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 7,
     paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 15,
-    backgroundColor: colors.inputBackground,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
   },
   disabledText: {
+    flex: 1,
     color: colors.muted,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
     textAlign: 'center',
   },
   errorText: {
     color: colors.danger,
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: 8,
+    lineHeight: 12,
     textAlign: 'center',
   },
-  pressed: { opacity: 0.72 },
+  pressed: {
+    opacity: 0.72,
+  },
 });
