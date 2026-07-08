@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateGroupRequest(
-
         @NotBlank(message = "El nombre del grupo es obligatorio.")
         @Size(
                 max = 100,
@@ -34,6 +33,25 @@ public record CreateGroupRequest(
         String city,
 
         @NotNull(message = "La privacidad del grupo es obligatoria.")
-        GroupPrivacy privacy
+        GroupPrivacy privacy,
+
+        Boolean acceptingCollaborators
 ) {
+
+    public CreateGroupRequest(
+            String name,
+            String description,
+            String imageUrl,
+            String city,
+            GroupPrivacy privacy
+    ) {
+        this(
+                name,
+                description,
+                imageUrl,
+                city,
+                privacy,
+                null
+        );
+    }
 }

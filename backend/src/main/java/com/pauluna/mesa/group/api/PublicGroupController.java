@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pauluna.mesa.group.application.GroupCollaborationService;
+import com.pauluna.mesa.group.application.PublicGroupCollaborationStateService;
 import com.pauluna.mesa.group.application.PublicGroupCopyService;
 import com.pauluna.mesa.group.application.PublicGroupService;
 
@@ -26,104 +28,162 @@ public class PublicGroupController {
 
     private final PublicGroupService publicGroupService;
     private final PublicGroupCopyService publicGroupCopyService;
+    private final GroupCollaborationService collaborationService;
+    private final PublicGroupCollaborationStateService collaborationStateService;
 
     public PublicGroupController(
             PublicGroupService publicGroupService,
-            PublicGroupCopyService publicGroupCopyService
+            PublicGroupCopyService publicGroupCopyService,
+            GroupCollaborationService collaborationService,
+            PublicGroupCollaborationStateService collaborationStateService
     ) {
         this.publicGroupService = publicGroupService;
         this.publicGroupCopyService = publicGroupCopyService;
+        this.collaborationService = collaborationService;
+        this.collaborationStateService = collaborationStateService;
     }
 
     @GetMapping
-    public ResponseEntity<List<PublicGroupSummaryResponse>>
-    getPublicGroups(
-            @RequestParam(required = false)
-            String city,
-
-            @RequestParam(required = false)
-            String query,
-
-            @AuthenticationPrincipal
-            Jwt jwt
+    public ResponseEntity<List<PublicGroupSummaryResponse>> getPublicGroups(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String query,
+            @AuthenticationPrincipal Jwt jwt
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
-
         return ResponseEntity.ok(
-                publicGroupService.getPublicGroups(
-                        city,
-                        query,
+                publicGroupService.getPublicGroups(city, query, userId)
+        );
+    }
+
+    @GetMapping("/following")
+    public ResponseEntity<List<PublicGroupSummaryResponse>> getFollowedGroups(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(publicGroupService.getFollowedGroups(userId));
+    }
+
+    @GetMapping("/{groupId}")
+    public ResponseEntity<PublicGroupDetailResponse> getPublicGroup(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(
+                publicGroupService.getPublicGroup(groupId, userId)
+        );
+    }
+
+    @GetMapping("/{groupId}/collaboration-state")
+    public ResponseEntity<PublicGroupCollaborationStateResponse>
+    getCollaborationState(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(
+                collaborationStateService.getState(groupId, userId)
+        );
+    }
+
+    @PostMapping("/{groupId}/collaboration-requests")
+    public ResponseEntity<CollaborationRequestResponse> requestCollaboration(
+            @PathVariable UUID groupId,
+            @Valid @RequestBody CreateCollaborationRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(
+                collaborationService.requestCollaboration(
+                        groupId,
+                        request,
                         userId
                 )
         );
     }
 
-    @GetMapping("/following")
-    public ResponseEntity<List<PublicGroupSummaryResponse>>
-    getFollowedGroups(
-            @AuthenticationPrincipal
-            Jwt jwt
+    @DeleteMapping("/{groupId}/collaboration-requests/me")
+    public ResponseEntity<CollaborationRequestResponse> cancelRequest(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
-
         return ResponseEntity.ok(
-                publicGroupService.getFollowedGroups(userId)
+                collaborationService.cancelRequest(groupId, userId)
         );
     }
 
-    @GetMapping("/{groupId}")
-    public ResponseEntity<PublicGroupDetailResponse>
-    getPublicGroup(
-            @PathVariable
-            UUID groupId,
-
-            @AuthenticationPrincipal
-            Jwt jwt
+    @DeleteMapping("/{groupId}/collaborators/me")
+    public ResponseEntity<Void> leaveCollaboration(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
+        collaborationService.leaveCollaboration(groupId, userId);
+        return ResponseEntity.noContent().build();
+    }
 
+    @GetMapping("/{groupId}/collaboration-requests")
+    public ResponseEntity<List<CollaborationRequestResponse>> getRequests(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(
-                publicGroupService.getPublicGroup(
+                collaborationService.getRequests(groupId, userId)
+        );
+    }
+
+    @PostMapping("/{groupId}/collaboration-requests/{requestId}/accept")
+    public ResponseEntity<CollaborationRequestResponse> acceptRequest(
+            @PathVariable UUID groupId,
+            @PathVariable UUID requestId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(
+                collaborationService.acceptRequest(
                         groupId,
+                        requestId,
+                        userId
+                )
+        );
+    }
+
+    @PostMapping("/{groupId}/collaboration-requests/{requestId}/reject")
+    public ResponseEntity<CollaborationRequestResponse> rejectRequest(
+            @PathVariable UUID groupId,
+            @PathVariable UUID requestId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(
+                collaborationService.rejectRequest(
+                        groupId,
+                        requestId,
                         userId
                 )
         );
     }
 
     @GetMapping("/{groupId}/copy-destinations")
-    public ResponseEntity<List<GroupResponse>>
-    getCopyDestinations(
-            @PathVariable
-            UUID groupId,
-
-            @AuthenticationPrincipal
-            Jwt jwt
+    public ResponseEntity<List<GroupResponse>> getCopyDestinations(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
-
         return ResponseEntity.ok(
-                publicGroupCopyService.getCopyDestinations(
-                        groupId,
-                        userId
-                )
+                publicGroupCopyService.getCopyDestinations(groupId, userId)
         );
     }
 
     @PostMapping("/{groupId}/copy")
-    public ResponseEntity<CopyPublicRestaurantsResponse>
-    copyRestaurants(
-            @PathVariable
-            UUID groupId,
-
-            @Valid
-            @RequestBody
-            CopyPublicRestaurantsRequest request,
-
-            @AuthenticationPrincipal
-            Jwt jwt
+    public ResponseEntity<CopyPublicRestaurantsResponse> copyRestaurants(
+            @PathVariable UUID groupId,
+            @Valid @RequestBody CopyPublicRestaurantsRequest request,
+            @AuthenticationPrincipal Jwt jwt
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
-
         return ResponseEntity.ok(
                 publicGroupCopyService.copyRestaurants(
                         groupId,
@@ -134,40 +194,24 @@ public class PublicGroupController {
     }
 
     @PostMapping("/{groupId}/followers")
-    public ResponseEntity<PublicGroupSummaryResponse>
-    followGroup(
-            @PathVariable
-            UUID groupId,
-
-            @AuthenticationPrincipal
-            Jwt jwt
+    public ResponseEntity<PublicGroupSummaryResponse> followGroup(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
-
         return ResponseEntity.ok(
-                publicGroupService.followGroup(
-                        groupId,
-                        userId
-                )
+                publicGroupService.followGroup(groupId, userId)
         );
     }
 
     @DeleteMapping("/{groupId}/followers")
-    public ResponseEntity<PublicGroupSummaryResponse>
-    unfollowGroup(
-            @PathVariable
-            UUID groupId,
-
-            @AuthenticationPrincipal
-            Jwt jwt
+    public ResponseEntity<PublicGroupSummaryResponse> unfollowGroup(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
-
         return ResponseEntity.ok(
-                publicGroupService.unfollowGroup(
-                        groupId,
-                        userId
-                )
+                publicGroupService.unfollowGroup(groupId, userId)
         );
     }
 }

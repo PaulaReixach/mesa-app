@@ -29,6 +29,8 @@ export type GroupRestaurant = {
   groupNotes: string | null;
   createdAt: string;
   updatedAt: string;
+  averageScore: number | null;
+  ratingsCount: number;
   restaurant: Restaurant;
 };
 

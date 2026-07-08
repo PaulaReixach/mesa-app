@@ -15,6 +15,7 @@ import type {
 
 type RestaurantCardProps = {
   groupRestaurant: GroupRestaurant;
+  presentation?: 'status' | 'rating';
 };
 
 const statusPresentation: Record<
@@ -59,6 +60,7 @@ const statusPresentation: Record<
 
 export function RestaurantCard({
   groupRestaurant,
+  presentation = 'status',
 }: RestaurantCardProps) {
   const { restaurant } = groupRestaurant;
 
@@ -71,6 +73,12 @@ export function RestaurantCard({
 
   const status =
     statusPresentation[groupRestaurant.status];
+
+  const formattedAverage = groupRestaurant.averageScore == null
+    ? null
+    : groupRestaurant.averageScore
+        .toFixed(1)
+        .replace('.', ',');
 
   function openRestaurant(): void {
     router.push({
@@ -113,26 +121,36 @@ export function RestaurantCard({
             {restaurant.name}
           </Text>
 
-          <View
-            style={[
-              styles.status,
-              {
-                backgroundColor:
-                  status.backgroundColor,
-              },
-            ]}
-          >
-            <Text
+          {presentation === 'rating' ? (
+            <View style={styles.ratingBadge}>
+              <Text style={styles.ratingText}>
+                {formattedAverage
+                  ? `★ ${formattedAverage}`
+                  : 'Sin valorar'}
+              </Text>
+            </View>
+          ) : (
+            <View
               style={[
-                styles.statusText,
+                styles.status,
                 {
-                  color: status.textColor,
+                  backgroundColor:
+                    status.backgroundColor,
                 },
               ]}
             >
-              {status.label}
-            </Text>
-          </View>
+              <Text
+                style={[
+                  styles.statusText,
+                  {
+                    color: status.textColor,
+                  },
+                ]}
+              >
+                {status.label}
+              </Text>
+            </View>
+          )}
         </View>
 
         <Text
@@ -217,6 +235,17 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   statusText: {
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  ratingBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#F7E8D2',
+  },
+  ratingText: {
+    color: '#9B6717',
     fontSize: 9,
     fontWeight: '900',
   },

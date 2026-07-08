@@ -2,10 +2,12 @@ import { File } from 'expo-file-system';
 
 import { apiMultipartRequest, apiRequest } from '../lib/api';
 import {
+  CollaborationRequest,
   CopyPublicRestaurantsPayload,
   CopyPublicRestaurantsResult,
   CreateGroupPayload,
   GroupImageUploadFile,
+  PublicGroupCollaborationState,
   PublicGroupDetail,
   PublicGroupSummary,
   RestaurantGroup,
@@ -77,6 +79,89 @@ export function getPublicGroup(
   return apiRequest<PublicGroupDetail>(
     `/groups/public/${groupId}`,
     { method: 'GET' },
+    accessToken,
+  );
+}
+
+export function getPublicGroupCollaborationState(
+  groupId: string,
+  accessToken: string,
+): Promise<PublicGroupCollaborationState> {
+  return apiRequest<PublicGroupCollaborationState>(
+    `/groups/public/${groupId}/collaboration-state`,
+    { method: 'GET' },
+    accessToken,
+  );
+}
+
+export function requestPublicGroupCollaboration(
+  groupId: string,
+  message: string | null,
+  accessToken: string,
+): Promise<CollaborationRequest> {
+  return apiRequest<CollaborationRequest>(
+    `/groups/public/${groupId}/collaboration-requests`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    },
+    accessToken,
+  );
+}
+
+export function cancelPublicGroupCollaborationRequest(
+  groupId: string,
+  accessToken: string,
+): Promise<CollaborationRequest> {
+  return apiRequest<CollaborationRequest>(
+    `/groups/public/${groupId}/collaboration-requests/me`,
+    { method: 'DELETE' },
+    accessToken,
+  );
+}
+
+export function leavePublicGroupCollaboration(
+  groupId: string,
+  accessToken: string,
+): Promise<void> {
+  return apiRequest<void>(
+    `/groups/public/${groupId}/collaborators/me`,
+    { method: 'DELETE' },
+    accessToken,
+  );
+}
+
+export function getPublicGroupCollaborationRequests(
+  groupId: string,
+  accessToken: string,
+): Promise<CollaborationRequest[]> {
+  return apiRequest<CollaborationRequest[]>(
+    `/groups/public/${groupId}/collaboration-requests`,
+    { method: 'GET' },
+    accessToken,
+  );
+}
+
+export function acceptPublicGroupCollaborationRequest(
+  groupId: string,
+  requestId: string,
+  accessToken: string,
+): Promise<CollaborationRequest> {
+  return apiRequest<CollaborationRequest>(
+    `/groups/public/${groupId}/collaboration-requests/${requestId}/accept`,
+    { method: 'POST' },
+    accessToken,
+  );
+}
+
+export function rejectPublicGroupCollaborationRequest(
+  groupId: string,
+  requestId: string,
+  accessToken: string,
+): Promise<CollaborationRequest> {
+  return apiRequest<CollaborationRequest>(
+    `/groups/public/${groupId}/collaboration-requests/${requestId}/reject`,
+    { method: 'POST' },
     accessToken,
   );
 }
