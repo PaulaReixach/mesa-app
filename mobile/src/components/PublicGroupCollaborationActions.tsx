@@ -1,6 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import { router, useFocusEffect } from 'expo-router';
 import type { Href } from 'expo-router';
+import type { ComponentProps } from 'react';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -21,6 +22,8 @@ import {
 } from '../services/group-service';
 import { colors } from '../theme/colors';
 import type { PublicGroupCollaborationState } from '../types/group';
+
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
 type Props = {
   groupId: string;
@@ -154,11 +157,7 @@ export function PublicGroupCollaborationActions({
     disabled = false,
   }: {
     title: string;
-    icon: {
-      ios: string;
-      android: string;
-      web: string;
-    };
+    icon: SymbolName;
     tone?: 'primary' | 'green' | 'muted' | 'warm';
     onPress?: () => void;
     disabled?: boolean;
