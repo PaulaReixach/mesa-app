@@ -107,6 +107,19 @@ public class RestaurantProposalNotificationService {
         );
     }
 
+    public void notifyProposalDuplicate(
+            RestaurantProposal proposal,
+            UUID ownerUserId
+    ) {
+        notifyProposalResolved(
+                proposal,
+                ownerUserId,
+                "Propuesta ya añadida",
+                proposal.getName()
+                        + " ya forma parte del grupo o se ha aceptado desde otra propuesta."
+        );
+    }
+
     private void notifyProposalResolved(
             RestaurantProposal proposal,
             UUID ownerUserId,
