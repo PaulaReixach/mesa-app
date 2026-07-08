@@ -21,6 +21,11 @@ public interface RestaurantProposalRepository
             UUID groupId
     );
 
+    List<RestaurantProposal> findAllByGroupIdAndStatus(
+            UUID groupId,
+            RestaurantProposalStatus status
+    );
+
     List<RestaurantProposal>
     findAllByGroupIdAndProposedByUserIdOrderByCreatedAtDesc(
             UUID groupId,
