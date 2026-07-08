@@ -7,6 +7,7 @@ import {
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -17,15 +18,21 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RestaurantCard } from '../../../../components/RestaurantCard';
+import { RestaurantProposalCard } from '../../../../components/RestaurantProposalCard';
 import { useAuth } from '../../../../contexts/auth-context';
 import { getErrorMessage } from '../../../../lib/api';
 import {
   getGroup,
   getPublicGroup,
 } from '../../../../services/group-service';
+import {
+  cancelRestaurantProposal,
+  getMyRestaurantProposals,
+} from '../../../../services/restaurant-proposal-service';
 import { colors } from '../../../../theme/colors';
 import type { RestaurantGroup } from '../../../../types/group';
 import type { GroupRestaurant } from '../../../../types/restaurant';
+import type { RestaurantProposal } from '../../../../types/restaurant-proposal';
 
 export default function CollaborationWorkspaceScreen() {
   const { groupId } = useLocalSearchParams<{
@@ -35,6 +42,9 @@ export default function CollaborationWorkspaceScreen() {
 
   const [group, setGroup] = useState<RestaurantGroup | null>(null);
   const [restaurants, setRestaurants] = useState<GroupRestaurant[]>([]);
+  const [proposals, setProposals] = useState<RestaurantProposal[]>([]);
+  const [cancellingProposalId, setCancellingProposalId] =
+    useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,13 +60,16 @@ export default function CollaborationWorkspaceScreen() {
       setError(null);
       isRefresh ? setRefreshing(true) : setLoading(true);
 
-      const [groupResponse, publicGroupResponse] = await Promise.all([
-        getGroup(groupId, accessToken),
-        getPublicGroup(groupId, accessToken),
-      ]);
+      const [groupResponse, publicGroupResponse, proposalResponse] =
+        await Promise.all([
+          getGroup(groupId, accessToken),
+          getPublicGroup(groupId, accessToken),
+          getMyRestaurantProposals(groupId, accessToken),
+        ]);
 
       setGroup(groupResponse);
       setRestaurants(publicGroupResponse.restaurants);
+      setProposals(proposalResponse);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -70,6 +83,57 @@ export default function CollaborationWorkspaceScreen() {
       void load();
     }, [load]),
   );
+
+  function openCreateProposal(): void {
+    router.push({
+      pathname: '/groups/[groupId]/restaurant-proposals/create',
+      params: { groupId },
+    });
+  }
+
+  async function cancelProposal(
+    proposal: RestaurantProposal,
+  ): Promise<void> {
+    if (!accessToken || !groupId || cancellingProposalId) {
+      return;
+    }
+
+    try {
+      setCancellingProposalId(proposal.id);
+      setError(null);
+
+      const updated = await cancelRestaurantProposal(
+        groupId,
+        proposal.id,
+        accessToken,
+      );
+
+      setProposals(current => current.map(item =>
+        item.id === updated.id ? updated : item
+      ));
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    } finally {
+      setCancellingProposalId(null);
+    }
+  }
+
+  function confirmCancelProposal(
+    proposal: RestaurantProposal,
+  ): void {
+    Alert.alert(
+      'Cancelar propuesta',
+      `${proposal.name} dejará de estar pendiente de revisión.`,
+      [
+        { text: 'Volver', style: 'cancel' },
+        {
+          text: 'Cancelar propuesta',
+          style: 'destructive',
+          onPress: () => void cancelProposal(proposal),
+        },
+      ],
+    );
+  }
 
   return (
     <SafeAreaView
@@ -144,7 +208,7 @@ export default function CollaborationWorkspaceScreen() {
                   {group.name}
                 </Text>
                 <Text style={styles.description}>
-                  Abre un restaurante para consultar las valoraciones y añadir la tuya.
+                  Valora los restaurantes publicados y propón nuevos sitios para la lista.
                 </Text>
               </View>
             </View>
@@ -160,8 +224,71 @@ export default function CollaborationWorkspaceScreen() {
                 tintColor="#8C6726"
               />
               <Text style={styles.noticeText}>
-                Como colaboradora puedes valorar. Los cambios en la lista pública siguen dependiendo de la persona creadora.
+                Tus propuestas necesitan la aprobación de la persona creadora antes de aparecer públicamente.
               </Text>
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={openCreateProposal}
+              style={({ pressed }) => [
+                styles.proposeButton,
+                pressed ? styles.pressed : null,
+              ]}
+            >
+              <SymbolView
+                name={{
+                  ios: 'plus.circle.fill',
+                  android: 'add_circle',
+                  web: 'add_circle',
+                }}
+                size={20}
+                tintColor={colors.white}
+              />
+              <Text style={styles.proposeButtonText}>
+                Proponer restaurante
+              </Text>
+            </Pressable>
+
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  Mis propuestas
+                </Text>
+                <Text style={styles.sectionCount}>
+                  {proposals.length}
+                </Text>
+              </View>
+
+              {proposals.length === 0 ? (
+                <View style={styles.emptyCard}>
+                  <Text style={styles.emptyTitle}>
+                    Aún no has propuesto ningún sitio
+                  </Text>
+                  <Text style={styles.emptyText}>
+                    Puedes enviar una propuesta y seguir aquí su estado.
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.list}>
+                  {proposals.map(proposal => (
+                    <RestaurantProposalCard
+                      key={proposal.id}
+                      proposal={proposal}
+                      resolvingAction={
+                        cancellingProposalId === proposal.id
+                          ? 'CANCEL'
+                          : null
+                      }
+                      onCancel={
+                        proposal.status === 'PENDING'
+                          ? () => confirmCancelProposal(proposal)
+                          : undefined
+                      }
+                    />
+                  ))}
+                </View>
+              )}
             </View>
 
             <View style={styles.section}>
@@ -303,6 +430,20 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     fontWeight: '700',
   },
+  proposeButton: {
+    minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 17,
+    backgroundColor: colors.primary,
+  },
+  proposeButtonText: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: '900',
+  },
   section: {
     gap: 12,
   },
@@ -370,5 +511,8 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 11,
     fontWeight: '900',
+  },
+  pressed: {
+    opacity: 0.72,
   },
 });
