@@ -22,6 +22,9 @@ import com.pauluna.mesa.group.domain.RestaurantGroup;
 import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
+import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
+import com.pauluna.mesa.restaurant.infrastructure.GroupRestaurantRepository;
+import com.pauluna.mesa.restaurant.infrastructure.RestaurantRatingRepository;
 import com.pauluna.mesa.user.application.UserNotFoundException;
 import com.pauluna.mesa.user.domain.User;
 import com.pauluna.mesa.user.infrastructure.UserRepository;
@@ -35,6 +38,8 @@ public class GroupCollaborationService {
     private final RestaurantGroupRepository restaurantGroupRepository;
     private final GroupCollaborationRequestRepository requestRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final GroupRestaurantRepository groupRestaurantRepository;
+    private final RestaurantRatingRepository restaurantRatingRepository;
     private final UserRepository userRepository;
     private final GroupService groupService;
 
@@ -42,12 +47,16 @@ public class GroupCollaborationService {
             RestaurantGroupRepository restaurantGroupRepository,
             GroupCollaborationRequestRepository requestRepository,
             GroupMemberRepository groupMemberRepository,
+            GroupRestaurantRepository groupRestaurantRepository,
+            RestaurantRatingRepository restaurantRatingRepository,
             UserRepository userRepository,
             GroupService groupService
     ) {
         this.restaurantGroupRepository = restaurantGroupRepository;
         this.requestRepository = requestRepository;
         this.groupMemberRepository = groupMemberRepository;
+        this.groupRestaurantRepository = groupRestaurantRepository;
+        this.restaurantRatingRepository = restaurantRatingRepository;
         this.userRepository = userRepository;
         this.groupService = groupService;
     }
@@ -142,6 +151,60 @@ public class GroupCollaborationService {
 
         request.cancel();
         return toResponse(requestRepository.saveAndFlush(request));
+    }
+
+    public void leaveCollaboration(
+            UUID groupId,
+            UUID userId
+    ) {
+        validateUserExists(userId);
+        getPublicGroup(groupId);
+
+        GroupMember membership = groupMemberRepository
+                .findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "No colaboras en este grupo."
+                        )
+                );
+
+        if (membership.getRole() != GroupRole.CONTRIBUTOR) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Solo las personas colaboradoras pueden abandonar la colaboración."
+            );
+        }
+
+        List<UUID> groupRestaurantIds = groupRestaurantRepository
+                .findAllByGroupIdOrderByCreatedAtDesc(groupId)
+                .stream()
+                .map(GroupRestaurant::getId)
+                .toList();
+
+        if (!groupRestaurantIds.isEmpty()) {
+            restaurantRatingRepository
+                    .deleteAllByGroupRestaurantIdInAndUserId(
+                            groupRestaurantIds,
+                            userId
+                    );
+        }
+
+        groupMemberRepository.deleteByGroupIdAndUserId(groupId, userId);
+
+        requestRepository
+                .findFirstByGroupIdAndUserIdOrderByCreatedAtDesc(
+                        groupId,
+                        userId
+                )
+                .filter(request ->
+                        request.getStatus()
+                                == CollaborationRequestStatus.ACCEPTED
+                )
+                .ifPresent(request -> {
+                    request.leave();
+                    requestRepository.saveAndFlush(request);
+                });
     }
 
     @Transactional(readOnly = true)
