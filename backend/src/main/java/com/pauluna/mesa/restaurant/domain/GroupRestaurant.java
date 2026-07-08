@@ -67,6 +67,9 @@ public class GroupRestaurant {
     )
     private String groupNotes;
 
+    @Column(name = "status_updated_by_user_id")
+    private UUID statusUpdatedByUserId;
+
     @Column(name = "copied_from_group_id")
     private UUID copiedFromGroupId;
 
@@ -122,6 +125,7 @@ public class GroupRestaurant {
         this.status = status;
         this.proposedByUserId = proposedByUserId;
         this.groupNotes = groupNotes;
+        this.statusUpdatedByUserId = proposedByUserId;
         this.copiedFromGroupId = copiedFromGroupId;
         this.copiedFromGroupRestaurantId =
                 copiedFromGroupRestaurantId;
@@ -130,9 +134,20 @@ public class GroupRestaurant {
     public void changeStatus(
             GroupRestaurantStatus status
     ) {
+        changeStatus(status, proposedByUserId);
+    }
+
+    public void changeStatus(
+            GroupRestaurantStatus status,
+            UUID updatedByUserId
+    ) {
         this.status = Objects.requireNonNull(
                 status,
                 "El estado del restaurante es obligatorio."
+        );
+        this.statusUpdatedByUserId = Objects.requireNonNull(
+                updatedByUserId,
+                "La persona que actualiza el estado es obligatoria."
         );
     }
 
@@ -196,6 +211,10 @@ public class GroupRestaurant {
 
     public String getGroupNotes() {
         return groupNotes;
+    }
+
+    public UUID getStatusUpdatedByUserId() {
+        return statusUpdatedByUserId;
     }
 
     public UUID getCopiedFromGroupId() {
