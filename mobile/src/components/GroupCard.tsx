@@ -35,7 +35,7 @@ export function GroupCard({
   const canManageCollaboration =
     group.privacy === 'PUBLIC' && ownedByCurrentUser;
   const collaborating =
-    group.privacy === 'PUBLIC' && !ownedByCurrentUser;
+    group.currentUserRole === 'CONTRIBUTOR';
 
   function handlePress(): void {
     if (collaborating) {
