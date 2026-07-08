@@ -1,9 +1,16 @@
 import {
   router,
+  useFocusEffect,
   useLocalSearchParams,
 } from 'expo-router';
-import { useState } from 'react';
 import {
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
+import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,8 +25,13 @@ import { FormField } from '../../../../../components/FormField';
 import { PrimaryButton } from '../../../../../components/PrimaryButton';
 import { useAuth } from '../../../../../contexts/auth-context';
 import { getErrorMessage } from '../../../../../lib/api';
-import { addGroupMember } from '../../../../../services/group-member-service';
+import {
+  cancelGroupInvitation,
+  createGroupInvitation,
+  getGroupInvitations,
+} from '../../../../../services/group-invitation-service';
 import { colors } from '../../../../../theme/colors';
+import type { GroupInvitation } from '../../../../../types/group-invitation';
 
 export default function AddGroupMemberScreen() {
   const { groupId } = useLocalSearchParams<{
@@ -29,22 +41,53 @@ export default function AddGroupMemberScreen() {
   const { accessToken } = useAuth();
 
   const [username, setUsername] = useState('');
-  const [requestError, setRequestError] =
-    useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [invitations, setInvitations] = useState<GroupInvitation[]>([]);
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  async function handleAddMember() {
+  const pendingInvitations = useMemo(
+    () => invitations.filter(invitation => invitation.status === 'PENDING'),
+    [invitations],
+  );
+
+  const loadInvitations = useCallback(async (): Promise<void> => {
+    if (!accessToken || !groupId) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setRequestError(null);
+      setIsLoading(true);
+      setInvitations(
+        await getGroupInvitations(groupId, accessToken),
+      );
+    } catch (error) {
+      setRequestError(getErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken, groupId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadInvitations();
+    }, [loadInvitations]),
+  );
+
+  async function handleCreateInvitation(): Promise<void> {
     setRequestError(null);
+    setSuccessMessage(null);
 
     const normalizedUsername = username
       .trim()
       .replace(/^@/, '');
 
     if (!normalizedUsername) {
-      setRequestError(
-        'Introduce el nombre de usuario.',
-      );
+      setRequestError('Introduce el nombre de usuario.');
       return;
     }
 
@@ -58,7 +101,7 @@ export default function AddGroupMemberScreen() {
     try {
       setIsSubmitting(true);
 
-      await addGroupMember(
+      const invitation = await createGroupInvitation(
         groupId,
         {
           username: normalizedUsername,
@@ -66,16 +109,74 @@ export default function AddGroupMemberScreen() {
         accessToken,
       );
 
-      router.replace({
-        pathname: '/groups/[groupId]',
-        params: {
-          groupId,
-        },
-      });
+      setInvitations(current => [
+        invitation,
+        ...current.filter(item => item.id !== invitation.id),
+      ]);
+      setUsername('');
+      setSuccessMessage(
+        `Invitación enviada a @${invitation.invitedUser.username}.`,
+      );
     } catch (error) {
       setRequestError(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  function confirmCancel(invitation: GroupInvitation): void {
+    Alert.alert(
+      'Cancelar invitación',
+      `¿Quieres cancelar la invitación enviada a @${invitation.invitedUser.username}?`,
+      [
+        {
+          text: 'Volver',
+          style: 'cancel',
+        },
+        {
+          text: 'Cancelar invitación',
+          style: 'destructive',
+          onPress: () => {
+            void handleCancel(invitation);
+          },
+        },
+      ],
+    );
+  }
+
+  async function handleCancel(
+    invitation: GroupInvitation,
+  ): Promise<void> {
+    if (!accessToken || !groupId || cancellingId) {
+      return;
+    }
+
+    try {
+      setCancellingId(invitation.id);
+      setRequestError(null);
+      setSuccessMessage(null);
+
+      await cancelGroupInvitation(
+        groupId,
+        invitation.id,
+        accessToken,
+      );
+
+      setInvitations(current =>
+        current.map(item =>
+          item.id === invitation.id
+            ? {
+                ...item,
+                status: 'CANCELLED',
+              }
+            : item,
+        ),
+      );
+      setSuccessMessage('Invitación cancelada.');
+    } catch (error) {
+      setRequestError(getErrorMessage(error));
+    } finally {
+      setCancellingId(null);
     }
   }
 
@@ -85,9 +186,7 @@ export default function AddGroupMemberScreen() {
       style={styles.safeArea}
     >
       <KeyboardAvoidingView
-        behavior={
-          Platform.OS === 'ios' ? 'padding' : undefined
-        }
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -97,6 +196,7 @@ export default function AddGroupMemberScreen() {
         >
           <View style={styles.header}>
             <Pressable
+              accessibilityLabel="Volver"
               accessibilityRole="button"
               onPress={() => router.back()}
               style={styles.backButton}
@@ -105,7 +205,7 @@ export default function AddGroupMemberScreen() {
             </Pressable>
 
             <Text style={styles.headerTitle}>
-              Añadir miembro
+              Invitaciones
             </Text>
 
             <View style={styles.headerSpacer} />
@@ -117,12 +217,12 @@ export default function AddGroupMemberScreen() {
             </Text>
 
             <Text style={styles.subtitle}>
-              Introduce su nombre de usuario de Mesa.
-              Podrá ver el grupo y todos sus restaurantes.
+              Recibirá una invitación y solo formará parte del grupo
+              cuando la acepte.
             </Text>
           </View>
 
-          <View style={styles.form}>
+          <View style={styles.formCard}>
             <FormField
               autoCapitalize="none"
               autoCorrect={false}
@@ -134,16 +234,108 @@ export default function AddGroupMemberScreen() {
             />
 
             {requestError ? (
-              <Text style={styles.error}>
-                {requestError}
-              </Text>
+              <Text style={styles.error}>{requestError}</Text>
+            ) : null}
+
+            {successMessage ? (
+              <Text style={styles.success}>{successMessage}</Text>
             ) : null}
 
             <PrimaryButton
               loading={isSubmitting}
-              onPress={handleAddMember}
-              title="Añadir al grupo"
+              onPress={handleCreateInvitation}
+              title="Enviar invitación"
             />
+          </View>
+
+          <View style={styles.pendingSection}>
+            <View style={styles.sectionHeading}>
+              <Text style={styles.sectionTitle}>
+                Invitaciones pendientes
+              </Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>
+                  {pendingInvitations.length}
+                </Text>
+              </View>
+            </View>
+
+            {isLoading ? (
+              <View style={styles.loadingCard}>
+                <ActivityIndicator
+                  color={colors.primary}
+                  size="small"
+                />
+                <Text style={styles.loadingText}>
+                  Cargando invitaciones...
+                </Text>
+              </View>
+            ) : null}
+
+            {!isLoading && pendingInvitations.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyTitle}>
+                  No hay invitaciones pendientes
+                </Text>
+                <Text style={styles.emptyText}>
+                  Las nuevas invitaciones aparecerán aquí hasta que
+                  se acepten, rechacen o cancelen.
+                </Text>
+              </View>
+            ) : null}
+
+            {!isLoading ? (
+              <View style={styles.invitationList}>
+                {pendingInvitations.map(invitation => (
+                  <View
+                    key={invitation.id}
+                    style={styles.invitationCard}
+                  >
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>
+                        {invitation.invitedUser.name
+                          .charAt(0)
+                          .toUpperCase()}
+                      </Text>
+                    </View>
+
+                    <View style={styles.invitationContent}>
+                      <Text style={styles.invitedName}>
+                        {invitation.invitedUser.name}
+                      </Text>
+                      <Text style={styles.invitedUsername}>
+                        @{invitation.invitedUser.username}
+                      </Text>
+                      <Text style={styles.pendingText}>
+                        Pendiente de respuesta
+                      </Text>
+                    </View>
+
+                    <Pressable
+                      accessibilityLabel={`Cancelar invitación a ${invitation.invitedUser.name}`}
+                      accessibilityRole="button"
+                      disabled={cancellingId !== null}
+                      onPress={() => confirmCancel(invitation)}
+                      style={({ pressed }) => [
+                        styles.cancelButton,
+                        pressed ? styles.pressed : null,
+                      ]}
+                    >
+                      {cancellingId === invitation.id ? (
+                        <ActivityIndicator
+                          color={colors.danger}
+                          size="small"
+                        />
+                      ) : (
+                        <Text style={styles.cancelText}>
+                          Cancelar
+                        </Text>
+                      )}
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            ) : null}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -161,9 +353,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 32,
+    gap: 26,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 36,
   },
   header: {
     flexDirection: 'row',
@@ -193,8 +386,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     gap: 8,
-    marginTop: 36,
-    marginBottom: 28,
+    marginTop: 8,
   },
   title: {
     color: colors.text,
@@ -204,15 +396,148 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: colors.muted,
-    fontSize: 16,
-    lineHeight: 23,
+    fontSize: 15,
+    lineHeight: 22,
   },
-  form: {
-    gap: 20,
+  formCard: {
+    gap: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
   },
   error: {
     color: colors.danger,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  success: {
+    color: '#607349',
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 19,
+  },
+  pendingSection: {
+    gap: 12,
+  },
+  sectionHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  countBadge: {
+    minWidth: 25,
+    height: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 7,
+    borderRadius: 999,
+    backgroundColor: '#FBE9E2',
+  },
+  countText: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  loadingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+  },
+  loadingText: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  emptyCard: {
+    gap: 5,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+  },
+  emptyTitle: {
+    color: colors.text,
     fontSize: 14,
-    lineHeight: 20,
+    fontWeight: '900',
+  },
+  emptyText: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  invitationList: {
+    gap: 10,
+  },
+  invitationCard: {
+    minHeight: 76,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    padding: 13,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 22,
+    backgroundColor: '#FBE9E2',
+  },
+  avatarText: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  invitationContent: {
+    flex: 1,
+    gap: 2,
+  },
+  invitedName: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  invitedUsername: {
+    color: colors.muted,
+    fontSize: 11,
+  },
+  pendingText: {
+    marginTop: 2,
+    color: '#9B6717',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  cancelButton: {
+    minWidth: 70,
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: '#FFF1EE',
+  },
+  cancelText: {
+    color: colors.danger,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  pressed: {
+    opacity: 0.72,
   },
 });
