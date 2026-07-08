@@ -8,6 +8,7 @@ import type { Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -23,6 +24,7 @@ import { getErrorMessage, resolveApiUrl } from '../../../../lib/api';
 import {
   followPublicGroup,
   getPublicGroup,
+  unfollowPublicGroup,
 } from '../../../../services/group-service';
 import { colors } from '../../../../theme/colors';
 import type { PublicGroupDetail } from '../../../../types/group';
@@ -83,7 +85,7 @@ export default function PublicGroupDetailScreen() {
   const { accessToken } = useAuth();
   const [detail, setDetail] = useState<PublicGroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [following, setFollowing] = useState(false);
+  const [updatingFollow, setUpdatingFollow] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -110,23 +112,47 @@ export default function PublicGroupDetailScreen() {
     }, [load]),
   );
 
-  async function handleFollow(): Promise<void> {
-    if (!accessToken || !groupId || !detail || following) {
+  async function updateFollowState(shouldFollow: boolean): Promise<void> {
+    if (!accessToken || !groupId || !detail || updatingFollow) {
       return;
     }
 
     try {
-      setFollowing(true);
+      setUpdatingFollow(true);
       setError(null);
-      const updatedGroup = await followPublicGroup(groupId, accessToken);
+
+      const updatedGroup = shouldFollow
+        ? await followPublicGroup(groupId, accessToken)
+        : await unfollowPublicGroup(groupId, accessToken);
+
       setDetail(current => current
         ? { ...current, group: updatedGroup }
         : current);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
-      setFollowing(false);
+      setUpdatingFollow(false);
     }
+  }
+
+  function handleFollowPress(): void {
+    if (!detail?.group.following) {
+      void updateFollowState(true);
+      return;
+    }
+
+    Alert.alert(
+      'Dejar de seguir',
+      'El grupo dejará de aparecer en tu sección de grupos seguidos. Si colaboras en él, seguirás siendo colaboradora.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Dejar de seguir',
+          style: 'destructive',
+          onPress: () => void updateFollowState(false),
+        },
+      ],
+    );
   }
 
   function openCopyFlow(): void {
@@ -228,15 +254,26 @@ export default function PublicGroupDetailScreen() {
                 ) : (
                   <Pressable
                     accessibilityRole="button"
-                    disabled={group.following || following}
-                    onPress={() => void handleFollow()}
-                    style={[styles.primaryButton, group.following ? styles.followingButton : null]}
+                    disabled={updatingFollow}
+                    onPress={handleFollowPress}
+                    style={[
+                      styles.primaryButton,
+                      group.following ? styles.unfollowButton : null,
+                    ]}
                   >
-                    {following ? (
-                      <ActivityIndicator color={colors.white} size="small" />
+                    {updatingFollow ? (
+                      <ActivityIndicator
+                        color={group.following ? colors.danger : colors.white}
+                        size="small"
+                      />
                     ) : (
-                      <Text style={[styles.primaryButtonText, group.following ? styles.followingButtonText : null]}>
-                        {group.following ? 'Siguiendo' : 'Seguir grupo'}
+                      <Text
+                        style={[
+                          styles.primaryButtonText,
+                          group.following ? styles.unfollowButtonText : null,
+                        ]}
+                      >
+                        {group.following ? 'Dejar de seguir' : 'Seguir grupo'}
                       </Text>
                     )}
                   </Pressable>
@@ -318,8 +355,8 @@ const styles = StyleSheet.create({
   statLabel: { color: colors.muted, fontSize: 8, fontWeight: '800', textAlign: 'center' },
   primaryButton: { minHeight: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 17, backgroundColor: colors.primary },
   primaryButtonText: { color: colors.white, fontSize: 14, fontWeight: '900' },
-  followingButton: { backgroundColor: '#E8EEDD' },
-  followingButtonText: { color: '#607349' },
+  unfollowButton: { borderWidth: 1, borderColor: '#F1B9AE', backgroundColor: '#FFF1EE' },
+  unfollowButtonText: { color: colors.danger },
   secondaryActions: { gap: 8 },
   copyAction: { minHeight: 46, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: colors.primary, borderRadius: 15, backgroundColor: '#FFF4EF' },
   copyActionText: { color: colors.primary, fontSize: 12, fontWeight: '900' },
