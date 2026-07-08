@@ -11,6 +11,7 @@ import com.pauluna.mesa.group.api.PublicGroupCollaborationStateResponse;
 import com.pauluna.mesa.group.domain.CollaborationRequestStatus;
 import com.pauluna.mesa.group.domain.GroupCollaborationRequest;
 import com.pauluna.mesa.group.domain.GroupPrivacy;
+import com.pauluna.mesa.group.domain.GroupRole;
 import com.pauluna.mesa.group.domain.RestaurantGroup;
 import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
@@ -59,10 +60,12 @@ public class PublicGroupCollaborationStateService {
 
         boolean owner = group.getOwnerUserId().equals(userId);
         boolean collaborating = !owner
-                && memberRepository.existsByGroupIdAndUserId(
-                        groupId,
-                        userId
-                );
+                && memberRepository
+                        .findByGroupIdAndUserId(groupId, userId)
+                        .map(member ->
+                                member.getRole() == GroupRole.CONTRIBUTOR
+                        )
+                        .orElse(false);
 
         GroupCollaborationRequest latest = requestRepository
                 .findFirstByGroupIdAndUserIdOrderByCreatedAtDesc(
