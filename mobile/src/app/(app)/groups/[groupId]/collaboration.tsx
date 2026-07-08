@@ -19,8 +19,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RestaurantCard } from '../../../../components/RestaurantCard';
 import { useAuth } from '../../../../contexts/auth-context';
 import { getErrorMessage } from '../../../../lib/api';
-import { getGroup } from '../../../../services/group-service';
-import { getGroupRestaurants } from '../../../../services/restaurant-service';
+import {
+  getGroup,
+  getPublicGroup,
+} from '../../../../services/group-service';
 import { colors } from '../../../../theme/colors';
 import type { RestaurantGroup } from '../../../../types/group';
 import type { GroupRestaurant } from '../../../../types/restaurant';
@@ -48,13 +50,13 @@ export default function CollaborationWorkspaceScreen() {
       setError(null);
       isRefresh ? setRefreshing(true) : setLoading(true);
 
-      const [groupResponse, restaurantsResponse] = await Promise.all([
+      const [groupResponse, publicGroupResponse] = await Promise.all([
         getGroup(groupId, accessToken),
-        getGroupRestaurants(groupId, accessToken),
+        getPublicGroup(groupId, accessToken),
       ]);
 
       setGroup(groupResponse);
-      setRestaurants(restaurantsResponse);
+      setRestaurants(publicGroupResponse.restaurants);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
