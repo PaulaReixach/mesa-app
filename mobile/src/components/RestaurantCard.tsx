@@ -121,15 +121,24 @@ export function RestaurantCard({
             {restaurant.name}
           </Text>
 
-          {presentation === 'rating' ? (
-            <View style={styles.ratingBadge}>
-              <Text style={styles.ratingText}>
-                {formattedAverage
-                  ? `★ ${formattedAverage}`
-                  : 'Sin valorar'}
-              </Text>
-            </View>
-          ) : (
+          <View style={styles.ratingBadge}>
+            <Text style={styles.ratingText}>
+              {formattedAverage
+                ? `★ ${formattedAverage}`
+                : 'Sin valorar'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.metaRow}>
+          <Text
+            numberOfLines={1}
+            style={styles.category}
+          >
+            {restaurant.category ?? 'Restaurante'}
+          </Text>
+
+          {presentation === 'status' ? (
             <View
               style={[
                 styles.status,
@@ -150,15 +159,8 @@ export function RestaurantCard({
                 {status.label}
               </Text>
             </View>
-          )}
+          ) : null}
         </View>
-
-        <Text
-          numberOfLines={1}
-          style={styles.category}
-        >
-          {restaurant.category ?? 'Restaurante'}
-        </Text>
 
         <Text
           numberOfLines={1}
@@ -216,7 +218,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    gap: 3,
+    gap: 4,
   },
   titleRow: {
     flexDirection: 'row',
@@ -228,6 +230,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     fontWeight: '900',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
   },
   status: {
     paddingHorizontal: 8,
@@ -250,6 +257,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   category: {
+    flex: 1,
     color: colors.text,
     fontSize: 10,
     fontWeight: '700',
