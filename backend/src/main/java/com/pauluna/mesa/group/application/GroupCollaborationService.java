@@ -20,7 +20,6 @@ import com.pauluna.mesa.group.domain.GroupPrivacy;
 import com.pauluna.mesa.group.domain.GroupRole;
 import com.pauluna.mesa.group.domain.RestaurantGroup;
 import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository;
-import com.pauluna.mesa.group.infrastructure.GroupFollowerRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
 import com.pauluna.mesa.user.application.UserNotFoundException;
@@ -36,7 +35,6 @@ public class GroupCollaborationService {
     private final RestaurantGroupRepository restaurantGroupRepository;
     private final GroupCollaborationRequestRepository requestRepository;
     private final GroupMemberRepository groupMemberRepository;
-    private final GroupFollowerRepository groupFollowerRepository;
     private final UserRepository userRepository;
     private final GroupService groupService;
 
@@ -44,14 +42,12 @@ public class GroupCollaborationService {
             RestaurantGroupRepository restaurantGroupRepository,
             GroupCollaborationRequestRepository requestRepository,
             GroupMemberRepository groupMemberRepository,
-            GroupFollowerRepository groupFollowerRepository,
             UserRepository userRepository,
             GroupService groupService
     ) {
         this.restaurantGroupRepository = restaurantGroupRepository;
         this.requestRepository = requestRepository;
         this.groupMemberRepository = groupMemberRepository;
-        this.groupFollowerRepository = groupFollowerRepository;
         this.userRepository = userRepository;
         this.groupService = groupService;
     }
@@ -184,11 +180,6 @@ public class GroupCollaborationService {
                     )
             );
         }
-
-        groupFollowerRepository.deleteByGroupIdAndUserId(
-                groupId,
-                request.getUserId()
-        );
 
         request.accept();
         return toResponse(requestRepository.saveAndFlush(request));
