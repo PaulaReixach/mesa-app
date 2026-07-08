@@ -15,6 +15,7 @@ import com.pauluna.mesa.restaurant.api.CreateGroupRestaurantRequest;
 import com.pauluna.mesa.restaurant.api.GroupRestaurantResponse;
 import com.pauluna.mesa.restaurant.api.UpdateGroupRestaurantRequest;
 import com.pauluna.mesa.restaurant.api.UpdateGroupRestaurantStatusRequest;
+import com.pauluna.mesa.restaurant.application.RestaurantRatingSummaryService.RatingSummary;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurantStatus;
 import com.pauluna.mesa.restaurant.domain.Restaurant;
@@ -28,15 +29,18 @@ public class RestaurantService {
     private final GroupService groupService;
     private final RestaurantRepository restaurantRepository;
     private final GroupRestaurantRepository groupRestaurantRepository;
+    private final RestaurantRatingSummaryService ratingSummaryService;
 
     public RestaurantService(
             GroupService groupService,
             RestaurantRepository restaurantRepository,
-            GroupRestaurantRepository groupRestaurantRepository
+            GroupRestaurantRepository groupRestaurantRepository,
+            RestaurantRatingSummaryService ratingSummaryService
     ) {
         this.groupService = groupService;
         this.restaurantRepository = restaurantRepository;
         this.groupRestaurantRepository = groupRestaurantRepository;
+        this.ratingSummaryService = ratingSummaryService;
     }
 
     public GroupRestaurantResponse addRestaurant(
@@ -131,9 +135,10 @@ public class RestaurantService {
         GroupRestaurant savedGroupRestaurant =
                 groupRestaurantRepository.save(groupRestaurant);
 
-        return GroupRestaurantResponse.from(
+        return toResponse(
                 savedGroupRestaurant,
-                restaurant
+                restaurant,
+                RatingSummary.empty()
         );
     }
 
@@ -168,14 +173,26 @@ public class RestaurantService {
                                 Function.identity()
                         ));
 
+        Map<UUID, RatingSummary> ratingsByGroupRestaurantId =
+                ratingSummaryService.getSummaries(
+                        groupRestaurants
+                                .stream()
+                                .map(GroupRestaurant::getId)
+                                .toList()
+                );
+
         return groupRestaurants
                 .stream()
                 .map(groupRestaurant ->
-                        GroupRestaurantResponse.from(
+                        toResponse(
                                 groupRestaurant,
                                 getRestaurantFromMap(
                                         restaurantsById,
                                         groupRestaurant.getRestaurantId()
+                                ),
+                                ratingsByGroupRestaurantId.getOrDefault(
+                                        groupRestaurant.getId(),
+                                        RatingSummary.empty()
                                 )
                         )
                 )
@@ -201,9 +218,10 @@ public class RestaurantService {
                         groupRestaurant.getRestaurantId()
                 );
 
-        return GroupRestaurantResponse.from(
+        return toResponse(
                 groupRestaurant,
-                restaurant
+                restaurant,
+                ratingSummaryService.getSummary(groupRestaurantId)
         );
     }
 
@@ -280,9 +298,10 @@ public class RestaurantService {
                         groupRestaurant
                 );
 
-        return GroupRestaurantResponse.from(
+        return toResponse(
                 updatedGroupRestaurant,
-                updatedRestaurant
+                updatedRestaurant,
+                ratingSummaryService.getSummary(groupRestaurantId)
         );
     }
 
@@ -305,10 +324,14 @@ public class RestaurantService {
                         groupRestaurant.getRestaurantId()
                 );
 
+        RatingSummary ratingSummary =
+                ratingSummaryService.getSummary(groupRestaurantId);
+
         if (groupRestaurant.getStatus() == request.status()) {
-            return GroupRestaurantResponse.from(
+            return toResponse(
                     groupRestaurant,
-                    restaurant
+                    restaurant,
+                    ratingSummary
             );
         }
 
@@ -319,9 +342,23 @@ public class RestaurantService {
                         groupRestaurant
                 );
 
-        return GroupRestaurantResponse.from(
+        return toResponse(
                 updatedGroupRestaurant,
-                restaurant
+                restaurant,
+                ratingSummary
+        );
+    }
+
+    private GroupRestaurantResponse toResponse(
+            GroupRestaurant groupRestaurant,
+            Restaurant restaurant,
+            RatingSummary ratingSummary
+    ) {
+        return GroupRestaurantResponse.from(
+                groupRestaurant,
+                restaurant,
+                ratingSummary.averageScore(),
+                ratingSummary.ratingsCount()
         );
     }
 
