@@ -59,6 +59,8 @@ function sentence(item: GroupActivityItem): string {
           ? statusLabel[item.restaurantStatus].toLowerCase()
           : 'actualizado'}`;
   }
+
+  return 'actualizó el grupo';
 }
 
 function fallbackIcon(item: GroupActivityItem) {
