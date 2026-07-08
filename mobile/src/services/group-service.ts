@@ -120,6 +120,17 @@ export function cancelPublicGroupCollaborationRequest(
   );
 }
 
+export function leavePublicGroupCollaboration(
+  groupId: string,
+  accessToken: string,
+): Promise<void> {
+  return apiRequest<void>(
+    `/groups/public/${groupId}/collaborators/me`,
+    { method: 'DELETE' },
+    accessToken,
+  );
+}
+
 export function getPublicGroupCollaborationRequests(
   groupId: string,
   accessToken: string,
