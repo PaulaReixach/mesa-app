@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GroupActivityTab } from '../components/GroupActivityTab';
 import {
   EmptyTab,
   GroupHeading,
@@ -23,15 +24,22 @@ import {
   MemberPreview,
   PrimaryGroupAction,
 } from '../components/GroupDetailPrimitivesTuned';
+import { GroupMembersTab } from '../components/GroupMembersTab';
 import { useAuth } from '../contexts/auth-context';
 import { getErrorMessage, resolveApiUrl } from '../lib/api';
 import { getGroupInvitations } from '../services/group-invitation-service';
-import { getGroupMembers } from '../services/group-member-service';
+import {
+  getGroupMembers,
+  removeGroupMember,
+} from '../services/group-member-service';
 import { getGroup } from '../services/group-service';
 import { getRestaurantProposalPendingCount } from '../services/restaurant-proposal-service';
 import { getGroupRestaurants } from '../services/restaurant-service';
 import { colors } from '../theme/colors';
-import type { RestaurantGroup } from '../types/group';
+import type {
+  PublicGroupOwner,
+  RestaurantGroup,
+} from '../types/group';
 import type { GroupMember } from '../types/group-member';
 import type { GroupRestaurant } from '../types/restaurant';
 
@@ -128,6 +136,15 @@ export default function PrivateGroupDetailScreen() {
     ? resolveApiUrl(group.imageUrl)
     : null;
   const previewRestaurants = restaurants.slice(0, 3);
+  const ownerMember = members.find(member => member.role === 'OWNER');
+  const activityOwner: PublicGroupOwner | null = group
+    ? {
+        id: group.ownerUserId,
+        name: ownerMember?.name ?? 'Creadora',
+        username: ownerMember?.username ?? '',
+        avatarUrl: ownerMember?.avatarUrl ?? null,
+      }
+    : null;
 
   const thirdStat = useMemo(() => {
     if (isOwner) {
@@ -216,6 +233,52 @@ export default function PrivateGroupDetailScreen() {
             { text: 'Cancelar', style: 'cancel' },
           ],
     );
+  }
+
+  function openMember(member: GroupMember): void {
+    const role = member.role === 'OWNER'
+      ? 'Creadora'
+      : group?.privacy === 'PUBLIC'
+        ? 'Colaborador'
+        : 'Miembro';
+
+    if (!isOwner || member.role === 'OWNER') {
+      Alert.alert(member.name, `@${member.username}\n${role}`);
+      return;
+    }
+
+    Alert.alert(
+      member.name,
+      `@${member.username}\n${role}`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: group?.privacy === 'PUBLIC'
+            ? 'Eliminar colaborador'
+            : 'Eliminar miembro',
+          style: 'destructive',
+          onPress: () => void deleteMember(member),
+        },
+      ],
+    );
+  }
+
+  async function deleteMember(member: GroupMember): Promise<void> {
+    if (!accessToken || !groupId) {
+      return;
+    }
+
+    try {
+      await removeGroupMember(groupId, member.userId, accessToken);
+      setMembers(current =>
+        current.filter(item => item.userId !== member.userId),
+      );
+    } catch (removeError) {
+      Alert.alert(
+        'No se ha podido eliminar',
+        getErrorMessage(removeError),
+      );
+    }
   }
 
   if (group
@@ -397,37 +460,22 @@ export default function PrivateGroupDetailScreen() {
                 ) : null}
 
                 {activeTab === 'members' ? (
-                  <>
-                    <GroupInfoBanner
-                      actionLabel="Invitar"
-                      icon={{
-                        ios: 'person.badge.plus',
-                        android: 'person_add',
-                        web: 'person_add',
-                      }}
-                      onPress={openInvitations}
-                      subtitle="Entrarán en el grupo cuando acepten."
-                      title="Haz crecer vuestro grupo"
-                    />
-
-                    <MemberPreview
-                      actionLabel={`Ver todos (${members.length})`}
-                      members={members}
-                      onAction={openInvitations}
-                      title="Miembros del grupo"
-                    />
-                  </>
+                  <GroupMembersTab
+                    canManageInvitations={isOwner}
+                    members={members}
+                    onManageInvitations={openInvitations}
+                    onMemberPress={openMember}
+                    pendingInvitationCount={pendingInvitationCount}
+                    privacy={group.privacy}
+                  />
                 ) : null}
 
-                {activeTab === 'activity' ? (
-                  <EmptyTab
-                    icon={{
-                      ios: 'clock.arrow.circlepath',
-                      android: 'history',
-                      web: 'history',
-                    }}
-                    text="Aquí aparecerán valoraciones, restaurantes e invitaciones."
-                    title="La actividad está en camino"
+                {activeTab === 'activity' && activityOwner ? (
+                  <GroupActivityTab
+                    groupCreatedAt={group.createdAt}
+                    members={members}
+                    owner={activityOwner}
+                    restaurants={restaurants}
                   />
                 ) : null}
               </View>
