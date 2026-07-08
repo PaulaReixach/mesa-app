@@ -199,21 +199,23 @@ export default function RestaurantDetailScreen() {
                 <Text style={styles.name}>
                   {restaurant.name}
                 </Text>
-                <View
-                  style={[
-                    styles.status,
-                    { backgroundColor: status.backgroundColor },
-                  ]}
-                >
-                  <Text
+                {canManageRestaurant ? (
+                  <View
                     style={[
-                      styles.statusText,
-                      { color: status.textColor },
+                      styles.status,
+                      { backgroundColor: status.backgroundColor },
                     ]}
                   >
-                    {status.label}
-                  </Text>
-                </View>
+                    <Text
+                      style={[
+                        styles.statusText,
+                        { color: status.textColor },
+                      ]}
+                    >
+                      {status.label}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
             </View>
 
