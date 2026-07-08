@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   headerTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
   loading: { alignItems: 'center', paddingVertical: 90 },
   heroCard: { overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 24, backgroundColor: colors.surface },
-  heroArtwork: { height: 160, backgroundColor: '#F2E2DA' },
+  heroArtwork: { height: 160, backgroundColor: '#F2DED5' },
   heroImage: { width: '100%', height: '100%' },
   heroFallback: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   heroInitial: { color: colors.primary, fontSize: 58, fontWeight: '900' },
