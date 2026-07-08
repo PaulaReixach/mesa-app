@@ -1,6 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import type { Href } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -19,6 +20,7 @@ import { useAuth } from '../../../contexts/auth-context';
 import { getErrorMessage, resolveApiUrl } from '../../../lib/api';
 import { getGroupMembers, removeGroupMember } from '../../../services/group-member-service';
 import { getGroup } from '../../../services/group-service';
+import { getRestaurantProposalPendingCount } from '../../../services/restaurant-proposal-service';
 import { getGroupRestaurants } from '../../../services/restaurant-service';
 import { colors } from '../../../theme/colors';
 import type { RestaurantGroup } from '../../../types/group';
@@ -106,6 +108,7 @@ export default function GroupDetailScreen() {
   const [group, setGroup] = useState<RestaurantGroup | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [restaurants, setRestaurants] = useState<GroupRestaurant[]>([]);
+  const [pendingProposalCount, setPendingProposalCount] = useState(0);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -125,9 +128,21 @@ export default function GroupDetailScreen() {
         getGroupMembers(groupId, accessToken),
         getGroupRestaurants(groupId, accessToken),
       ]);
+
+      let proposalCount = 0;
+      if (
+        groupResponse.privacy === 'PUBLIC'
+        && groupResponse.currentUserRole === 'OWNER'
+      ) {
+        proposalCount = (
+          await getRestaurantProposalPendingCount(groupId, accessToken)
+        ).pendingCount;
+      }
+
       setGroup(groupResponse);
       setMembers(membersResponse);
       setRestaurants(restaurantsResponse);
+      setPendingProposalCount(proposalCount);
     } catch (error) {
       setLoadError(getErrorMessage(error));
     } finally {
@@ -140,8 +155,18 @@ export default function GroupDetailScreen() {
     void loadGroupData();
   }, [loadGroupData]));
 
+  useEffect(() => {
+    if (!groupId || group?.currentUserRole !== 'CONTRIBUTOR') {
+      return;
+    }
+
+    router.replace(`/groups/public/${groupId}` as Href);
+  }, [group?.currentUserRole, groupId]);
+
   const isOwner = Boolean(group && user?.id === group.ownerUserId);
   const canManageRestaurants = group?.currentUserRole !== 'CONTRIBUTOR';
+  const isRedirectingToPublicGroup =
+    group?.currentUserRole === 'CONTRIBUTOR';
 
   function openCreateRestaurant(): void {
     router.push({ pathname: '/groups/[groupId]/restaurants/create', params: { groupId } });
@@ -153,6 +178,13 @@ export default function GroupDetailScreen() {
 
   function openEditGroup(): void {
     router.push({ pathname: '/groups/[groupId]/edit', params: { groupId } });
+  }
+
+  function openRestaurantProposals(): void {
+    router.push({
+      pathname: '/groups/[groupId]/restaurant-proposals',
+      params: { groupId },
+    });
   }
 
   function confirmRemoveMember(member: GroupMember): void {
@@ -172,6 +204,7 @@ export default function GroupDetailScreen() {
       setRemovingUserId(member.userId);
       await removeGroupMember(groupId, member.userId, accessToken);
       setMembers(current => current.filter(item => item.userId !== member.userId));
+      await loadGroupData(true);
     } catch (error) {
       Alert.alert('No se ha podido eliminar', getErrorMessage(error));
     } finally {
@@ -180,6 +213,19 @@ export default function GroupDetailScreen() {
   }
 
   const groupImageUri = group?.imageUrl ? resolveApiUrl(group.imageUrl) : null;
+
+  if (isRedirectingToPublicGroup) {
+    return (
+      <SafeAreaView
+        edges={['top', 'right', 'bottom', 'left']}
+        style={styles.safeArea}
+      >
+        <View style={styles.loading}>
+          <ActivityIndicator color={colors.primary} size="large" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
@@ -236,6 +282,39 @@ export default function GroupDetailScreen() {
                 <View style={styles.statCard}><Text style={styles.statValue}>{group.followerCount}</Text><Text style={styles.statLabel}>Seguidores</Text></View>
               ) : null}
             </View>
+
+            {isOwner && group.privacy === 'PUBLIC' ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={openRestaurantProposals}
+                style={({ pressed }) => [
+                  styles.proposalManagement,
+                  pressed ? styles.pressed : null,
+                ]}
+              >
+                <View style={styles.proposalIcon}>
+                  <SymbolView
+                    name={{ ios: 'tray.full.fill', android: 'inbox', web: 'inbox' }}
+                    size={20}
+                    tintColor={colors.primary}
+                  />
+                </View>
+                <View style={styles.proposalText}>
+                  <Text style={styles.proposalTitle}>Propuestas de restaurantes</Text>
+                  <Text style={styles.proposalSubtitle}>Revisa los sitios enviados por tus colaboradores</Text>
+                </View>
+                {pendingProposalCount > 0 ? (
+                  <View style={styles.proposalBadge}>
+                    <Text style={styles.proposalBadgeText}>{pendingProposalCount}</Text>
+                  </View>
+                ) : null}
+                <SymbolView
+                  name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+                  size={18}
+                  tintColor={colors.muted}
+                />
+              </Pressable>
+            ) : null}
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
@@ -307,6 +386,38 @@ const styles = StyleSheet.create({
   statCard: { flex: 1, gap: 2, padding: 15, borderWidth: 1, borderColor: colors.border, borderRadius: 18, backgroundColor: colors.surface },
   statValue: { color: colors.primary, fontSize: 23, fontWeight: '900' },
   statLabel: { color: colors.muted, fontSize: 10, fontWeight: '700' },
+  proposalManagement: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    padding: 13,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 19,
+    backgroundColor: '#FFF8F3',
+  },
+  proposalIcon: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+    backgroundColor: '#FBE9E2',
+  },
+  proposalText: { flex: 1, gap: 3 },
+  proposalTitle: { color: colors.text, fontSize: 12, fontWeight: '900' },
+  proposalSubtitle: { color: colors.muted, fontSize: 9, lineHeight: 14 },
+  proposalBadge: {
+    minWidth: 25,
+    height: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 7,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+  },
+  proposalBadgeText: { color: colors.white, fontSize: 9, fontWeight: '900' },
   section: { gap: 12 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   sectionTitle: { color: colors.text, fontSize: 17, fontWeight: '900' },

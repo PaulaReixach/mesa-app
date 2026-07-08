@@ -16,6 +16,10 @@ import com.pauluna.mesa.group.api.GroupMemberResponse;
 import com.pauluna.mesa.group.domain.GroupMember;
 import com.pauluna.mesa.group.domain.GroupRole;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
+import com.pauluna.mesa.restaurant.application.RestaurantProposalService;
+import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
+import com.pauluna.mesa.restaurant.infrastructure.GroupRestaurantRepository;
+import com.pauluna.mesa.restaurant.infrastructure.RestaurantRatingRepository;
 import com.pauluna.mesa.user.application.PrivacyPreferencesService;
 import com.pauluna.mesa.user.application.UserNotFoundByUsernameException;
 import com.pauluna.mesa.user.application.UserNotFoundException;
@@ -31,6 +35,10 @@ public class GroupMemberService {
     private final GroupMemberRepository
             groupMemberRepository;
 
+    private final GroupRestaurantRepository groupRestaurantRepository;
+    private final RestaurantRatingRepository restaurantRatingRepository;
+    private final RestaurantProposalService restaurantProposalService;
+
     private final UserRepository userRepository;
 
     private final PrivacyPreferencesService
@@ -39,6 +47,9 @@ public class GroupMemberService {
     public GroupMemberService(
             GroupService groupService,
             GroupMemberRepository groupMemberRepository,
+            GroupRestaurantRepository groupRestaurantRepository,
+            RestaurantRatingRepository restaurantRatingRepository,
+            RestaurantProposalService restaurantProposalService,
             UserRepository userRepository,
             PrivacyPreferencesService
                     privacyPreferencesService
@@ -48,6 +59,9 @@ public class GroupMemberService {
         this.groupMemberRepository =
                 groupMemberRepository;
 
+        this.groupRestaurantRepository = groupRestaurantRepository;
+        this.restaurantRatingRepository = restaurantRatingRepository;
+        this.restaurantProposalService = restaurantProposalService;
         this.userRepository = userRepository;
 
         this.privacyPreferencesService =
@@ -209,6 +223,27 @@ public class GroupMemberService {
         ) {
             throw new GroupOwnerCannotBeRemovedException(
                     groupId
+            );
+        }
+
+        if (membership.getRole() == GroupRole.CONTRIBUTOR) {
+            List<UUID> groupRestaurantIds = groupRestaurantRepository
+                    .findAllByGroupIdOrderByCreatedAtDesc(groupId)
+                    .stream()
+                    .map(GroupRestaurant::getId)
+                    .toList();
+
+            if (!groupRestaurantIds.isEmpty()) {
+                restaurantRatingRepository
+                        .deleteAllByGroupRestaurantIdInAndUserId(
+                                groupRestaurantIds,
+                                memberUserId
+                        );
+            }
+
+            restaurantProposalService.cancelPendingForCollaborator(
+                    groupId,
+                    memberUserId
             );
         }
 

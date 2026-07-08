@@ -22,6 +22,7 @@ import com.pauluna.mesa.group.domain.RestaurantGroup;
 import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
+import com.pauluna.mesa.restaurant.application.RestaurantProposalService;
 import com.pauluna.mesa.restaurant.domain.GroupRestaurant;
 import com.pauluna.mesa.restaurant.infrastructure.GroupRestaurantRepository;
 import com.pauluna.mesa.restaurant.infrastructure.RestaurantRatingRepository;
@@ -40,6 +41,7 @@ public class GroupCollaborationService {
     private final GroupMemberRepository groupMemberRepository;
     private final GroupRestaurantRepository groupRestaurantRepository;
     private final RestaurantRatingRepository restaurantRatingRepository;
+    private final RestaurantProposalService restaurantProposalService;
     private final UserRepository userRepository;
     private final GroupService groupService;
 
@@ -49,6 +51,7 @@ public class GroupCollaborationService {
             GroupMemberRepository groupMemberRepository,
             GroupRestaurantRepository groupRestaurantRepository,
             RestaurantRatingRepository restaurantRatingRepository,
+            RestaurantProposalService restaurantProposalService,
             UserRepository userRepository,
             GroupService groupService
     ) {
@@ -57,6 +60,7 @@ public class GroupCollaborationService {
         this.groupMemberRepository = groupMemberRepository;
         this.groupRestaurantRepository = groupRestaurantRepository;
         this.restaurantRatingRepository = restaurantRatingRepository;
+        this.restaurantProposalService = restaurantProposalService;
         this.userRepository = userRepository;
         this.groupService = groupService;
     }
@@ -189,6 +193,11 @@ public class GroupCollaborationService {
                             userId
                     );
         }
+
+        restaurantProposalService.cancelPendingForCollaborator(
+                groupId,
+                userId
+        );
 
         groupMemberRepository.deleteByGroupIdAndUserId(groupId, userId);
 

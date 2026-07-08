@@ -158,6 +158,23 @@ public class GroupService {
     }
 
     @Transactional(readOnly = true)
+    public void validateContributorAccess(
+            UUID groupId,
+            UUID userId
+    ) {
+        RestaurantGroup group = getAccessibleGroup(groupId, userId);
+        GroupMember membership = getMembership(groupId, userId);
+
+        if (group.getPrivacy() != GroupPrivacy.PUBLIC
+                || membership.getRole() != GroupRole.CONTRIBUTOR) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Solo las personas colaboradoras pueden proponer restaurantes."
+            );
+        }
+    }
+
+    @Transactional(readOnly = true)
     public void validateRestaurantManagementAccess(
             UUID groupId,
             UUID userId
