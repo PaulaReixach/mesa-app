@@ -46,6 +46,17 @@ export function updateGroup(
   }, accessToken);
 }
 
+export function deleteGroup(
+  groupId: string,
+  accessToken: string,
+): Promise<void> {
+  return apiRequest<void>(
+    `/groups/${groupId}`,
+    { method: 'DELETE' },
+    accessToken,
+  );
+}
+
 export function getPublicGroups(
   accessToken: string,
   query = '',
