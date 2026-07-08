@@ -1,8 +1,5 @@
 import { apiRequest } from '../lib/api';
-import {
-  AddGroupMemberPayload,
-  GroupMember,
-} from '../types/group-member';
+import type { GroupMember } from '../types/group-member';
 
 export function getGroupMembers(
   groupId: string,
@@ -12,21 +9,6 @@ export function getGroupMembers(
     `/groups/${groupId}/members`,
     {
       method: 'GET',
-    },
-    accessToken,
-  );
-}
-
-export function addGroupMember(
-  groupId: string,
-  payload: AddGroupMemberPayload,
-  accessToken: string,
-): Promise<GroupMember> {
-  return apiRequest<GroupMember>(
-    `/groups/${groupId}/members`,
-    {
-      method: 'POST',
-      body: JSON.stringify(payload),
     },
     accessToken,
   );
