@@ -7,7 +7,8 @@ export type CollaborationRequestStatus =
   | 'PENDING'
   | 'ACCEPTED'
   | 'REJECTED'
-  | 'CANCELLED';
+  | 'CANCELLED'
+  | 'LEFT';
 
 export type RestaurantGroup = {
   id: string;
@@ -18,6 +19,7 @@ export type RestaurantGroup = {
   privacy: GroupPrivacy;
   acceptingCollaborators: boolean;
   currentUserRole: GroupRole | null;
+  followerCount: number;
   ownerUserId: string;
   createdAt: string;
   updatedAt: string;
