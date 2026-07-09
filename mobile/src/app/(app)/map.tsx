@@ -38,15 +38,11 @@ import {
 import { useAuth } from '../../contexts/auth-context';
 import { getErrorMessage } from '../../lib/api';
 import { getMapRestaurants } from '../../services/map-service';
-import {
-  updateGroupRestaurantStatus,
-} from '../../services/restaurant-service';
+import { updateGroupRestaurantStatus } from '../../services/restaurant-service';
 import { styles } from '../../styles/map-screen.styles';
 import { colors } from '../../theme/colors';
 import type { MapRestaurant } from '../../types/map';
-import type {
-  GroupRestaurantStatus,
-} from '../../types/restaurant';
+import type { GroupRestaurantStatus } from '../../types/restaurant';
 
 type Coordinates = {
   latitude: number;
@@ -69,21 +65,6 @@ type MapRestaurantItem = MapRestaurant & {
 
 type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
-type QuickFilterProps = {
-  active: boolean;
-  icon: SymbolName;
-  label: string;
-  onPress: () => void;
-};
-
-type RestaurantRowProps = {
-  onFavoritePress: () => void;
-  onPress: () => void;
-  restaurant: MapRestaurantItem;
-  selected: boolean;
-  updating: boolean;
-};
-
 const DEFAULT_REGION = {
   latitude: 41.9794,
   longitude: 2.8214,
@@ -91,12 +72,7 @@ const DEFAULT_REGION = {
   longitudeDelta: 0.08,
 };
 
-const DISTANCE_OPTIONS: DistanceOption[] = [
-  null,
-  2,
-  5,
-  10,
-];
+const DISTANCE_OPTIONS: DistanceOption[] = [null, 2, 5, 10];
 
 const STATUS_OPTIONS: Array<{
   label: string;
@@ -158,18 +134,9 @@ const STATUS_PRESENTATION: Record<
 };
 
 const MAP_STYLE = [
-  {
-    elementType: 'geometry',
-    stylers: [{ color: '#F5EFE6' }],
-  },
-  {
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#746A65' }],
-  },
-  {
-    elementType: 'labels.text.stroke',
-    stylers: [{ color: '#FFF8F3' }],
-  },
+  { elementType: 'geometry', stylers: [{ color: '#F5EFE6' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#746A65' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#FFF8F3' }] },
   {
     featureType: 'administrative.locality',
     elementType: 'labels.text.fill',
@@ -180,10 +147,7 @@ const MAP_STYLE = [
     elementType: 'geometry',
     stylers: [{ color: '#ECE7D8' }],
   },
-  {
-    featureType: 'poi.business',
-    stylers: [{ visibility: 'off' }],
-  },
+  { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
   {
     featureType: 'poi.park',
     elementType: 'geometry',
@@ -204,10 +168,7 @@ const MAP_STYLE = [
     elementType: 'geometry',
     stylers: [{ color: '#F0E4D6' }],
   },
-  {
-    featureType: 'transit',
-    stylers: [{ visibility: 'off' }],
-  },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
   {
     featureType: 'water',
     elementType: 'geometry',
@@ -215,32 +176,18 @@ const MAP_STYLE = [
   },
 ];
 
-function clamp(
-  value: number,
-  minimum: number,
-  maximum: number,
-): number {
-  return Math.min(
-    Math.max(value, minimum),
-    maximum,
-  );
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.min(Math.max(value, minimum), maximum);
 }
 
 function toRadians(degrees: number): number {
   return degrees * Math.PI / 180;
 }
 
-function calculateDistanceKm(
-  first: Coordinates,
-  second: Coordinates,
-): number {
+function calculateDistanceKm(first: Coordinates, second: Coordinates): number {
   const earthRadiusKm = 6371;
-  const latitudeDifference = toRadians(
-    second.latitude - first.latitude,
-  );
-  const longitudeDifference = toRadians(
-    second.longitude - first.longitude,
-  );
+  const latitudeDifference = toRadians(second.latitude - first.latitude);
+  const longitudeDifference = toRadians(second.longitude - first.longitude);
   const firstLatitude = toRadians(first.latitude);
   const secondLatitude = toRadians(second.latitude);
   const value =
@@ -251,15 +198,10 @@ function calculateDistanceKm(
 
   return earthRadiusKm
     * 2
-    * Math.atan2(
-      Math.sqrt(value),
-      Math.sqrt(1 - value),
-    );
+    * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value));
 }
 
-function formatDistance(
-  distanceKm: number | null,
-): string {
+function formatDistance(distanceKm: number | null): string {
   if (distanceKm === null) {
     return '';
   }
@@ -268,9 +210,7 @@ function formatDistance(
     return `${Math.round(distanceKm * 1000)} m`;
   }
 
-  return `${distanceKm
-    .toFixed(1)
-    .replace('.', ',')} km`;
+  return `${distanceKm.toFixed(1).replace('.', ',')} km`;
 }
 
 function normalizeSearch(value: string): string {
@@ -286,7 +226,12 @@ function QuickFilter({
   icon,
   label,
   onPress,
-}: QuickFilterProps) {
+}: {
+  active: boolean;
+  icon: SymbolName;
+  label: string;
+  onPress: () => void;
+}) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -301,20 +246,14 @@ function QuickFilter({
       <SymbolView
         name={icon}
         size={14}
-        tintColor={
-          active
-            ? colors.white
-            : colors.muted
-        }
+        tintColor={active ? colors.white : colors.muted}
       />
       <Text
         maxFontSizeMultiplier={1.15}
         numberOfLines={1}
         style={[
           styles.quickChipText,
-          active
-            ? styles.quickChipTextActive
-            : null,
+          active ? styles.quickChipTextActive : null,
         ]}
       >
         {label}
@@ -332,8 +271,7 @@ function RestaurantMarker({
   restaurant: MapRestaurantItem;
   selected: boolean;
 }) {
-  const presentation =
-    STATUS_PRESENTATION[restaurant.status];
+  const presentation = STATUS_PRESENTATION[restaurant.status];
 
   return (
     <Marker
@@ -341,8 +279,8 @@ function RestaurantMarker({
         latitude: restaurant.latitude,
         longitude: restaurant.longitude,
       }}
-      onPress={event => {
-        event.stopPropagation();
+      onPress={(event: any) => {
+        event.stopPropagation?.();
         onPress();
       }}
       tracksViewChanges
@@ -352,13 +290,8 @@ function RestaurantMarker({
         <View
           style={[
             styles.markerBubble,
-            {
-              backgroundColor:
-                presentation.markerColor,
-            },
-            selected
-              ? styles.markerBubbleSelected
-              : null,
+            { backgroundColor: presentation.markerColor },
+            selected ? styles.markerBubbleSelected : null,
           ]}
         >
           <SymbolView
@@ -371,18 +304,24 @@ function RestaurantMarker({
             tintColor={colors.white}
           />
         </View>
-
         <View
           style={[
             styles.markerPoint,
-            {
-              borderTopColor:
-                presentation.markerColor,
-            },
+            { borderTopColor: presentation.markerColor },
           ]}
         />
       </View>
     </Marker>
+  );
+}
+
+function FavoriteIcon({ favorite }: { favorite: boolean }) {
+  return (
+    <MaterialIcons
+      color={favorite ? colors.primary : colors.muted}
+      name={favorite ? 'favorite' : 'favorite-border'}
+      size={22}
+    />
   );
 }
 
@@ -393,10 +332,8 @@ function RestaurantRow({
   selected,
   updating,
 }: RestaurantRowProps) {
-  const favorite =
-    restaurant.status === 'FAVORITE';
-  const presentation =
-    STATUS_PRESENTATION[restaurant.status];
+  const favorite = restaurant.status === 'FAVORITE';
+  const presentation = STATUS_PRESENTATION[restaurant.status];
 
   return (
     <Pressable
@@ -404,19 +341,14 @@ function RestaurantRow({
       onPress={onPress}
       style={({ pressed }) => [
         styles.restaurantRow,
-        selected
-          ? styles.restaurantRowSelected
-          : null,
+        selected ? styles.restaurantRowSelected : null,
         pressed ? styles.pressed : null,
       ]}
     >
       <View
         style={[
           styles.rowIcon,
-          {
-            backgroundColor:
-              presentation.backgroundColor,
-          },
+          { backgroundColor: presentation.backgroundColor },
         ]}
       >
         <SymbolView
@@ -438,25 +370,18 @@ function RestaurantRow({
         >
           {restaurant.name}
         </Text>
-
         <Text
           maxFontSizeMultiplier={1.2}
           numberOfLines={1}
           style={styles.rowMeta}
         >
-          {restaurant.category ?? 'Restaurante'}
-          {' · '}
-          {restaurant.groupName}
+          {restaurant.category ?? 'Restaurante'} · {restaurant.groupName}
         </Text>
-
         <View style={styles.rowFooter}>
           <View
             style={[
               styles.statusPill,
-              {
-                backgroundColor:
-                  presentation.backgroundColor,
-              },
+              { backgroundColor: presentation.backgroundColor },
             ]}
           >
             <Text
@@ -469,7 +394,6 @@ function RestaurantRow({
               {presentation.label}
             </Text>
           </View>
-
           {restaurant.distanceKm !== null ? (
             <Text
               maxFontSizeMultiplier={1.15}
@@ -482,11 +406,7 @@ function RestaurantRow({
       </View>
 
       <Pressable
-        accessibilityLabel={
-          favorite
-            ? 'Quitar de favoritos'
-            : 'Añadir a favoritos'
-        }
+        accessibilityLabel={favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
         accessibilityRole="button"
         disabled={updating}
         hitSlop={8}
@@ -500,24 +420,9 @@ function RestaurantRow({
         ]}
       >
         {updating ? (
-          <ActivityIndicator
-            color={colors.primary}
-            size="small"
-          />
+          <ActivityIndicator color={colors.primary} size="small" />
         ) : (
-          <MaterialIcons
-            color={
-              favorite
-                ? colors.primary
-                : colors.muted
-            }
-            name={
-              favorite
-                ? 'favorite'
-                : 'favorite-border'
-            }
-            size={22}
-          />
+          <FavoriteIcon favorite={favorite} />
         )}
       </Pressable>
     </Pressable>
@@ -527,46 +432,29 @@ function RestaurantRow({
 export default function MapScreen() {
   const { accessToken } = useAuth();
   const insets = useSafeAreaInsets();
-
   const mapRef = useRef<MapView | null>(null);
-  const sheetTop = useRef(
-    new Animated.Value(1000),
-  ).current;
+  const sheetTop = useRef(new Animated.Value(1000)).current;
   const currentSheetTopRef = useRef(1000);
   const panStartTopRef = useRef(1000);
   const sheetWasPositionedRef = useRef(false);
+  const previousStatusByRestaurantRef = useRef<
+    Record<string, GroupRestaurantStatus>
+  >({});
 
-  const [restaurants, setRestaurants] =
-    useState<MapRestaurant[]>([]);
-  const [userLocation, setUserLocation] =
-    useState<Coordinates | null>(null);
-  const [locationGranted, setLocationGranted] =
-    useState(false);
-  const [selectedRestaurantId,
-    setSelectedRestaurantId] =
-    useState<string | null>(null);
-  const [searchQuery, setSearchQuery] =
-    useState('');
-  const [distance, setDistance] =
-    useState<DistanceOption>(null);
-  const [statusFilter, setStatusFilter] =
-    useState<StatusFilter>('ALL');
-  const [favoritesOnly, setFavoritesOnly] =
-    useState(false);
-  const [filterModalVisible,
-    setFilterModalVisible] =
-    useState(false);
-  const [isLoading, setIsLoading] =
-    useState(true);
-  const [isMapReady, setIsMapReady] =
-    useState(false);
-  const [updatingRestaurantId,
-    setUpdatingRestaurantId] =
-    useState<string | null>(null);
-  const [errorMessage, setErrorMessage] =
-    useState<string | null>(null);
-  const [mapHeight, setMapHeight] =
-    useState(0);
+  const [restaurants, setRestaurants] = useState<MapRestaurant[]>([]);
+  const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
+  const [locationGranted, setLocationGranted] = useState(false);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [distance, setDistance] = useState<DistanceOption>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [updatingRestaurantId, setUpdatingRestaurantId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mapHeight, setMapHeight] = useState(0);
 
   const snapPoints = useMemo(() => {
     if (mapHeight <= 0) {
@@ -579,13 +467,8 @@ export default function MapScreen() {
 
     const expanded = 12;
     const middle = Math.round(mapHeight * 0.44);
-    const collapsedHeight = selectedRestaurantId
-      ? 166
-      : 94;
-    const collapsed = Math.max(
-      middle + 64,
-      mapHeight - collapsedHeight,
-    );
+    const collapsedHeight = selectedRestaurantId ? 166 : 94;
+    const collapsed = Math.max(middle + 64, mapHeight - collapsedHeight);
 
     return {
       collapsed,
@@ -609,16 +492,11 @@ export default function MapScreen() {
 
   const nearestSnapPoint = useCallback(
     (value: number): number => {
-      const points = [
-        snapPoints.expanded,
-        snapPoints.middle,
-        snapPoints.collapsed,
-      ];
+      const points = [snapPoints.expanded, snapPoints.middle, snapPoints.collapsed];
 
       return points.reduce(
         (nearest, point) => (
-          Math.abs(point - value)
-            < Math.abs(nearest - value)
+          Math.abs(point - value) < Math.abs(nearest - value)
             ? point
             : nearest
         ),
@@ -630,33 +508,21 @@ export default function MapScreen() {
 
   const panResponder = useMemo(() => (
     PanResponder.create({
-      onMoveShouldSetPanResponder: (
-        _,
-        gestureState,
-      ) => Math.abs(gestureState.dy) > 4,
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 4,
       onPanResponderGrant: () => {
-        panStartTopRef.current =
-          currentSheetTopRef.current;
+        panStartTopRef.current = currentSheetTopRef.current;
       },
-      onPanResponderMove: (
-        _,
-        gestureState,
-      ) => {
+      onPanResponderMove: (_, gestureState) => {
         sheetTop.setValue(
           clamp(
-            panStartTopRef.current
-              + gestureState.dy,
+            panStartTopRef.current + gestureState.dy,
             snapPoints.expanded,
             snapPoints.collapsed,
           ),
         );
       },
-      onPanResponderRelease: (
-        _,
-        gestureState,
-      ) => {
-        const currentTop =
-          currentSheetTopRef.current;
+      onPanResponderRelease: (_, gestureState) => {
+        const currentTop = currentSheetTopRef.current;
 
         if (gestureState.vy > 0.7) {
           animateSheetTo(
@@ -676,29 +542,18 @@ export default function MapScreen() {
           return;
         }
 
-        animateSheetTo(
-          nearestSnapPoint(currentTop),
-        );
+        animateSheetTo(nearestSnapPoint(currentTop));
       },
       onStartShouldSetPanResponder: () => true,
     })
-  ), [
-    animateSheetTo,
-    nearestSnapPoint,
-    sheetTop,
-    snapPoints,
-  ]);
+  ), [animateSheetTo, nearestSnapPoint, sheetTop, snapPoints]);
 
   useEffect(() => {
-    const listenerId = sheetTop.addListener(
-      ({ value }) => {
-        currentSheetTopRef.current = value;
-      },
-    );
+    const listenerId = sheetTop.addListener(({ value }) => {
+      currentSheetTopRef.current = value;
+    });
 
-    return () => {
-      sheetTop.removeListener(listenerId);
-    };
+    return () => sheetTop.removeListener(listenerId);
   }, [sheetTop]);
 
   useEffect(() => {
@@ -708,8 +563,7 @@ export default function MapScreen() {
 
     if (!sheetWasPositionedRef.current) {
       sheetTop.setValue(snapPoints.collapsed);
-      currentSheetTopRef.current =
-        snapPoints.collapsed;
+      currentSheetTopRef.current = snapPoints.collapsed;
       sheetWasPositionedRef.current = true;
       return;
     }
@@ -724,85 +578,62 @@ export default function MapScreen() {
   }, [mapHeight, sheetTop, snapPoints]);
 
   useEffect(() => {
-    if (
-      !sheetWasPositionedRef.current
-      || mapHeight <= 0
-    ) {
+    if (!sheetWasPositionedRef.current || mapHeight <= 0) {
       return;
     }
 
     animateSheetTo(snapPoints.collapsed);
-  }, [
-    animateSheetTo,
-    mapHeight,
-    selectedRestaurantId,
-    snapPoints.collapsed,
-  ]);
+  }, [animateSheetTo, mapHeight, selectedRestaurantId, snapPoints.collapsed]);
 
-  const requestCurrentLocation = useCallback(
-    async (): Promise<Coordinates | null> => {
-      try {
-        const permission = await Location
-          .requestForegroundPermissionsAsync();
-        const granted =
-          permission.status === 'granted';
+  const requestCurrentLocation = useCallback(async (): Promise<Coordinates | null> => {
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      const granted = permission.status === 'granted';
+      setLocationGranted(granted);
 
-        setLocationGranted(granted);
-
-        if (!granted) {
-          return null;
-        }
-
-        const location = await Location
-          .getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-
-        return {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
-      } catch {
-        setLocationGranted(false);
+      if (!granted) {
         return null;
       }
-    },
-    [],
-  );
 
-  const restaurantsWithDistance =
-    useMemo<MapRestaurantItem[]>(() => (
-      restaurants.map(restaurant => ({
-        ...restaurant,
-        distanceKm: userLocation
-          ? calculateDistanceKm(
-              userLocation,
-              {
-                latitude: restaurant.latitude,
-                longitude: restaurant.longitude,
-              },
-            )
-          : null,
-      }))
-    ), [restaurants, userLocation]);
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+    } catch {
+      setLocationGranted(false);
+      return null;
+    }
+  }, []);
+
+  const restaurantsWithDistance = useMemo<MapRestaurantItem[]>(() => (
+    restaurants.map(restaurant => ({
+      ...restaurant,
+      distanceKm: userLocation
+        ? calculateDistanceKm(
+            userLocation,
+            {
+              latitude: restaurant.latitude,
+              longitude: restaurant.longitude,
+            },
+          )
+        : null,
+    }))
+  ), [restaurants, userLocation]);
 
   const visibleRestaurants = useMemo(() => {
-    const normalizedQuery =
-      normalizeSearch(searchQuery);
+    const normalizedQuery = normalizeSearch(searchQuery);
 
     return restaurantsWithDistance
       .filter(restaurant => {
-        if (
-          statusFilter !== 'ALL'
-          && restaurant.status !== statusFilter
-        ) {
+        if (statusFilter !== 'ALL' && restaurant.status !== statusFilter) {
           return false;
         }
 
-        if (
-          favoritesOnly
-          && restaurant.status !== 'FAVORITE'
-        ) {
+        if (favoritesOnly && restaurant.status !== 'FAVORITE') {
           return false;
         }
 
@@ -827,26 +658,17 @@ export default function MapScreen() {
             .filter(Boolean)
             .join(' '));
 
-          if (!searchableText.includes(normalizedQuery)) {
-            return false;
-          }
+          return searchableText.includes(normalizedQuery);
         }
 
         return true;
       })
       .sort((first, second) => {
-        if (
-          first.distanceKm !== null
-          && second.distanceKm !== null
-        ) {
-          return first.distanceKm
-            - second.distanceKm;
+        if (first.distanceKm !== null && second.distanceKm !== null) {
+          return first.distanceKm - second.distanceKm;
         }
 
-        return first.name.localeCompare(
-          second.name,
-          'es',
-        );
+        return first.name.localeCompare(second.name, 'es');
       });
   }, [
     distance,
@@ -859,55 +681,46 @@ export default function MapScreen() {
 
   const markerSetKey = useMemo(() => (
     visibleRestaurants
-      .map(restaurant => (
-        `${restaurant.groupRestaurantId}:${restaurant.status}`
-      ))
+      .map(restaurant => `${restaurant.groupRestaurantId}:${restaurant.status}`)
       .sort()
       .join('|') || 'empty'
   ), [visibleRestaurants]);
 
   const selectedRestaurant = useMemo(() => (
     visibleRestaurants.find(
-      restaurant =>
-        restaurant.groupRestaurantId
-        === selectedRestaurantId,
+      restaurant => restaurant.groupRestaurantId === selectedRestaurantId,
     ) ?? null
   ), [selectedRestaurantId, visibleRestaurants]);
 
   useEffect(() => {
-    if (
-      selectedRestaurantId
-      && !selectedRestaurant
-    ) {
+    if (selectedRestaurantId && !selectedRestaurant) {
       setSelectedRestaurantId(null);
     }
   }, [selectedRestaurant, selectedRestaurantId]);
 
-  const loadMap = useCallback(
-    async (): Promise<void> => {
-      if (!accessToken) {
-        setIsLoading(false);
-        return;
-      }
+  const loadMap = useCallback(async (): Promise<void> => {
+    if (!accessToken) {
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        setIsLoading(true);
-        setErrorMessage(null);
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
 
-        const [response, currentLocation] =
-          await Promise.all([
-            getMapRestaurants(accessToken),
-            requestCurrentLocation(),
-          ]);
+      const [response, currentLocation] = await Promise.all([
+        getMapRestaurants(accessToken),
+        requestCurrentLocation(),
+      ]);
 
-        setRestaurants(response);
-        setUserLocation(currentLocation);
-      } catch (error) {
-        setErrorMessage(getErrorMessage(error));
-      } finally {
-        setIsLoading(false);
-      }
-    }, [accessToken, requestCurrentLocation]);
+      setRestaurants(response);
+      setUserLocation(currentLocation);
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken, requestCurrentLocation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -916,18 +729,14 @@ export default function MapScreen() {
   );
 
   useEffect(() => {
-    if (
-      !isMapReady
-      || selectedRestaurantId
-    ) {
+    if (!isMapReady || selectedRestaurantId) {
       return;
     }
 
-    const coordinates =
-      visibleRestaurants.map(restaurant => ({
-        latitude: restaurant.latitude,
-        longitude: restaurant.longitude,
-      }));
+    const coordinates = visibleRestaurants.map(restaurant => ({
+      latitude: restaurant.latitude,
+      longitude: restaurant.longitude,
+    }));
 
     if (userLocation) {
       coordinates.push(userLocation);
@@ -964,9 +773,7 @@ export default function MapScreen() {
       );
     }, 220);
 
-    return () => {
-      clearTimeout(timeoutId);
-    };
+    return () => clearTimeout(timeoutId);
   }, [
     isMapReady,
     markerSetKey,
@@ -975,9 +782,7 @@ export default function MapScreen() {
     visibleRestaurants,
   ]);
 
-  function handleMapLayout(
-    event: LayoutChangeEvent,
-  ): void {
+  function handleMapLayout(event: LayoutChangeEvent): void {
     setMapHeight(event.nativeEvent.layout.height);
   }
 
@@ -1007,27 +812,18 @@ export default function MapScreen() {
     setFavoritesOnly(true);
   }
 
-  function openRestaurant(
-    restaurant: MapRestaurantItem,
-  ): void {
+  function openRestaurant(restaurant: MapRestaurantItem): void {
     router.push({
       params: {
         groupId: restaurant.groupId,
-        groupRestaurantId:
-          restaurant.groupRestaurantId,
+        groupRestaurantId: restaurant.groupRestaurantId,
       },
-      pathname:
-        '/groups/[groupId]/restaurants/[groupRestaurantId]',
+      pathname: '/groups/[groupId]/restaurants/[groupRestaurantId]',
     });
   }
 
-  function focusRestaurant(
-    restaurant: MapRestaurantItem,
-  ): void {
-    setSelectedRestaurantId(
-      restaurant.groupRestaurantId,
-    );
-
+  function focusRestaurant(restaurant: MapRestaurantItem): void {
+    setSelectedRestaurantId(restaurant.groupRestaurantId);
     mapRef.current?.animateToRegion(
       {
         latitude: restaurant.latitude,
@@ -1040,8 +836,7 @@ export default function MapScreen() {
   }
 
   async function centerOnUser(): Promise<void> {
-    const location = userLocation
-      ?? await requestCurrentLocation();
+    const location = userLocation ?? await requestCurrentLocation();
 
     if (!location) {
       Alert.alert(
@@ -1062,23 +857,16 @@ export default function MapScreen() {
     );
   }
 
-  async function openDirections(
-    restaurant: MapRestaurantItem,
-  ): Promise<void> {
-    const destination =
-      `${restaurant.latitude},${restaurant.longitude}`;
-    const fallbackUrl =
-      `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+  async function openDirections(restaurant: MapRestaurantItem): Promise<void> {
+    const destination = `${restaurant.latitude},${restaurant.longitude}`;
+    const fallbackUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
     const nativeUrl = Platform.select({
       android: `google.navigation:q=${destination}`,
       ios: `http://maps.apple.com/?daddr=${destination}`,
     });
 
     try {
-      if (
-        nativeUrl
-        && await Linking.canOpenURL(nativeUrl)
-      ) {
+      if (nativeUrl && await Linking.canOpenURL(nativeUrl)) {
         await Linking.openURL(nativeUrl);
         return;
       }
@@ -1092,64 +880,54 @@ export default function MapScreen() {
     }
   }
 
-  async function toggleFavorite(
-    restaurant: MapRestaurantItem,
-  ): Promise<void> {
+  async function toggleFavorite(restaurant: MapRestaurantItem): Promise<void> {
     if (!accessToken || updatingRestaurantId) {
       return;
     }
 
-    const nextStatus: GroupRestaurantStatus =
-      restaurant.status === 'FAVORITE'
-        ? 'VISITED'
-        : 'FAVORITE';
+    const wasFavorite = restaurant.status === 'FAVORITE';
+    const previousStatus =
+      previousStatusByRestaurantRef.current[restaurant.groupRestaurantId];
+    const nextStatus: GroupRestaurantStatus = wasFavorite
+      ? previousStatus ?? 'WANT_TO_GO'
+      : 'FAVORITE';
 
     try {
-      setUpdatingRestaurantId(
+      setUpdatingRestaurantId(restaurant.groupRestaurantId);
+
+      const response = await updateGroupRestaurantStatus(
+        restaurant.groupId,
         restaurant.groupRestaurantId,
+        { status: nextStatus },
+        accessToken,
       );
 
-      const response =
-        await updateGroupRestaurantStatus(
-          restaurant.groupId,
-          restaurant.groupRestaurantId,
-          { status: nextStatus },
-          accessToken,
-        );
+      if (!wasFavorite) {
+        previousStatusByRestaurantRef.current[restaurant.groupRestaurantId] =
+          restaurant.status;
+      } else {
+        delete previousStatusByRestaurantRef.current[restaurant.groupRestaurantId];
+      }
 
-      setRestaurants(current =>
-        current.map(item =>
-          item.groupRestaurantId
-            === restaurant.groupRestaurantId
-            ? {
-                ...item,
-                status: response.status,
-              }
-            : item,
-        ),
-      );
+      setRestaurants(current => current.map(item => (
+        item.groupRestaurantId === restaurant.groupRestaurantId
+          ? {
+              ...item,
+              status: response.status,
+            }
+          : item
+      )));
     } catch (error) {
-      Alert.alert(
-        'No se ha podido actualizar',
-        getErrorMessage(error),
-      );
+      Alert.alert('No se ha podido actualizar', getErrorMessage(error));
     } finally {
       setUpdatingRestaurantId(null);
     }
   }
 
-  const allQuickFilterActive =
-    statusFilter === 'ALL'
-    && !favoritesOnly;
-  const pendingQuickFilterActive =
-    statusFilter === 'WANT_TO_GO'
-    && !favoritesOnly;
-  const filtersActive =
-    distance !== null
-    || statusFilter !== 'ALL'
-    || favoritesOnly;
-  const locationButtonBottom =
-    selectedRestaurant ? 182 : 110;
+  const allQuickFilterActive = statusFilter === 'ALL' && !favoritesOnly;
+  const pendingQuickFilterActive = statusFilter === 'WANT_TO_GO' && !favoritesOnly;
+  const filtersActive = distance !== null || statusFilter !== 'ALL' || favoritesOnly;
+  const locationButtonBottom = selectedRestaurant ? 182 : 110;
 
   return (
     <SafeAreaView
@@ -1191,9 +969,7 @@ export default function MapScreen() {
               size={20}
               tintColor={colors.primary}
             />
-            {filtersActive ? (
-              <View style={styles.filterDot} />
-            ) : null}
+            {filtersActive ? <View style={styles.filterDot} /> : null}
           </Pressable>
         </View>
 
@@ -1248,36 +1024,22 @@ export default function MapScreen() {
         >
           <QuickFilter
             active={allQuickFilterActive}
-            icon={{
-              android: 'map',
-              ios: 'map',
-              web: 'map',
-            }}
+            icon={{ android: 'map', ios: 'map', web: 'map' }}
             label="Todos"
             onPress={showAll}
           />
           <QuickFilter
             active={pendingQuickFilterActive}
-            icon={{
-              android: 'schedule',
-              ios: 'clock',
-              web: 'schedule',
-            }}
+            icon={{ android: 'schedule', ios: 'clock', web: 'schedule' }}
             label="Pendientes"
             onPress={showPending}
           />
           <QuickFilter
             active={favoritesOnly}
             icon={{
-              android: favoritesOnly
-                ? 'favorite'
-                : 'favorite_border',
-              ios: favoritesOnly
-                ? 'heart.fill'
-                : 'heart',
-              web: favoritesOnly
-                ? 'favorite'
-                : 'favorite_border',
+              android: favoritesOnly ? 'favorite' : 'favorite_border',
+              ios: favoritesOnly ? 'heart.fill' : 'heart',
+              web: favoritesOnly ? 'favorite' : 'favorite_border',
             }}
             label="Favoritos"
             onPress={showFavorites}
@@ -1301,11 +1063,7 @@ export default function MapScreen() {
           }}
           onMapReady={() => setIsMapReady(true)}
           onPress={() => setSelectedRestaurantId(null)}
-          provider={
-            Platform.OS === 'android'
-              ? PROVIDER_GOOGLE
-              : undefined
-          }
+          provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
           ref={mapRef}
           rotateEnabled={false}
           showsCompass={false}
@@ -1316,13 +1074,10 @@ export default function MapScreen() {
         >
           {visibleRestaurants.map(restaurant => (
             <RestaurantMarker
-              key={restaurant.groupRestaurantId}
+              key={`${restaurant.groupRestaurantId}:${restaurant.status}:${restaurant.groupRestaurantId === selectedRestaurantId}`}
               onPress={() => focusRestaurant(restaurant)}
               restaurant={restaurant}
-              selected={
-                selectedRestaurantId
-                === restaurant.groupRestaurantId
-              }
+              selected={selectedRestaurantId === restaurant.groupRestaurantId}
             />
           ))}
         </MapView>
@@ -1330,11 +1085,7 @@ export default function MapScreen() {
         {!isLoading && !errorMessage ? (
           <View style={styles.resultsPill}>
             <SymbolView
-              name={{
-                android: 'restaurant',
-                ios: 'fork.knife',
-                web: 'restaurant',
-              }}
+              name={{ android: 'restaurant', ios: 'fork.knife', web: 'restaurant' }}
               size={12}
               tintColor={colors.primary}
             />
@@ -1342,11 +1093,7 @@ export default function MapScreen() {
               maxFontSizeMultiplier={1.15}
               style={styles.resultsPillText}
             >
-              {visibleRestaurants.length}
-              {' '}
-              {visibleRestaurants.length === 1
-                ? 'resultado'
-                : 'resultados'}
+              {visibleRestaurants.length} {visibleRestaurants.length === 1 ? 'resultado' : 'resultados'}
             </Text>
           </View>
         ) : null}
@@ -1362,11 +1109,7 @@ export default function MapScreen() {
           ]}
         >
           <SymbolView
-            name={{
-              android: 'my_location',
-              ios: 'location.fill',
-              web: 'my_location',
-            }}
+            name={{ android: 'my_location', ios: 'location.fill', web: 'my_location' }}
             size={20}
             tintColor={colors.primary}
           />
@@ -1392,24 +1135,14 @@ export default function MapScreen() {
                       styles.selectedIcon,
                       {
                         backgroundColor:
-                          STATUS_PRESENTATION[
-                            selectedRestaurant.status
-                          ].backgroundColor,
+                          STATUS_PRESENTATION[selectedRestaurant.status].backgroundColor,
                       },
                     ]}
                   >
                     <SymbolView
-                      name={{
-                        android: 'restaurant',
-                        ios: 'fork.knife',
-                        web: 'restaurant',
-                      }}
+                      name={{ android: 'restaurant', ios: 'fork.knife', web: 'restaurant' }}
                       size={21}
-                      tintColor={
-                        STATUS_PRESENTATION[
-                          selectedRestaurant.status
-                        ].markerColor
-                      }
+                      tintColor={STATUS_PRESENTATION[selectedRestaurant.status].markerColor}
                     />
                   </View>
 
@@ -1427,16 +1160,11 @@ export default function MapScreen() {
                         accessibilityLabel="Cerrar selección"
                         accessibilityRole="button"
                         hitSlop={8}
-                        onPress={() =>
-                          setSelectedRestaurantId(null)}
+                        onPress={() => setSelectedRestaurantId(null)}
                         style={styles.closeSelection}
                       >
                         <SymbolView
-                          name={{
-                            android: 'close',
-                            ios: 'xmark',
-                            web: 'close',
-                          }}
+                          name={{ android: 'close', ios: 'xmark', web: 'close' }}
                           size={14}
                           tintColor={colors.muted}
                         />
@@ -1448,10 +1176,7 @@ export default function MapScreen() {
                       numberOfLines={1}
                       style={styles.selectedMeta}
                     >
-                      {selectedRestaurant.category
-                        ?? 'Restaurante'}
-                      {' · '}
-                      {selectedRestaurant.groupName}
+                      {selectedRestaurant.category ?? 'Restaurante'} · {selectedRestaurant.groupName}
                     </Text>
 
                     <View style={styles.selectedStatusRow}>
@@ -1460,9 +1185,7 @@ export default function MapScreen() {
                           styles.statusPill,
                           {
                             backgroundColor:
-                              STATUS_PRESENTATION[
-                                selectedRestaurant.status
-                              ].backgroundColor,
+                              STATUS_PRESENTATION[selectedRestaurant.status].backgroundColor,
                           },
                         ]}
                       >
@@ -1472,17 +1195,11 @@ export default function MapScreen() {
                             styles.statusPillText,
                             {
                               color:
-                                STATUS_PRESENTATION[
-                                  selectedRestaurant.status
-                                ].textColor,
+                                STATUS_PRESENTATION[selectedRestaurant.status].textColor,
                             },
                           ]}
                         >
-                          {
-                            STATUS_PRESENTATION[
-                              selectedRestaurant.status
-                            ].label
-                          }
+                          {STATUS_PRESENTATION[selectedRestaurant.status].label}
                         </Text>
                       </View>
 
@@ -1491,9 +1208,7 @@ export default function MapScreen() {
                           maxFontSizeMultiplier={1.15}
                           style={styles.selectedDistance}
                         >
-                          {formatDistance(
-                            selectedRestaurant.distanceKm,
-                          )}
+                          {formatDistance(selectedRestaurant.distanceKm)}
                         </Text>
                       ) : null}
                     </View>
@@ -1503,8 +1218,7 @@ export default function MapScreen() {
                 <View style={styles.selectedActions}>
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() =>
-                      openRestaurant(selectedRestaurant)}
+                    onPress={() => openRestaurant(selectedRestaurant)}
                     style={({ pressed }) => [
                       styles.primaryButton,
                       pressed ? styles.pressed : null,
@@ -1521,19 +1235,14 @@ export default function MapScreen() {
                   <Pressable
                     accessibilityLabel="Abrir indicaciones"
                     accessibilityRole="button"
-                    onPress={() =>
-                      void openDirections(selectedRestaurant)}
+                    onPress={() => void openDirections(selectedRestaurant)}
                     style={({ pressed }) => [
                       styles.iconButton,
                       pressed ? styles.pressed : null,
                     ]}
                   >
                     <SymbolView
-                      name={{
-                        android: 'navigation',
-                        ios: 'location.north.line',
-                        web: 'navigation',
-                      }}
+                      name={{ android: 'navigation', ios: 'location.north.line', web: 'navigation' }}
                       size={18}
                       tintColor={colors.primary}
                     />
@@ -1542,34 +1251,17 @@ export default function MapScreen() {
                   <Pressable
                     accessibilityLabel="Cambiar favorito"
                     accessibilityRole="button"
-                    disabled={
-                      updatingRestaurantId
-                      === selectedRestaurant.groupRestaurantId
-                    }
-                    onPress={() =>
-                      void toggleFavorite(selectedRestaurant)}
+                    disabled={updatingRestaurantId === selectedRestaurant.groupRestaurantId}
+                    onPress={() => void toggleFavorite(selectedRestaurant)}
                     style={({ pressed }) => [
                       styles.iconButton,
                       pressed ? styles.pressed : null,
                     ]}
                   >
-                    {updatingRestaurantId
-                    === selectedRestaurant.groupRestaurantId ? (
-                      <ActivityIndicator
-                        color={colors.primary}
-                        size="small"
-                      />
+                    {updatingRestaurantId === selectedRestaurant.groupRestaurantId ? (
+                      <ActivityIndicator color={colors.primary} size="small" />
                     ) : (
-                      <MaterialIcons
-                        color={colors.primary}
-                        name={
-                          selectedRestaurant.status
-                          === 'FAVORITE'
-                            ? 'favorite'
-                            : 'favorite-border'
-                        }
-                        size={21}
-                      />
+                      <FavoriteIcon favorite={selectedRestaurant.status === 'FAVORITE'} />
                     )}
                   </Pressable>
                 </View>
@@ -1577,8 +1269,7 @@ export default function MapScreen() {
             ) : (
               <Pressable
                 accessibilityRole="button"
-                onPress={() =>
-                  animateSheetTo(snapPoints.middle)}
+                onPress={() => animateSheetTo(snapPoints.middle)}
                 style={({ pressed }) => [
                   styles.collapsedHeader,
                   pressed ? styles.pressed : null,
@@ -1589,19 +1280,13 @@ export default function MapScreen() {
                     maxFontSizeMultiplier={1.15}
                     style={styles.collapsedTitle}
                   >
-                    {userLocation
-                      ? 'Cerca de ti'
-                      : 'Tus restaurantes'}
+                    {userLocation ? 'Cerca de ti' : 'Tus restaurantes'}
                   </Text>
                   <Text
                     maxFontSizeMultiplier={1.2}
                     style={styles.collapsedSubtitle}
                   >
-                    {visibleRestaurants.length}
-                    {' '}
-                    {visibleRestaurants.length === 1
-                      ? 'restaurante guardado'
-                      : 'restaurantes guardados'}
+                    {visibleRestaurants.length} {visibleRestaurants.length === 1 ? 'restaurante guardado' : 'restaurantes guardados'}
                   </Text>
                 </View>
 
@@ -1613,11 +1298,7 @@ export default function MapScreen() {
                     Ver lista
                   </Text>
                   <SymbolView
-                    name={{
-                      android: 'keyboard_arrow_up',
-                      ios: 'chevron.up',
-                      web: 'keyboard_arrow_up',
-                    }}
+                    name={{ android: 'keyboard_arrow_up', ios: 'chevron.up', web: 'keyboard_arrow_up' }}
                     size={13}
                     tintColor={colors.primary}
                   />
@@ -1628,41 +1309,26 @@ export default function MapScreen() {
 
           {isLoading ? (
             <View style={styles.state}>
-              <ActivityIndicator
-                color={colors.primary}
-                size="large"
-              />
-              <Text style={styles.stateText}>
-                Cargando tus restaurantes...
-              </Text>
+              <ActivityIndicator color={colors.primary} size="large" />
+              <Text style={styles.stateText}>Cargando tus restaurantes...</Text>
             </View>
           ) : errorMessage ? (
             <View style={styles.state}>
               <View style={styles.stateIcon}>
                 <SymbolView
-                  name={{
-                    android: 'wifi_off',
-                    ios: 'wifi.slash',
-                    web: 'wifi_off',
-                  }}
+                  name={{ android: 'wifi_off', ios: 'wifi.slash', web: 'wifi_off' }}
                   size={21}
                   tintColor={colors.primary}
                 />
               </View>
-              <Text style={styles.stateTitle}>
-                No hemos podido cargar el mapa
-              </Text>
-              <Text style={styles.stateText}>
-                {errorMessage}
-              </Text>
+              <Text style={styles.stateTitle}>No hemos podido cargar el mapa</Text>
+              <Text style={styles.stateText}>{errorMessage}</Text>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => void loadMap()}
                 style={styles.retryButton}
               >
-                <Text style={styles.retryButtonText}>
-                  Volver a intentar
-                </Text>
+                <Text style={styles.retryButtonText}>Volver a intentar</Text>
               </Pressable>
             </View>
           ) : (
@@ -1673,53 +1339,34 @@ export default function MapScreen() {
                   : styles.listContent
               }
               data={visibleRestaurants}
-              keyExtractor={item =>
-                item.groupRestaurantId
-              }
+              keyExtractor={item => item.groupRestaurantId}
               ListEmptyComponent={(
                 <View style={styles.state}>
                   <View style={styles.stateIcon}>
                     <SymbolView
-                      name={{
-                        android: 'location_off',
-                        ios: 'mappin.slash',
-                        web: 'location_off',
-                      }}
+                      name={{ android: 'location_off', ios: 'mappin.slash', web: 'location_off' }}
                       size={21}
                       tintColor={colors.primary}
                     />
                   </View>
-                  <Text style={styles.stateTitle}>
-                    No hay restaurantes aquí
-                  </Text>
-                  <Text style={styles.stateText}>
-                    Prueba con otra búsqueda o cambia los filtros.
-                  </Text>
+                  <Text style={styles.stateTitle}>No hay restaurantes aquí</Text>
+                  <Text style={styles.stateText}>Prueba con otra búsqueda o cambia los filtros.</Text>
                   <Pressable
                     accessibilityRole="button"
                     onPress={resetFilters}
                     style={styles.retryButton}
                   >
-                    <Text style={styles.retryButtonText}>
-                      Ver todos
-                    </Text>
+                    <Text style={styles.retryButtonText}>Ver todos</Text>
                   </Pressable>
                 </View>
               )}
               renderItem={({ item }) => (
                 <RestaurantRow
-                  onFavoritePress={() =>
-                    void toggleFavorite(item)}
+                  onFavoritePress={() => void toggleFavorite(item)}
                   onPress={() => focusRestaurant(item)}
                   restaurant={item}
-                  selected={
-                    selectedRestaurantId
-                    === item.groupRestaurantId
-                  }
-                  updating={
-                    updatingRestaurantId
-                    === item.groupRestaurantId
-                  }
+                  selected={selectedRestaurantId === item.groupRestaurantId}
+                  updating={updatingRestaurantId === item.groupRestaurantId}
                 />
               )}
               showsVerticalScrollIndicator={false}
@@ -1731,8 +1378,7 @@ export default function MapScreen() {
 
       <Modal
         animationType="slide"
-        onRequestClose={() =>
-          setFilterModalVisible(false)}
+        onRequestClose={() => setFilterModalVisible(false)}
         transparent
         visible={filterModalVisible}
       >
@@ -1745,8 +1391,7 @@ export default function MapScreen() {
             style={[
               styles.modalContent,
               {
-                paddingBottom:
-                  Math.max(insets.bottom, 18) + 18,
+                paddingBottom: Math.max(insets.bottom, 18) + 18,
               },
             ]}
           >
@@ -1775,11 +1420,7 @@ export default function MapScreen() {
                 style={styles.modalClose}
               >
                 <SymbolView
-                  name={{
-                    android: 'close',
-                    ios: 'xmark',
-                    web: 'close',
-                  }}
+                  name={{ android: 'close', ios: 'xmark', web: 'close' }}
                   size={16}
                   tintColor={colors.text}
                 />
@@ -1788,18 +1429,12 @@ export default function MapScreen() {
 
             <View style={styles.modalBody}>
               <View style={styles.modalSection}>
-                <Text style={styles.modalLabel}>
-                  Distancia
-                </Text>
+                <Text style={styles.modalLabel}>Distancia</Text>
 
                 {!locationGranted ? (
                   <View style={styles.locationWarning}>
                     <SymbolView
-                      name={{
-                        android: 'location_off',
-                        ios: 'location.slash',
-                        web: 'location_off',
-                      }}
+                      name={{ android: 'location_off', ios: 'location.slash', web: 'location_off' }}
                       size={17}
                       tintColor={colors.primary}
                     />
@@ -1822,18 +1457,14 @@ export default function MapScreen() {
                           }}
                           style={[
                             styles.modalOption,
-                            selected
-                              ? styles.modalOptionSelected
-                              : null,
+                            selected ? styles.modalOptionSelected : null,
                           ]}
                         >
                           <Text
                             maxFontSizeMultiplier={1.15}
                             style={[
                               styles.modalOptionText,
-                              selected
-                                ? styles.modalOptionTextSelected
-                                : null,
+                              selected ? styles.modalOptionTextSelected : null,
                             ]}
                           >
                             {option === null
@@ -1848,14 +1479,11 @@ export default function MapScreen() {
               </View>
 
               <View style={styles.modalSection}>
-                <Text style={styles.modalLabel}>
-                  Estado
-                </Text>
+                <Text style={styles.modalLabel}>Estado</Text>
 
                 <View style={styles.modalOptions}>
                   {STATUS_OPTIONS.map(option => {
-                    const selected =
-                      option.value === statusFilter;
+                    const selected = option.value === statusFilter;
 
                     return (
                       <Pressable
@@ -1870,18 +1498,14 @@ export default function MapScreen() {
                         }}
                         style={[
                           styles.modalOption,
-                          selected
-                            ? styles.modalOptionSelected
-                            : null,
+                          selected ? styles.modalOptionSelected : null,
                         ]}
                       >
                         <Text
                           maxFontSizeMultiplier={1.15}
                           style={[
                             styles.modalOptionText,
-                            selected
-                              ? styles.modalOptionTextSelected
-                              : null,
+                            selected ? styles.modalOptionTextSelected : null,
                           ]}
                         >
                           {option.label}
@@ -1902,9 +1526,7 @@ export default function MapScreen() {
                   pressed ? styles.pressed : null,
                 ]}
               >
-                <Text style={styles.resetButtonText}>
-                  Restablecer
-                </Text>
+                <Text style={styles.resetButtonText}>Restablecer</Text>
               </Pressable>
 
               <Pressable
@@ -1916,11 +1538,7 @@ export default function MapScreen() {
                 ]}
               >
                 <Text style={styles.applyButtonText}>
-                  Ver {visibleRestaurants.length}
-                  {' '}
-                  {visibleRestaurants.length === 1
-                    ? 'restaurante'
-                    : 'restaurantes'}
+                  Ver {visibleRestaurants.length} {visibleRestaurants.length === 1 ? 'restaurante' : 'restaurantes'}
                 </Text>
               </Pressable>
             </View>
