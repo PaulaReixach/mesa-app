@@ -1,3 +1,4 @@
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
@@ -11,20 +12,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { addHubBannerImage } from '../../assets/AddHubBannerImage';
-import { addHubGroupImage } from '../../assets/add-hub/GroupImage';
-import { addHubInvitationsImage } from '../../assets/add-hub/InvitationsImage';
-import { addHubManualImage } from '../../assets/add-hub/ManualImage';
-import { addHubSearchImage } from '../../assets/add-hub/SearchImage';
-import { addHubTipImage } from '../../assets/add-hub/TipImage';
 import { addHubActionStyles as actionStyles } from '../../components/AddHubActionCard.styles';
 import { addHubScreenStyles as styles } from '../../components/AddHubScreen.styles';
 import { colors } from '../../theme/colors';
 
-type AddHubImageSource = { uri: string };
+type ActionIconName = keyof typeof Feather.glyphMap;
 
 type ActionCardProps = {
   compact: boolean;
-  imageSource: AddHubImageSource;
+  iconBackgroundColor: string;
+  iconColor: string;
+  iconName: ActionIconName;
   onPress: () => void;
   subtitle: string;
   title: string;
@@ -32,7 +30,9 @@ type ActionCardProps = {
 
 function ActionCard({
   compact,
-  imageSource,
+  iconBackgroundColor,
+  iconColor,
+  iconName,
   onPress,
   subtitle,
   title,
@@ -47,14 +47,18 @@ function ActionCard({
         pressed ? actionStyles.cardPressed : null,
       ]}
     >
-      <View style={[
-        actionStyles.iconCircle,
-        compact ? actionStyles.iconCircleCompact : null,
-      ]}>
-        <Image
-          contentFit="contain"
-          source={imageSource}
-          style={actionStyles.iconImage}
+      <View
+        style={[
+          actionStyles.iconCircle,
+          { backgroundColor: iconBackgroundColor },
+          compact ? actionStyles.iconCircleCompact : null,
+        ]}
+      >
+        <Feather
+          color={iconColor}
+          name={iconName}
+          size={34}
+          strokeWidth={2.4}
         />
       </View>
 
@@ -105,10 +109,10 @@ function TipCard({ compact }: { compact: boolean }) {
           styles.tipIcon,
           compact ? styles.tipIconCompact : null,
         ]}>
-          <Image
-            contentFit="contain"
-            source={addHubTipImage}
-            style={styles.tipIconImage}
+          <MaterialCommunityIcons
+            color="#D9892C"
+            name="lightbulb-on-outline"
+            size={compact ? 23 : 25}
           />
         </View>
         <Text
@@ -197,28 +201,36 @@ export default function AddScreen() {
         ]}>
           <ActionCard
             compact={compact}
-            imageSource={addHubSearchImage}
+            iconBackgroundColor="#FFF4EA"
+            iconColor="#B94F38"
+            iconName="search"
             onPress={() => chooseGroup('SEARCH')}
             subtitle="Busca y guárdalo en un grupo"
             title="Buscar restaurante"
           />
           <ActionCard
             compact={compact}
-            imageSource={addHubManualImage}
+            iconBackgroundColor="#F2F6EC"
+            iconColor="#5B743A"
+            iconName="edit-3"
             onPress={() => chooseGroup('MANUAL')}
             subtitle="Añade un sitio que no encuentres"
             title="Añadir manualmente"
           />
           <ActionCard
             compact={compact}
-            imageSource={addHubGroupImage}
+            iconBackgroundColor="#FFF4EA"
+            iconColor="#C85B3D"
+            iconName="users"
             onPress={() => router.push('/groups/create')}
             subtitle="Privado o público"
             title="Crear grupo"
           />
           <ActionCard
             compact={compact}
-            imageSource={addHubInvitationsImage}
+            iconBackgroundColor="#F2F6EC"
+            iconColor="#5B743A"
+            iconName="mail"
             onPress={() => router.push('/group-invitations')}
             subtitle="Revisa solicitudes y pendientes"
             title="Abrir invitaciones"
