@@ -1,13 +1,14 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export const addHubActionStyles = StyleSheet.create({
   card: {
-    minHeight: 106,
+    minHeight: 108,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 18,
+    gap: 16,
     paddingHorizontal: 16,
     paddingVertical: 13,
     borderWidth: 1,
@@ -16,10 +17,10 @@ export const addHubActionStyles = StyleSheet.create({
     backgroundColor: '#FFFDFC',
   },
   cardCompact: {
-    minHeight: 104,
-    gap: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    minHeight: 102,
+    gap: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
     borderRadius: 22,
   },
   cardPressed: {
@@ -27,16 +28,16 @@ export const addHubActionStyles = StyleSheet.create({
     transform: [{ scale: 0.994 }],
   },
   iconCircle: {
-    width: 76,
-    height: 76,
+    width: 74,
+    height: 74,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 38,
+    borderRadius: 37,
   },
   iconCircleCompact: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
   },
   copy: {
     flex: 1,
@@ -45,21 +46,23 @@ export const addHubActionStyles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 20,
-    fontWeight: '700',
+    fontFamily: fonts.semiBold,
+    fontSize: 17.5,
+    lineHeight: 22,
     letterSpacing: -0.25,
   },
   titleCompact: {
-    fontSize: 19,
+    fontSize: 17,
+    lineHeight: 21,
   },
   subtitle: {
     color: '#706A66',
-    fontSize: 15.5,
-    fontWeight: '400',
-    lineHeight: 21,
+    fontFamily: fonts.regular,
+    fontSize: 14.5,
+    lineHeight: 20,
   },
   subtitleCompact: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 19,
   },
 });
