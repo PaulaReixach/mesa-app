@@ -6,7 +6,10 @@ import {
   View,
 } from 'react-native';
 
-import { GroupActivityRow } from './GroupActivityRow';
+import {
+  HomeActivityRow,
+  type HomeActivityEntry,
+} from './HomeActivityRow';
 import { HomeGroupCard } from './HomeGroupCard';
 import { HomeInvitationBanner } from './HomeInvitationBanner';
 import {
@@ -16,7 +19,6 @@ import {
 import { homeStyles as styles } from './HomeDashboardStyles';
 import { colors } from '../theme/colors';
 import type { RestaurantGroup } from '../types/group';
-import type { GroupActivityItem } from '../types/group-activity';
 import type { GroupMember } from '../types/group-member';
 
 export function HomeDashboardContent({
@@ -26,7 +28,7 @@ export function HomeDashboardContent({
   pendingInvitationCount,
   recommendation,
 }: {
-  activity: GroupActivityItem[];
+  activity: HomeActivityEntry[];
   groups: RestaurantGroup[];
   membersByGroup: Record<string, GroupMember[]>;
   pendingInvitationCount: number;
@@ -34,10 +36,15 @@ export function HomeDashboardContent({
 }) {
   const visibleGroups = groups.slice(0, 2);
 
-  function openGroup(groupId: string): void {
+  function openGroup(group: RestaurantGroup): void {
+    if (group.privacy === 'PUBLIC') {
+      router.push(`/groups/public/${group.id}`);
+      return;
+    }
+
     router.push({
       pathname: '/groups/[groupId]',
-      params: { groupId },
+      params: { groupId: group.id },
     });
   }
 
@@ -81,7 +88,7 @@ export function HomeDashboardContent({
                 group={group}
                 key={group.id}
                 members={membersByGroup[group.id] ?? []}
-                onPress={() => openGroup(group.id)}
+                onPress={() => openGroup(group)}
               />
             ))}
           </View>
@@ -142,8 +149,8 @@ export function HomeDashboardContent({
 
         {activity.length > 0 ? (
           <View style={styles.activityList}>
-            {activity.map(item => (
-              <GroupActivityRow item={item} key={item.id} />
+            {activity.map(entry => (
+              <HomeActivityRow entry={entry} key={entry.activity.id} />
             ))}
           </View>
         ) : (
