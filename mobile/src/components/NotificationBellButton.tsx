@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 15,
+    borderRadius: 22,
     backgroundColor: colors.surface,
   },
 
