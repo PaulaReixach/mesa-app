@@ -1,18 +1,26 @@
 import * as Location from 'expo-location';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { MaterialIcons } from '@expo/vector-icons';
+import type { ComponentProps } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Alert,
   Animated,
   FlatList,
+  Linking,
   Modal,
   PanResponder,
   Platform,
   Pressable,
-  StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
@@ -24,13 +32,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
 
 import { useAuth } from '../../contexts/auth-context';
 import { getErrorMessage } from '../../lib/api';
@@ -43,6 +44,7 @@ import type { MapRestaurant } from '../../types/map';
 import type {
   GroupRestaurantStatus,
 } from '../../types/restaurant';
+import { styles } from './MapScreen.styles';
 
 type Coordinates = {
   latitude: number;
@@ -63,24 +65,28 @@ type MapRestaurantItem = MapRestaurant & {
   distanceKm: number | null;
 };
 
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
+
 type FilterChipProps = {
-  label: string;
   active?: boolean;
   chevron?: boolean;
+  disabled?: boolean;
+  icon: SymbolName;
+  label: string;
   onPress: () => void;
 };
 
 type RestaurantRowProps = {
+  onFavoritePress: () => void;
+  onPress: () => void;
   restaurant: MapRestaurantItem;
   selected: boolean;
   updating: boolean;
-  onPress: () => void;
-  onFavoritePress: () => void;
 };
 
 const DEFAULT_REGION = {
-  latitude: 39.5696,
-  longitude: 2.6502,
+  latitude: 41.9794,
+  longitude: 2.8214,
   latitudeDelta: 0.08,
   longitudeDelta: 0.08,
 };
@@ -93,37 +99,81 @@ const DISTANCE_OPTIONS: DistanceOption[] = [
 ];
 
 const STATUS_OPTIONS: Array<{
-  value: StatusFilter;
   label: string;
+  value: StatusFilter;
 }> = [
   {
-    value: 'ALL',
     label: 'Todos',
+    value: 'ALL',
   },
   {
-    value: 'WANT_TO_GO',
     label: 'Pendiente de ir',
+    value: 'WANT_TO_GO',
   },
   {
-    value: 'VISITED',
     label: 'Visitado',
+    value: 'VISITED',
   },
   {
-    value: 'WANT_TO_REPEAT',
     label: 'Queremos repetir',
+    value: 'WANT_TO_REPEAT',
   },
   {
-    value: 'DO_NOT_REPEAT',
     label: 'No repetir',
+    value: 'DO_NOT_REPEAT',
   },
   {
-    value: 'ARCHIVED',
     label: 'Archivado',
+    value: 'ARCHIVED',
   },
 ];
 
-const FILTER_SHEET_COLLAPSED_TRANSLATE = 210;
-const FILTER_SHEET_CLOSE_TRANSLATE = 360;
+const STATUS_PRESENTATION: Record<
+  GroupRestaurantStatus,
+  {
+    backgroundColor: string;
+    label: string;
+    markerColor: string;
+    textColor: string;
+  }
+> = {
+  WANT_TO_GO: {
+    backgroundColor: '#FBE8E0',
+    label: 'Pendiente',
+    markerColor: '#D56A4A',
+    textColor: '#B95135',
+  },
+  VISITED: {
+    backgroundColor: '#F1E7D8',
+    label: 'Visitado',
+    markerColor: '#A47A46',
+    textColor: '#805D34',
+  },
+  FAVORITE: {
+    backgroundColor: '#E8EEDD',
+    label: 'Favorito',
+    markerColor: '#62794D',
+    textColor: '#52673F',
+  },
+  WANT_TO_REPEAT: {
+    backgroundColor: '#E8EEDD',
+    label: 'Repetir',
+    markerColor: '#62794D',
+    textColor: '#52673F',
+  },
+  DO_NOT_REPEAT: {
+    backgroundColor: '#F0ECE9',
+    label: 'No repetir',
+    markerColor: '#817B76',
+    textColor: '#625D59',
+  },
+  ARCHIVED: {
+    backgroundColor: '#F0ECE9',
+    label: 'Archivado',
+    markerColor: '#817B76',
+    textColor: '#625D59',
+  },
+};
 
 const MAP_STYLE = [
   {
@@ -139,9 +189,18 @@ const MAP_STYLE = [
     stylers: [{ color: '#FFF8F3' }],
   },
   {
+    featureType: 'administrative.locality',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#4E4743' }],
+  },
+  {
     featureType: 'poi',
     elementType: 'geometry',
     stylers: [{ color: '#ECE7D8' }],
+  },
+  {
+    featureType: 'poi.business',
+    stylers: [{ visibility: 'off' }],
   },
   {
     featureType: 'poi.park',
@@ -157,6 +216,15 @@ const MAP_STYLE = [
     featureType: 'road',
     elementType: 'geometry.stroke',
     stylers: [{ color: '#E7DDD3' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [{ color: '#F0E4D6' }],
+  },
+  {
+    featureType: 'transit',
+    stylers: [{ visibility: 'off' }],
   },
   {
     featureType: 'water',
@@ -176,9 +244,7 @@ function clamp(
   );
 }
 
-function toRadians(
-  degrees: number,
-): number {
+function toRadians(degrees: number): number {
   return degrees * Math.PI / 180;
 }
 
@@ -187,23 +253,14 @@ function calculateDistanceKm(
   second: Coordinates,
 ): number {
   const earthRadiusKm = 6371;
-
   const latitudeDifference = toRadians(
     second.latitude - first.latitude,
   );
-
   const longitudeDifference = toRadians(
     second.longitude - first.longitude,
   );
-
-  const firstLatitude = toRadians(
-    first.latitude,
-  );
-
-  const secondLatitude = toRadians(
-    second.latitude,
-  );
-
+  const firstLatitude = toRadians(first.latitude);
+  const secondLatitude = toRadians(second.latitude);
   const value =
     Math.sin(latitudeDifference / 2) ** 2
     + Math.cos(firstLatitude)
@@ -234,54 +291,53 @@ function formatDistance(
     .replace('.', ',')} km`;
 }
 
-function getMarkerColor(
-  status: GroupRestaurantStatus,
-): string {
-  switch (status) {
-    case 'FAVORITE':
-    case 'WANT_TO_REPEAT':
-      return '#62794D';
-
-    case 'VISITED':
-      return '#A47A46';
-
-    case 'DO_NOT_REPEAT':
-    case 'ARCHIVED':
-      return '#817B76';
-
-    case 'WANT_TO_GO':
-    default:
-      return colors.primary;
-  }
+function normalizeSearch(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
 function FilterChip({
-  label,
   active = false,
   chevron = false,
+  disabled = false,
+  icon,
+  label,
   onPress,
 }: FilterChipProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{
+        disabled,
+        selected: active,
+      }}
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.filterChip,
-        active
-          ? styles.filterChipActive
-          : null,
-        pressed
-          ? styles.pressed
-          : null,
+        active ? styles.filterChipActive : null,
+        disabled ? styles.filterChipDisabled : null,
+        pressed && !disabled ? styles.pressed : null,
       ]}
     >
+      <SymbolView
+        name={icon}
+        size={16}
+        tintColor={
+          active
+            ? colors.primary
+            : colors.muted
+        }
+      />
+
       <Text
         numberOfLines={1}
         style={[
           styles.filterText,
-          active
-            ? styles.filterTextActive
-            : null,
+          active ? styles.filterTextActive : null,
         ]}
       >
         {label}
@@ -290,11 +346,11 @@ function FilterChip({
       {chevron ? (
         <SymbolView
           name={{
-            ios: 'chevron.down',
             android: 'keyboard_arrow_down',
+            ios: 'chevron.down',
             web: 'keyboard_arrow_down',
           }}
-          size={13}
+          size={12}
           tintColor={
             active
               ? colors.primary
@@ -307,17 +363,16 @@ function FilterChip({
 }
 
 function RestaurantMarker({
+  onPress,
   restaurant,
   selected,
-  onPress,
 }: {
+  onPress: () => void;
   restaurant: MapRestaurantItem;
   selected: boolean;
-  onPress: () => void;
 }) {
-  const markerColor = getMarkerColor(
-    restaurant.status,
-  );
+  const presentation =
+    STATUS_PRESENTATION[restaurant.status];
 
   return (
     <Marker
@@ -326,26 +381,32 @@ function RestaurantMarker({
         longitude: restaurant.longitude,
       }}
       onPress={onPress}
+      zIndex={selected ? 2 : 1}
     >
-      <View style={styles.marker}>
+      <View style={styles.markerWrapper}>
+        {selected ? (
+          <View style={styles.markerHalo} />
+        ) : null}
+
         <View
           style={[
-            styles.markerCircle,
+            styles.markerBubble,
             {
-              backgroundColor: markerColor,
+              backgroundColor:
+                presentation.markerColor,
             },
             selected
-              ? styles.markerCircleSelected
+              ? styles.markerBubbleSelected
               : null,
           ]}
         >
           <SymbolView
             name={{
-              ios: 'fork.knife',
               android: 'restaurant',
+              ios: 'fork.knife',
               web: 'restaurant',
             }}
-            size={selected ? 18 : 16}
+            size={selected ? 19 : 16}
             tintColor={colors.white}
           />
         </View>
@@ -354,7 +415,8 @@ function RestaurantMarker({
           style={[
             styles.markerPoint,
             {
-              borderTopColor: markerColor,
+              borderTopColor:
+                presentation.markerColor,
             },
           ]}
         />
@@ -364,14 +426,16 @@ function RestaurantMarker({
 }
 
 function RestaurantRow({
+  onFavoritePress,
+  onPress,
   restaurant,
   selected,
   updating,
-  onPress,
-  onFavoritePress,
 }: RestaurantRowProps) {
   const favorite =
     restaurant.status === 'FAVORITE';
+  const presentation =
+    STATUS_PRESENTATION[restaurant.status];
 
   return (
     <Pressable
@@ -382,24 +446,30 @@ function RestaurantRow({
         selected
           ? styles.restaurantRowSelected
           : null,
-        pressed
-          ? styles.pressed
-          : null,
+        pressed ? styles.pressed : null,
       ]}
     >
-      <View style={styles.thumbnail}>
+      <View
+        style={[
+          styles.restaurantThumbnail,
+          {
+            backgroundColor:
+              presentation.backgroundColor,
+          },
+        ]}
+      >
         <SymbolView
           name={{
-            ios: 'fork.knife',
             android: 'restaurant',
+            ios: 'fork.knife',
             web: 'restaurant',
           }}
-          size={22}
-          tintColor={colors.primary}
+          size={21}
+          tintColor={presentation.markerColor}
         />
       </View>
 
-      <View style={styles.restaurantText}>
+      <View style={styles.restaurantCopy}>
         <Text
           numberOfLines={1}
           style={styles.restaurantName}
@@ -409,59 +479,90 @@ function RestaurantRow({
 
         <Text
           numberOfLines={1}
-          style={styles.restaurantInfo}
+          style={styles.restaurantMeta}
         >
           {restaurant.category ?? 'Restaurante'}
           {' · '}
           {restaurant.groupName}
         </Text>
+
+        <View style={styles.restaurantFooter}>
+          <View
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor:
+                  presentation.backgroundColor,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusBadgeText,
+                {
+                  color: presentation.textColor,
+                },
+              ]}
+            >
+              {presentation.label}
+            </Text>
+          </View>
+
+          {restaurant.distanceKm !== null ? (
+            <Text style={styles.restaurantDistance}>
+              {formatDistance(restaurant.distanceKm)}
+            </Text>
+          ) : null}
+        </View>
       </View>
 
-      <View style={styles.restaurantEnd}>
-        <Text style={styles.distance}>
-          {formatDistance(
-            restaurant.distanceKm,
-          )}
-        </Text>
-
-        <Pressable
-          accessibilityLabel={
-            favorite
-              ? 'Quitar de favoritos'
-              : 'Añadir a favoritos'
-          }
-          accessibilityRole="button"
-          disabled={updating}
-          hitSlop={10}
-          onPress={event => {
-            event.stopPropagation();
-            onFavoritePress();
-          }}
-          style={({ pressed }) => [
-            styles.favoriteButton,
-            pressed
-              ? styles.favoriteButtonPressed
-              : null,
-          ]}
-        >
-          {updating ? (
-            <ActivityIndicator
-              color={colors.primary}
-              size="small"
-            />
-          ) : (
-          <MaterialIcons
-            name={
-              favorite
-                ? 'bookmark'
-                : 'bookmark-border'
-            }
-            size={25}
+      <Pressable
+        accessibilityLabel={
+          favorite
+            ? 'Quitar de favoritos'
+            : 'Añadir a favoritos'
+        }
+        accessibilityRole="button"
+        disabled={updating}
+        hitSlop={8}
+        onPress={event => {
+          event.stopPropagation();
+          onFavoritePress();
+        }}
+        style={({ pressed }) => [
+          styles.rowFavoriteButton,
+          pressed
+            ? styles.rowFavoriteButtonPressed
+            : null,
+        ]}
+      >
+        {updating ? (
+          <ActivityIndicator
             color={colors.primary}
+            size="small"
           />
-          )}
-        </Pressable>
-      </View>
+        ) : (
+          <SymbolView
+            name={{
+              android: favorite
+                ? 'favorite'
+                : 'favorite_border',
+              ios: favorite
+                ? 'heart.fill'
+                : 'heart',
+              web: favorite
+                ? 'favorite'
+                : 'favorite_border',
+            }}
+            size={21}
+            tintColor={
+              favorite
+                ? colors.primary
+                : colors.muted
+            }
+          />
+        )}
+      </Pressable>
     </Pressable>
   );
 }
@@ -474,92 +575,76 @@ export default function MapScreen() {
   const sheetTop = useRef(
     new Animated.Value(0),
   ).current;
-  const filterSheetTranslateY = useRef(
-    new Animated.Value(0),
-  ).current;
-
   const currentSheetTopRef = useRef(0);
   const panStartTopRef = useRef(0);
   const sheetWasPositionedRef = useRef(false);
-  const currentFilterSheetTranslateYRef =
-    useRef(0);
-  const filterSheetPanStartRef = useRef(0);
 
   const [restaurants, setRestaurants] =
     useState<MapRestaurant[]>([]);
-
   const [userLocation, setUserLocation] =
     useState<Coordinates | null>(null);
-
   const [locationGranted, setLocationGranted] =
     useState(false);
-
   const [selectedRestaurantId,
     setSelectedRestaurantId] =
     useState<string | null>(null);
-
+  const [searchQuery, setSearchQuery] =
+    useState('');
   const [distance, setDistance] =
     useState<DistanceOption>(null);
-
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>('ALL');
-
   const [favoritesOnly, setFavoritesOnly] =
     useState(false);
-
   const [filterModalVisible,
     setFilterModalVisible] =
     useState(false);
-
   const [isLoading, setIsLoading] =
     useState(true);
-
   const [isMapReady, setIsMapReady] =
     useState(false);
-
   const [updatingRestaurantId,
     setUpdatingRestaurantId] =
     useState<string | null>(null);
-
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
-
   const [mapHeight, setMapHeight] =
     useState(0);
 
   const snapPoints = useMemo(() => {
     if (mapHeight <= 0) {
       return {
+        collapsed: 0,
         expanded: 0,
         middle: 0,
-        collapsed: 0,
       };
     }
 
-    const expanded = 18;
-    const middle = Math.round(
-      mapHeight * 0.57,
-    );
+    const expanded = 14;
+    const middle = Math.round(mapHeight * 0.5);
+    const collapsedHeight = selectedRestaurantId
+      ? 194
+      : 112;
     const collapsed = Math.max(
-      middle + 90,
-      mapHeight - 90,
+      middle + 70,
+      mapHeight - collapsedHeight,
     );
 
     return {
+      collapsed,
       expanded,
       middle,
-      collapsed,
     };
-  }, [mapHeight]);
+  }, [mapHeight, selectedRestaurantId]);
 
   const animateSheetTo = useCallback(
     (value: number) => {
       Animated.spring(sheetTop, {
+        damping: 25,
+        mass: 0.82,
+        stiffness: 220,
         toValue: value,
         useNativeDriver: false,
-        damping: 24,
-        stiffness: 220,
-        mass: 0.8,
       }).start();
     },
     [sheetTop],
@@ -574,31 +659,28 @@ export default function MapScreen() {
       ];
 
       return points.reduce(
-        (nearest, point) => {
-          return Math.abs(point - value)
+        (nearest, point) => (
+          Math.abs(point - value)
             < Math.abs(nearest - value)
             ? point
-            : nearest;
-        },
+            : nearest
+        ),
         points[0],
       );
     },
     [snapPoints],
   );
 
-  const panResponder = useMemo(() => {
-    return PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+  const panResponder = useMemo(() => (
+    PanResponder.create({
       onMoveShouldSetPanResponder: (
         _,
         gestureState,
-      ) => Math.abs(gestureState.dy) > 3,
-
+      ) => Math.abs(gestureState.dy) > 4,
       onPanResponderGrant: () => {
         panStartTopRef.current =
           currentSheetTopRef.current;
       },
-
       onPanResponderMove: (
         _,
         gestureState,
@@ -612,7 +694,6 @@ export default function MapScreen() {
 
         sheetTop.setValue(nextTop);
       },
-
       onPanResponderRelease: (
         _,
         gestureState,
@@ -621,32 +702,20 @@ export default function MapScreen() {
           currentSheetTopRef.current;
 
         if (gestureState.vy > 0.75) {
-          if (currentTop
-            < snapPoints.middle - 20) {
-            animateSheetTo(
-              snapPoints.middle,
-            );
-          } else {
-            animateSheetTo(
-              snapPoints.collapsed,
-            );
-          }
-
+          animateSheetTo(
+            currentTop < snapPoints.middle
+              ? snapPoints.middle
+              : snapPoints.collapsed,
+          );
           return;
         }
 
         if (gestureState.vy < -0.75) {
-          if (currentTop
-            > snapPoints.middle + 20) {
-            animateSheetTo(
-              snapPoints.middle,
-            );
-          } else {
-            animateSheetTo(
-              snapPoints.expanded,
-            );
-          }
-
+          animateSheetTo(
+            currentTop > snapPoints.middle
+              ? snapPoints.middle
+              : snapPoints.expanded,
+          );
           return;
         }
 
@@ -654,101 +723,13 @@ export default function MapScreen() {
           nearestSnapPoint(currentTop),
         );
       },
-    });
-  }, [
+      onStartShouldSetPanResponder: () => true,
+    })
+  ), [
     animateSheetTo,
     nearestSnapPoint,
     sheetTop,
     snapPoints,
-  ]);
-
-  const animateFilterSheetTo = useCallback(
-    (value: number) => {
-      Animated.spring(filterSheetTranslateY, {
-        toValue: value,
-        useNativeDriver: true,
-        damping: 24,
-        stiffness: 230,
-        mass: 0.8,
-        overshootClamping: true,
-      }).start();
-    },
-    [filterSheetTranslateY],
-  );
-
-  const closeFilterModal = useCallback(() => {
-    Animated.timing(filterSheetTranslateY, {
-      toValue: FILTER_SHEET_CLOSE_TRANSLATE,
-      duration: 180,
-      useNativeDriver: true,
-    }).start(() => {
-      setFilterModalVisible(false);
-      filterSheetTranslateY.setValue(0);
-      currentFilterSheetTranslateYRef.current = 0;
-    });
-  }, [filterSheetTranslateY]);
-
-  const filterPanResponder = useMemo(() => {
-    return PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (
-        _,
-        gestureState,
-      ) => Math.abs(gestureState.dy) > 3,
-
-      onPanResponderGrant: () => {
-        filterSheetPanStartRef.current =
-          currentFilterSheetTranslateYRef.current;
-      },
-
-      onPanResponderMove: (
-        _,
-        gestureState,
-      ) => {
-        const nextTranslateY = clamp(
-          filterSheetPanStartRef.current
-            + gestureState.dy,
-          0,
-          FILTER_SHEET_CLOSE_TRANSLATE,
-        );
-
-        filterSheetTranslateY.setValue(
-          nextTranslateY,
-        );
-      },
-
-      onPanResponderRelease: (
-        _,
-        gestureState,
-      ) => {
-        const currentTranslateY =
-          currentFilterSheetTranslateYRef.current;
-
-        if (
-          gestureState.vy > 1
-          || currentTranslateY > 300
-        ) {
-          closeFilterModal();
-          return;
-        }
-
-        if (
-          gestureState.vy > 0.45
-          || currentTranslateY > 110
-        ) {
-          animateFilterSheetTo(
-            FILTER_SHEET_COLLAPSED_TRANSLATE,
-          );
-          return;
-        }
-
-        animateFilterSheetTo(0);
-      },
-    });
-  }, [
-    animateFilterSheetTo,
-    closeFilterModal,
-    filterSheetTranslateY,
   ]);
 
   useEffect(() => {
@@ -764,37 +745,12 @@ export default function MapScreen() {
   }, [sheetTop]);
 
   useEffect(() => {
-    const listenerId =
-      filterSheetTranslateY.addListener(
-        ({ value }) => {
-          currentFilterSheetTranslateYRef.current =
-            value;
-        },
-      );
-
-    return () => {
-      filterSheetTranslateY
-        .removeListener(listenerId);
-    };
-  }, [filterSheetTranslateY]);
-
-  useEffect(() => {
-    if (filterModalVisible) {
-      filterSheetTranslateY.setValue(0);
-      currentFilterSheetTranslateYRef.current = 0;
-    }
-  }, [
-    filterModalVisible,
-    filterSheetTranslateY,
-  ]);
-
-  useEffect(() => {
     if (mapHeight <= 0) {
       return;
     }
 
     if (!sheetWasPositionedRef.current) {
-      sheetTop.setValue(snapPoints.middle);
+      sheetTop.setValue(snapPoints.collapsed);
       sheetWasPositionedRef.current = true;
       return;
     }
@@ -808,10 +764,56 @@ export default function MapScreen() {
     );
   }, [mapHeight, sheetTop, snapPoints]);
 
+  useEffect(() => {
+    if (
+      mapHeight <= 0
+      || !sheetWasPositionedRef.current
+    ) {
+      return;
+    }
+
+    animateSheetTo(snapPoints.collapsed);
+  }, [
+    animateSheetTo,
+    mapHeight,
+    selectedRestaurantId,
+    snapPoints.collapsed,
+  ]);
+
+  const requestCurrentLocation = useCallback(
+    async (): Promise<Coordinates | null> => {
+      try {
+        const permission = await Location
+          .requestForegroundPermissionsAsync();
+        const granted =
+          permission.status === 'granted';
+
+        setLocationGranted(granted);
+
+        if (!granted) {
+          return null;
+        }
+
+        const location = await Location
+          .getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+
+        return {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+      } catch {
+        setLocationGranted(false);
+        return null;
+      }
+    },
+    [],
+  );
 
   const restaurantsWithDistance =
-    useMemo<MapRestaurantItem[]>(() => {
-      return restaurants.map(restaurant => ({
+    useMemo<MapRestaurantItem[]>(() => (
+      restaurants.map(restaurant => ({
         ...restaurant,
         distanceKm: userLocation
           ? calculateDistanceKm(
@@ -822,10 +824,13 @@ export default function MapScreen() {
               },
             )
           : null,
-      }));
-    }, [restaurants, userLocation]);
+      }))
+    ), [restaurants, userLocation]);
 
   const visibleRestaurants = useMemo(() => {
+    const normalizedQuery =
+      normalizeSearch(searchQuery);
+
     return restaurantsWithDistance
       .filter(restaurant => {
         if (
@@ -851,44 +856,64 @@ export default function MapScreen() {
           return false;
         }
 
+        if (normalizedQuery) {
+          const searchableText = normalizeSearch([
+            restaurant.name,
+            restaurant.category,
+            restaurant.address,
+            restaurant.city,
+            restaurant.country,
+            restaurant.groupName,
+          ]
+            .filter(Boolean)
+            .join(' '));
+
+          if (!searchableText.includes(normalizedQuery)) {
+            return false;
+          }
+        }
+
         return true;
       })
       .sort((first, second) => {
         if (
-          first.groupRestaurantId
-          === selectedRestaurantId
+          first.distanceKm !== null
+          && second.distanceKm !== null
         ) {
-          return -1;
+          return first.distanceKm
+            - second.distanceKm;
         }
 
-        if (
-          second.groupRestaurantId
-          === selectedRestaurantId
-        ) {
-          return 1;
-        }
-
-        if (
-          first.distanceKm === null
-          || second.distanceKm === null
-        ) {
-          return first.name.localeCompare(
-            second.name,
-            'es',
-          );
-        }
-
-        return first.distanceKm
-          - second.distanceKm;
+        return first.name.localeCompare(
+          second.name,
+          'es',
+        );
       });
   }, [
     distance,
     favoritesOnly,
     restaurantsWithDistance,
-    selectedRestaurantId,
+    searchQuery,
     statusFilter,
     userLocation,
   ]);
+
+  const selectedRestaurant = useMemo(() => (
+    visibleRestaurants.find(
+      restaurant =>
+        restaurant.groupRestaurantId
+        === selectedRestaurantId,
+    ) ?? null
+  ), [selectedRestaurantId, visibleRestaurants]);
+
+  useEffect(() => {
+    if (
+      selectedRestaurantId
+      && !selectedRestaurant
+    ) {
+      setSelectedRestaurantId(null);
+    }
+  }, [selectedRestaurant, selectedRestaurantId]);
 
   const loadMap = useCallback(
     async (): Promise<void> => {
@@ -903,52 +928,22 @@ export default function MapScreen() {
 
         const restaurantsPromise =
           getMapRestaurants(accessToken);
-
-        let currentLocation:
-          Coordinates | null = null;
-
-        try {
-          const permission = await Location
-            .requestForegroundPermissionsAsync();
-
-          const granted =
-            permission.status === 'granted';
-
-          setLocationGranted(granted);
-
-          if (granted) {
-            const location = await Location
-              .getCurrentPositionAsync({
-                accuracy:
-                  Location.Accuracy.Balanced,
-              });
-
-            currentLocation = {
-              latitude:
-                location.coords.latitude,
-              longitude:
-                location.coords.longitude,
-            };
-          }
-        } catch {
-          setLocationGranted(false);
-        }
-
-        const response =
-          await restaurantsPromise;
+        const locationPromise =
+          requestCurrentLocation();
+        const [response, currentLocation] =
+          await Promise.all([
+            restaurantsPromise,
+            locationPromise,
+          ]);
 
         setRestaurants(response);
         setUserLocation(currentLocation);
       } catch (error) {
-        setErrorMessage(
-          getErrorMessage(error),
-        );
+        setErrorMessage(getErrorMessage(error));
       } finally {
         setIsLoading(false);
       }
-    },
-    [accessToken],
-  );
+    }, [accessToken, requestCurrentLocation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -957,7 +952,10 @@ export default function MapScreen() {
   );
 
   useEffect(() => {
-    if (!isMapReady) {
+    if (
+      !isMapReady
+      || selectedRestaurantId
+    ) {
       return;
     }
 
@@ -975,7 +973,7 @@ export default function MapScreen() {
       return;
     }
 
-    const timeout = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (coordinates.length === 1) {
         mapRef.current?.animateToRegion(
           {
@@ -983,9 +981,8 @@ export default function MapScreen() {
             latitudeDelta: 0.035,
             longitudeDelta: 0.035,
           },
-          400,
+          380,
         );
-
         return;
       }
 
@@ -994,20 +991,21 @@ export default function MapScreen() {
         {
           animated: true,
           edgePadding: {
-            top: 55,
-            right: 45,
-            bottom: 120,
+            bottom: 150,
             left: 45,
+            right: 45,
+            top: 55,
           },
         },
       );
-    }, 250);
+    }, 220);
 
     return () => {
-      clearTimeout(timeout);
+      clearTimeout(timeoutId);
     };
   }, [
     isMapReady,
+    selectedRestaurantId,
     userLocation,
     visibleRestaurants,
   ]);
@@ -1022,6 +1020,10 @@ export default function MapScreen() {
 
   function openFilterModal(): void {
     setFilterModalVisible(true);
+  }
+
+  function closeFilterModal(): void {
+    setFilterModalVisible(false);
   }
 
   function selectDistance(
@@ -1054,37 +1056,96 @@ export default function MapScreen() {
 
   function resetFilters(): void {
     setDistance(null);
-    setStatusFilter('ALL');
     setFavoritesOnly(false);
+    setSearchQuery('');
+    setStatusFilter('ALL');
   }
 
   function openRestaurant(
     restaurant: MapRestaurantItem,
   ): void {
     router.push({
-      pathname:
-        '/groups/[groupId]/restaurants/[groupRestaurantId]',
       params: {
         groupId: restaurant.groupId,
         groupRestaurantId:
           restaurant.groupRestaurantId,
       },
+      pathname:
+        '/groups/[groupId]/restaurants/[groupRestaurantId]',
     });
   }
 
-  function selectMarker(
+  function focusRestaurant(
     restaurant: MapRestaurantItem,
   ): void {
     setSelectedRestaurantId(
       restaurant.groupRestaurantId,
     );
 
-    if (
-      currentSheetTopRef.current
-      > snapPoints.middle + 20
-    ) {
-      animateSheetTo(
-        snapPoints.middle,
+    mapRef.current?.animateToRegion(
+      {
+        latitude: restaurant.latitude,
+        latitudeDelta: 0.025,
+        longitude: restaurant.longitude,
+        longitudeDelta: 0.025,
+      },
+      360,
+    );
+  }
+
+  function clearRestaurantSelection(): void {
+    setSelectedRestaurantId(null);
+  }
+
+  async function centerOnUser(): Promise<void> {
+    const location = userLocation
+      ?? await requestCurrentLocation();
+
+    if (!location) {
+      Alert.alert(
+        'Ubicación no disponible',
+        'Activa el permiso de ubicación para centrar el mapa y calcular distancias.',
+      );
+      return;
+    }
+
+    setUserLocation(location);
+    mapRef.current?.animateToRegion(
+      {
+        ...location,
+        latitudeDelta: 0.025,
+        longitudeDelta: 0.025,
+      },
+      380,
+    );
+  }
+
+  async function openDirections(
+    restaurant: MapRestaurantItem,
+  ): Promise<void> {
+    const destination =
+      `${restaurant.latitude},${restaurant.longitude}`;
+    const fallbackUrl =
+      `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+    const nativeUrl = Platform.select({
+      android: `google.navigation:q=${destination}`,
+      ios: `http://maps.apple.com/?daddr=${destination}`,
+    });
+
+    try {
+      if (
+        nativeUrl
+        && await Linking.canOpenURL(nativeUrl)
+      ) {
+        await Linking.openURL(nativeUrl);
+        return;
+      }
+
+      await Linking.openURL(fallbackUrl);
+    } catch {
+      Alert.alert(
+        'No se ha podido abrir el mapa',
+        'Prueba de nuevo dentro de unos segundos.',
       );
     }
   }
@@ -1139,74 +1200,147 @@ export default function MapScreen() {
     distance === null
       ? 'Distancia'
       : `A ${distance} km`;
-
   const statusLabel =
     STATUS_OPTIONS.find(
       option => option.value === statusFilter,
     )?.label ?? 'Estado';
-
   const filtersActive =
     distance !== null
     || statusFilter !== 'ALL'
     || favoritesOnly;
+  const mapLocationButtonBottom =
+    selectedRestaurant ? 210 : 126;
 
   return (
     <SafeAreaView
       edges={['top', 'right', 'left']}
       style={styles.safeArea}
     >
-      <View style={styles.header}>
-        <Text style={styles.title}>
-          Mapa
-        </Text>
+      <View style={styles.topPanel}>
+        <View style={styles.headingRow}>
+          <View style={styles.headingCopy}>
+            <Text style={styles.title}>
+              Mapa
+            </Text>
+            <Text style={styles.subtitle}>
+              Encuentra tus restaurantes guardados
+            </Text>
+          </View>
 
-        <Pressable
-          accessibilityLabel="Filtros"
-          accessibilityRole="button"
-          onPress={openFilterModal}
-          style={({ pressed }) => [
-            styles.filterIconButton,
-            pressed
-              ? styles.pressed
-              : null,
-          ]}
-        >
+          <Pressable
+            accessibilityLabel="Abrir filtros"
+            accessibilityRole="button"
+            onPress={openFilterModal}
+            style={({ pressed }) => [
+              styles.filterButton,
+              pressed ? styles.pressed : null,
+            ]}
+          >
+            <SymbolView
+              name={{
+                android: 'tune',
+                ios: 'slider.horizontal.3',
+                web: 'tune',
+              }}
+              size={21}
+              tintColor={colors.primary}
+            />
+
+            {filtersActive ? (
+              <View style={styles.filterDot} />
+            ) : null}
+          </Pressable>
+        </View>
+
+        <View style={styles.searchBar}>
           <SymbolView
             name={{
-              ios: 'slider.horizontal.3',
-              android: 'tune',
-              web: 'tune',
+              android: 'search',
+              ios: 'magnifyingglass',
+              web: 'search',
             }}
-            size={21}
-            tintColor={colors.text}
+            size={20}
+            tintColor={colors.muted}
           />
 
-          {filtersActive ? (
-            <View style={styles.filterDot} />
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={setSearchQuery}
+            placeholder="Buscar restaurante o zona"
+            placeholderTextColor="#9B918B"
+            returnKeyType="search"
+            style={styles.searchInput}
+            value={searchQuery}
+          />
+
+          {searchQuery ? (
+            <Pressable
+              accessibilityLabel="Borrar búsqueda"
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => setSearchQuery('')}
+            >
+              <SymbolView
+                name={{
+                  android: 'cancel',
+                  ios: 'xmark.circle.fill',
+                  web: 'cancel',
+                }}
+                size={19}
+                tintColor="#B5AAA4"
+              />
+            </Pressable>
           ) : null}
-        </Pressable>
-      </View>
+        </View>
 
-      <View style={styles.filtersBar}>
-        <FilterChip
-          active={distance !== null}
-          chevron
-          label={distanceLabel}
-          onPress={openFilterModal}
-        />
+        <View style={styles.filtersRow}>
+          <FilterChip
+            active={distance !== null}
+            chevron
+            disabled={!locationGranted}
+            icon={{
+              android: 'near_me',
+              ios: 'location',
+              web: 'near_me',
+            }}
+            label={
+              locationGranted
+                ? distanceLabel
+                : 'Sin ubicación'
+            }
+            onPress={openFilterModal}
+          />
 
-        <FilterChip
-          active={statusFilter !== 'ALL'}
-          chevron
-          label={statusLabel}
-          onPress={openFilterModal}
-        />
+          <FilterChip
+            active={statusFilter !== 'ALL'}
+            chevron
+            icon={{
+              android: 'check_circle_outline',
+              ios: 'checkmark.circle',
+              web: 'check_circle_outline',
+            }}
+            label={statusLabel}
+            onPress={openFilterModal}
+          />
 
-        <FilterChip
-          active={favoritesOnly}
-          label="Favoritos"
-          onPress={toggleFavorites}
-        />
+          <FilterChip
+            active={favoritesOnly}
+            icon={{
+              android: favoritesOnly
+                ? 'favorite'
+                : 'favorite_border',
+              ios: favoritesOnly
+                ? 'heart.fill'
+                : 'heart',
+              web: favoritesOnly
+                ? 'favorite'
+                : 'favorite_border',
+            }}
+            label="Favoritos"
+            onPress={toggleFavorites}
+          />
+        </View>
       </View>
 
       <View
@@ -1217,14 +1351,15 @@ export default function MapScreen() {
           customMapStyle={MAP_STYLE}
           initialRegion={DEFAULT_REGION}
           mapPadding={{
-            top: 18,
-            right: 14,
-            bottom: 84,
-            left: 14,
+            bottom: 125,
+            left: 18,
+            right: 18,
+            top: 28,
           }}
           onMapReady={() => {
             setIsMapReady(true);
           }}
+          onPress={clearRestaurantSelection}
           provider={
             Platform.OS === 'android'
               ? PROVIDER_GOOGLE
@@ -1235,17 +1370,15 @@ export default function MapScreen() {
           showsCompass={false}
           showsMyLocationButton={false}
           showsUserLocation={locationGranted}
-          style={StyleSheet.absoluteFill}
+          style={styles.map}
           toolbarEnabled={false}
         >
           {visibleRestaurants.map(
             restaurant => (
               <RestaurantMarker
-                key={
-                  restaurant.groupRestaurantId
-                }
+                key={restaurant.groupRestaurantId}
                 onPress={() => {
-                  selectMarker(restaurant);
+                  focusRestaurant(restaurant);
                 }}
                 restaurant={restaurant}
                 selected={
@@ -1256,6 +1389,52 @@ export default function MapScreen() {
             ),
           )}
         </MapView>
+
+        {!isLoading && !errorMessage ? (
+          <View style={styles.mapResultBadge}>
+            <SymbolView
+              name={{
+                android: 'restaurant',
+                ios: 'fork.knife',
+                web: 'restaurant',
+              }}
+              size={13}
+              tintColor={colors.primary}
+            />
+            <Text style={styles.mapResultText}>
+              {visibleRestaurants.length}
+              {' '}
+              {visibleRestaurants.length === 1
+                ? 'restaurante'
+                : 'restaurantes'}
+            </Text>
+          </View>
+        ) : null}
+
+        <Pressable
+          accessibilityLabel="Centrar en mi ubicación"
+          accessibilityRole="button"
+          onPress={() => {
+            void centerOnUser();
+          }}
+          style={({ pressed }) => [
+            styles.locationButton,
+            {
+              bottom: mapLocationButtonBottom,
+            },
+            pressed ? styles.pressed : null,
+          ]}
+        >
+          <SymbolView
+            name={{
+              android: 'my_location',
+              ios: 'location.fill',
+              web: 'my_location',
+            }}
+            size={21}
+            tintColor={colors.primary}
+          />
+        </Pressable>
 
         <Animated.View
           style={[
@@ -1271,34 +1450,244 @@ export default function MapScreen() {
           >
             <View style={styles.handle} />
 
-            <View style={styles.sheetHeader}>
-              <View>
-                <Text style={styles.sheetTitle}>
-                  {userLocation
-                    ? 'Cerca de ti'
-                    : 'Tus restaurantes'}
-                </Text>
+            {selectedRestaurant ? (
+              <View style={styles.selectedSummary}>
+                <View style={styles.selectedTopRow}>
+                  <View
+                    style={[
+                      styles.selectedThumbnail,
+                      {
+                        backgroundColor:
+                          STATUS_PRESENTATION[
+                            selectedRestaurant.status
+                          ].backgroundColor,
+                      },
+                    ]}
+                  >
+                    <SymbolView
+                      name={{
+                        android: 'restaurant',
+                        ios: 'fork.knife',
+                        web: 'restaurant',
+                      }}
+                      size={25}
+                      tintColor={
+                        STATUS_PRESENTATION[
+                          selectedRestaurant.status
+                        ].markerColor
+                      }
+                    />
+                  </View>
 
-                <Text style={styles.sheetSubtitle}>
-                  {visibleRestaurants.length}
-                  {' '}
-                  {visibleRestaurants.length === 1
-                    ? 'restaurante'
-                    : 'restaurantes'}
-                </Text>
+                  <View style={styles.selectedCopy}>
+                    <View style={styles.selectedNameRow}>
+                      <Text
+                        numberOfLines={1}
+                        style={styles.selectedName}
+                      >
+                        {selectedRestaurant.name}
+                      </Text>
+
+                      <Pressable
+                        accessibilityLabel="Cerrar restaurante seleccionado"
+                        accessibilityRole="button"
+                        hitSlop={8}
+                        onPress={clearRestaurantSelection}
+                        style={styles.clearSelectionButton}
+                      >
+                        <SymbolView
+                          name={{
+                            android: 'close',
+                            ios: 'xmark',
+                            web: 'close',
+                          }}
+                          size={15}
+                          tintColor={colors.muted}
+                        />
+                      </Pressable>
+                    </View>
+
+                    <Text
+                      numberOfLines={1}
+                      style={styles.selectedMeta}
+                    >
+                      {selectedRestaurant.category
+                        ?? 'Restaurante'}
+                      {' · '}
+                      {selectedRestaurant.groupName}
+                    </Text>
+
+                    <View style={styles.selectedContextRow}>
+                      <View
+                        style={[
+                          styles.statusBadge,
+                          {
+                            backgroundColor:
+                              STATUS_PRESENTATION[
+                                selectedRestaurant.status
+                              ].backgroundColor,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusBadgeText,
+                            {
+                              color:
+                                STATUS_PRESENTATION[
+                                  selectedRestaurant.status
+                                ].textColor,
+                            },
+                          ]}
+                        >
+                          {
+                            STATUS_PRESENTATION[
+                              selectedRestaurant.status
+                            ].label
+                          }
+                        </Text>
+                      </View>
+
+                      {selectedRestaurant.distanceKm !== null ? (
+                        <Text style={styles.selectedDistance}>
+                          {formatDistance(
+                            selectedRestaurant.distanceKm,
+                          )}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.selectedActions}>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      openRestaurant(selectedRestaurant);
+                    }}
+                    style={({ pressed }) => [
+                      styles.detailButton,
+                      pressed
+                        ? styles.detailButtonPressed
+                        : null,
+                    ]}
+                  >
+                    <Text style={styles.detailButtonText}>
+                      Ver detalle
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityLabel="Abrir indicaciones"
+                    accessibilityRole="button"
+                    onPress={() => {
+                      void openDirections(selectedRestaurant);
+                    }}
+                    style={({ pressed }) => [
+                      styles.secondaryActionButton,
+                      pressed ? styles.pressed : null,
+                    ]}
+                  >
+                    <SymbolView
+                      name={{
+                        android: 'navigation',
+                        ios: 'location.north.line',
+                        web: 'navigation',
+                      }}
+                      size={19}
+                      tintColor={colors.primary}
+                    />
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityLabel={
+                      selectedRestaurant.status === 'FAVORITE'
+                        ? 'Quitar de favoritos'
+                        : 'Añadir a favoritos'
+                    }
+                    accessibilityRole="button"
+                    disabled={
+                      updatingRestaurantId
+                      === selectedRestaurant.groupRestaurantId
+                    }
+                    onPress={() => {
+                      void toggleFavorite(selectedRestaurant);
+                    }}
+                    style={({ pressed }) => [
+                      styles.secondaryActionButton,
+                      pressed ? styles.pressed : null,
+                    ]}
+                  >
+                    {updatingRestaurantId
+                    === selectedRestaurant.groupRestaurantId ? (
+                      <ActivityIndicator
+                        color={colors.primary}
+                        size="small"
+                      />
+                    ) : (
+                      <SymbolView
+                        name={{
+                          android:
+                            selectedRestaurant.status
+                            === 'FAVORITE'
+                              ? 'favorite'
+                              : 'favorite_border',
+                          ios:
+                            selectedRestaurant.status
+                            === 'FAVORITE'
+                              ? 'heart.fill'
+                              : 'heart',
+                          web:
+                            selectedRestaurant.status
+                            === 'FAVORITE'
+                              ? 'favorite'
+                              : 'favorite_border',
+                        }}
+                        size={20}
+                        tintColor={colors.primary}
+                      />
+                    )}
+                  </Pressable>
+                </View>
               </View>
-
-              {filtersActive ? (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={resetFilters}
-                >
-                  <Text style={styles.resetText}>
-                    Restablecer
+            ) : (
+              <View style={styles.sheetHeader}>
+                <View style={styles.sheetHeadingCopy}>
+                  <Text style={styles.sheetTitle}>
+                    {userLocation
+                      ? 'Cerca de ti'
+                      : 'Tus restaurantes'}
                   </Text>
-                </Pressable>
-              ) : null}
-            </View>
+                  <Text style={styles.sheetSubtitle}>
+                    {visibleRestaurants.length}
+                    {' '}
+                    {visibleRestaurants.length === 1
+                      ? 'restaurante guardado'
+                      : 'restaurantes guardados'}
+                  </Text>
+                  {!locationGranted ? (
+                    <Text style={styles.locationHint}>
+                      Activa la ubicación para ordenarlos por cercanía
+                    </Text>
+                  ) : (
+                    <Text style={styles.sheetHint}>
+                      Desliza hacia arriba para ver la lista
+                    </Text>
+                  )}
+                </View>
+
+                {filtersActive || searchQuery ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={resetFilters}
+                  >
+                    <Text style={styles.resetText}>
+                      Restablecer
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            )}
           </View>
 
           {isLoading ? (
@@ -1307,28 +1696,37 @@ export default function MapScreen() {
                 color={colors.primary}
                 size="large"
               />
-
               <Text style={styles.stateText}>
-                Cargando restaurantes...
+                Cargando tus restaurantes...
               </Text>
             </View>
           ) : errorMessage ? (
             <View style={styles.state}>
+              <View style={styles.stateIcon}>
+                <SymbolView
+                  name={{
+                    android: 'wifi_off',
+                    ios: 'wifi.slash',
+                    web: 'wifi_off',
+                  }}
+                  size={22}
+                  tintColor={colors.primary}
+                />
+              </View>
               <Text style={styles.stateTitle}>
-                No se ha podido cargar el mapa
+                No hemos podido cargar el mapa
               </Text>
-
               <Text style={styles.stateText}>
                 {errorMessage}
               </Text>
-
               <Pressable
                 accessibilityRole="button"
                 onPress={() => {
                   void loadMap();
                 }}
+                style={styles.retryButton}
               >
-                <Text style={styles.retryText}>
+                <Text style={styles.retryButtonText}>
                   Volver a intentar
                 </Text>
               </Pressable>
@@ -1344,45 +1742,43 @@ export default function MapScreen() {
               keyExtractor={item =>
                 item.groupRestaurantId
               }
-              ListEmptyComponent={
+              ListEmptyComponent={(
                 <View style={styles.state}>
-                  <View style={styles.emptyIcon}>
+                  <View style={styles.stateIcon}>
                     <SymbolView
                       name={{
-                        ios: 'mappin.slash',
                         android: 'location_off',
+                        ios: 'mappin.slash',
                         web: 'location_off',
                       }}
-                      size={24}
+                      size={22}
                       tintColor={colors.primary}
                     />
                   </View>
-
                   <Text style={styles.stateTitle}>
-                    No hay resultados
+                    No hay restaurantes aquí
                   </Text>
-
                   <Text style={styles.stateText}>
-                    Amplía la distancia o cambia los filtros.
+                    Prueba con otra búsqueda o cambia los filtros.
                   </Text>
-
                   <Pressable
                     accessibilityRole="button"
                     onPress={resetFilters}
+                    style={styles.retryButton}
                   >
-                    <Text style={styles.retryText}>
+                    <Text style={styles.retryButtonText}>
                       Ver todos
                     </Text>
                   </Pressable>
                 </View>
-              }
+              )}
               renderItem={({ item }) => (
                 <RestaurantRow
                   onFavoritePress={() => {
                     void toggleFavorite(item);
                   }}
                   onPress={() => {
-                    openRestaurant(item);
+                    focusRestaurant(item);
                   }}
                   restaurant={item}
                   selected={
@@ -1403,7 +1799,7 @@ export default function MapScreen() {
       </View>
 
       <Modal
-        animationType="fade"
+        animationType="slide"
         onRequestClose={closeFilterModal}
         transparent
         visible={filterModalVisible}
@@ -1412,62 +1808,71 @@ export default function MapScreen() {
           onPress={closeFilterModal}
           style={styles.modalOverlay}
         >
-          <Animated.View
+          <Pressable
+            onPress={event => {
+              event.stopPropagation();
+            }}
             style={[
               styles.modalContent,
               {
                 paddingBottom:
-                  Math.max(insets.bottom, 18) + 22,
-                transform: [
-                  {
-                    translateY:
-                      filterSheetTranslateY,
-                  },
-                ],
+                  Math.max(insets.bottom, 18) + 18,
               },
             ]}
           >
-            <Pressable
-              onPress={event => {
-                event.stopPropagation();
-              }}
-              style={styles.modalInner}
-            >
-              <View
-                {...filterPanResponder.panHandlers}
-                style={styles.modalDragArea}
-              >
-                <View style={styles.modalHandle} />
+            <View style={styles.modalHandle} />
 
-                <View style={styles.modalHeader}>
-                  <View>
-                    <Text style={styles.modalTitle}>
-                      Filtrar mapa
-                    </Text>
-
-                    <Text style={styles.modalSubtitle}>
-                      Arrastra para subir o bajar
-                    </Text>
-                  </View>
-
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={resetFilters}
-                    hitSlop={10}
-                  >
-                    <Text style={styles.modalReset}>
-                      Restablecer
-                    </Text>
-                  </Pressable>
-                </View>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>
+                  Filtrar mapa
+                </Text>
+                <Text style={styles.modalSubtitle}>
+                  Ajusta los resultados que quieres ver
+                </Text>
               </View>
 
-              <View style={styles.modalBody}>
-                <View style={styles.modalSection}>
-                  <Text style={styles.modalLabel}>
-                    Distancia
-                  </Text>
+              <Pressable
+                accessibilityLabel="Cerrar filtros"
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={closeFilterModal}
+                style={styles.modalCloseButton}
+              >
+                <SymbolView
+                  name={{
+                    android: 'close',
+                    ios: 'xmark',
+                    web: 'close',
+                  }}
+                  size={17}
+                  tintColor={colors.text}
+                />
+              </Pressable>
+            </View>
 
+            <View style={styles.modalBody}>
+              <View style={styles.modalSection}>
+                <Text style={styles.modalLabel}>
+                  Distancia
+                </Text>
+
+                {!locationGranted ? (
+                  <View style={styles.locationWarning}>
+                    <SymbolView
+                      name={{
+                        android: 'location_off',
+                        ios: 'location.slash',
+                        web: 'location_off',
+                      }}
+                      size={18}
+                      tintColor={colors.primary}
+                    />
+                    <Text style={styles.locationWarningText}>
+                      Activa tu ubicación para usar este filtro.
+                    </Text>
+                  </View>
+                ) : (
                   <View style={styles.modalOptions}>
                     {DISTANCE_OPTIONS.map(option => {
                       const selected =
@@ -1503,48 +1908,63 @@ export default function MapScreen() {
                       );
                     })}
                   </View>
-                </View>
+                )}
+              </View>
 
-                <View style={styles.modalSection}>
-                  <Text style={styles.modalLabel}>
-                    Estado
-                  </Text>
+              <View style={styles.modalSection}>
+                <Text style={styles.modalLabel}>
+                  Estado
+                </Text>
 
-                  <View style={styles.modalOptions}>
-                    {STATUS_OPTIONS.map(option => {
-                      const selected =
-                        option.value === statusFilter;
+                <View style={styles.modalOptions}>
+                  {STATUS_OPTIONS.map(option => {
+                    const selected =
+                      option.value === statusFilter;
 
-                      return (
-                        <Pressable
-                          key={option.value}
-                          accessibilityRole="button"
-                          onPress={() => {
-                            selectStatus(option.value);
-                          }}
+                    return (
+                      <Pressable
+                        key={option.value}
+                        accessibilityRole="button"
+                        onPress={() => {
+                          selectStatus(option.value);
+                        }}
+                        style={[
+                          styles.modalOption,
+                          selected
+                            ? styles.modalOptionSelected
+                            : null,
+                        ]}
+                      >
+                        <Text
                           style={[
-                            styles.modalOption,
+                            styles.modalOptionText,
                             selected
-                              ? styles.modalOptionSelected
+                              ? styles.modalOptionTextSelected
                               : null,
                           ]}
                         >
-                          <Text
-                            style={[
-                              styles.modalOptionText,
-                              selected
-                                ? styles.modalOptionTextSelected
-                                : null,
-                            ]}
-                          >
-                            {option.label}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
+                          {option.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
               </View>
+            </View>
+
+            <View style={styles.modalFooter}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={resetFilters}
+                style={({ pressed }) => [
+                  styles.modalResetButton,
+                  pressed ? styles.pressed : null,
+                ]}
+              >
+                <Text style={styles.modalResetText}>
+                  Restablecer
+                </Text>
+              </Pressable>
 
               <Pressable
                 accessibilityRole="button"
@@ -1556,7 +1976,7 @@ export default function MapScreen() {
                     : null,
                 ]}
               >
-                <Text style={styles.applyText}>
+                <Text style={styles.applyButtonText}>
                   Ver {visibleRestaurants.length}
                   {' '}
                   {visibleRestaurants.length === 1
@@ -1564,455 +1984,10 @@ export default function MapScreen() {
                     : 'restaurantes'}
                 </Text>
               </Pressable>
-            </Pressable>
-          </Animated.View>
+            </View>
+          </Pressable>
         </Pressable>
       </Modal>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  header: {
-    minHeight: 58,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-  },
-
-  title: {
-    color: colors.text,
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-  },
-
-  filterIconButton: {
-    position: 'relative',
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 19,
-  },
-
-  filterDot: {
-    position: 'absolute',
-    top: 5,
-    right: 4,
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-
-  filtersBar: {
-    height: 66,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 18,
-    paddingTop: 4,
-    paddingBottom: 12,
-  },
-
-  filterChip: {
-    height: 44,
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 24,
-    backgroundColor: colors.surface,
-    elevation: 2,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-  },
-
-  filterChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: '#FFF0EB',
-  },
-
-  filterText: {
-    flexShrink: 1,
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-
-  filterTextActive: {
-    color: colors.primary,
-  },
-
-  mapContainer: {
-    flex: 1,
-    minHeight: 0,
-    overflow: 'hidden',
-    backgroundColor: '#F1ECE4',
-  },
-
-  marker: {
-    alignItems: 'center',
-  },
-
-  markerCircle: {
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: colors.white,
-    borderRadius: 20,
-    elevation: 5,
-  },
-
-  markerCircleSelected: {
-    width: 44,
-    height: 44,
-    borderRadius: 23,
-  },
-
-  markerPoint: {
-    width: 0,
-    height: 0,
-    marginTop: -3,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 9,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-  },
-
-  bottomSheet: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    left: 0,
-    overflow: 'hidden',
-    borderTopLeftRadius: 27,
-    borderTopRightRadius: 27,
-    backgroundColor: colors.surface,
-    elevation: 14,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: -3,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-  },
-
-  dragArea: {
-    paddingTop: 10,
-    backgroundColor: colors.surface,
-  },
-
-  handle: {
-    width: 42,
-    height: 4,
-    alignSelf: 'center',
-    marginBottom: 7,
-    borderRadius: 2,
-    backgroundColor: '#D8D0CB',
-  },
-
-  sheetHeader: {
-    minHeight: 58,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingBottom: 6,
-  },
-
-  sheetTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-
-  sheetSubtitle: {
-    marginTop: 3,
-    color: colors.muted,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-
-  resetText: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-
-  list: {
-    flex: 1,
-  },
-
-  restaurantList: {
-    paddingHorizontal: 14,
-    paddingBottom: 20,
-  },
-
-  restaurantRow: {
-    minHeight: 76,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    paddingHorizontal: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0E7E1',
-  },
-
-  restaurantRowSelected: {
-    backgroundColor: '#FFF7F2',
-  },
-
-  thumbnail: {
-    width: 54,
-    height: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    backgroundColor: '#F7E4DD',
-  },
-
-  restaurantText: {
-    flex: 1,
-  },
-
-  restaurantName: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-
-  restaurantInfo: {
-    marginTop: 4,
-    color: colors.muted,
-    fontSize: 11,
-  },
-
-  restaurantEnd: {
-    minWidth: 57,
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-
-  distance: {
-    minHeight: 14,
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: '600',
-  },
-
-  favoriteButton: {
-    width: 30,
-    height: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 15,
-  },
-
-  favoriteButtonPressed: {
-    backgroundColor: '#F7E8E2',
-  },
-
-  state: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 30,
-    paddingBottom: 16,
-  },
-
-  stateTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-
-  stateText: {
-    maxWidth: 280,
-    marginTop: 7,
-    color: colors.muted,
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-
-  retryText: {
-    marginTop: 12,
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
-  },
-
-  emptyList: {
-    flexGrow: 1,
-  },
-
-  emptyIcon: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-    borderRadius: 24,
-    backgroundColor: '#F7E8E2',
-  },
-
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor:
-      'rgba(43, 36, 33, 0.36)',
-  },
-
-  modalContent: {
-    maxHeight: '82%',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    backgroundColor: colors.background,
-    elevation: 16,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: -4,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-  },
-
-  modalInner: {
-    paddingHorizontal: 22,
-    paddingTop: 10,
-  },
-
-  modalDragArea: {
-    paddingBottom: 18,
-  },
-
-  modalHandle: {
-    width: 48,
-    height: 5,
-    alignSelf: 'center',
-    marginBottom: 20,
-    borderRadius: 3,
-    backgroundColor: '#D8D0CB',
-  },
-
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 16,
-  },
-
-  modalTitle: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: -0.45,
-  },
-
-  modalSubtitle: {
-    marginTop: 5,
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  modalReset: {
-    marginTop: 5,
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-
-  modalBody: {
-    gap: 30,
-  },
-
-  modalSection: {
-    gap: 13,
-  },
-
-  modalLabel: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: '900',
-  },
-
-  modalOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-
-  modalOption: {
-    minHeight: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 25,
-    backgroundColor: colors.surface,
-  },
-
-  modalOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-
-  modalOptionText: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: '800',
-  },
-
-  modalOptionTextSelected: {
-    color: colors.white,
-  },
-
-  applyButton: {
-    minHeight: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 34,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-  },
-
-  applyButtonPressed: {
-    backgroundColor: colors.primaryPressed,
-  },
-
-  applyText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '900',
-  },
-
-  pressed: {
-    opacity: 0.68,
-  },
-});
