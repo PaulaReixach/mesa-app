@@ -1,74 +1,59 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
-
-const regularFont = Platform.select({
-  ios: 'System',
-  android: 'sans-serif',
-  default: 'System',
-});
-
-const mediumFont = Platform.select({
-  ios: 'System',
-  android: 'sans-serif-medium',
-  default: 'System',
-});
 
 export const addHubScreenStyles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FBF6F3' },
   content: {
     flexGrow: 1,
     paddingHorizontal: 18,
-    paddingTop: 7,
-    paddingBottom: 26,
+    paddingTop: 8,
+    paddingBottom: 20,
     backgroundColor: '#FBF6F3',
   },
   header: {
-    minHeight: 54,
+    minHeight: 58,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   closeButton: {
-    position: 'absolute', left: 0, width: 44, height: 44,
+    position: 'absolute', left: 0, width: 48, height: 48,
     alignItems: 'center', justifyContent: 'center', borderWidth: 1,
-    borderColor: '#E8DED7', borderRadius: 22, backgroundColor: '#FFFDFC',
+    borderColor: '#E8DED7', borderRadius: 24, backgroundColor: '#FFFDFC',
   },
-  closeButtonCompact: { width: 38, height: 38, borderRadius: 19 },
+  closeButtonCompact: { width: 44, height: 44, borderRadius: 22 },
   title: {
-    color: '#171412', fontFamily: mediumFont, fontSize: 17,
-    fontWeight: '600', letterSpacing: -0.2,
+    color: '#171412', fontSize: 21, fontWeight: '700', letterSpacing: -0.35,
   },
-  titleCompact: { fontSize: 16 },
-  actions: { gap: 11 },
-  actionsCompact: { gap: 9 },
-  tipSlot: { marginTop: 'auto', paddingTop: 20 },
+  titleCompact: { fontSize: 20 },
+  actions: { gap: 12 },
+  actionsCompact: { gap: 10 },
+  tipSlot: { marginTop: 16 },
   tipCard: {
-    minHeight: 72, flexDirection: 'row', alignItems: 'stretch', overflow: 'hidden',
-    borderWidth: 1, borderColor: '#EADFD6', borderRadius: 18, backgroundColor: '#FAF2E9',
+    minHeight: 86, flexDirection: 'row', alignItems: 'stretch', overflow: 'hidden',
+    borderWidth: 1, borderColor: '#EADFD6', borderRadius: 19, backgroundColor: '#FAF2E9',
   },
-  tipCardCompact: { minHeight: 64, borderRadius: 17 },
+  tipCardCompact: { minHeight: 78, borderRadius: 18 },
   tipCopyRow: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 9,
-    paddingLeft: 12, paddingVertical: 8, zIndex: 2,
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingLeft: 14, paddingVertical: 10, zIndex: 2,
   },
   tipIcon: {
-    width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
-    overflow: 'hidden', borderRadius: 18,
+    width: 42, height: 42, alignItems: 'center', justifyContent: 'center',
+    borderRadius: 21, backgroundColor: '#FBE8CF',
   },
-  tipIconCompact: { width: 32, height: 32, borderRadius: 16 },
-  tipIconImage: { width: '100%', height: '100%' },
+  tipIconCompact: { width: 38, height: 38, borderRadius: 19 },
   tipText: {
-    flex: 1, color: '#625C58', fontFamily: regularFont,
-    fontSize: 10.5, fontWeight: '400', lineHeight: 15.5,
+    flex: 1, color: '#625C58', fontSize: 15, fontWeight: '400', lineHeight: 21,
   },
-  tipTextCompact: { fontSize: 9.75, lineHeight: 14 },
-  tipStrong: { color: colors.primary, fontFamily: mediumFont, fontWeight: '600' },
+  tipTextCompact: { fontSize: 14, lineHeight: 20 },
+  tipStrong: { color: colors.primary, fontWeight: '700' },
   illustration: {
-    width: 132, alignItems: 'flex-end', justifyContent: 'flex-end', overflow: 'hidden',
+    width: 176, alignItems: 'flex-end', justifyContent: 'flex-end', overflow: 'hidden',
   },
-  illustrationCompact: { width: 112 },
-  illustrationImage: { width: 132, height: 72 },
-  illustrationImageCompact: { width: 112, height: 64 },
+  illustrationCompact: { width: 152 },
+  illustrationImage: { width: 176, height: 92 },
+  illustrationImageCompact: { width: 152, height: 82 },
   pressed: { opacity: 0.74 },
 });
