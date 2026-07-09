@@ -11,7 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { addHubBannerImage } from '../../assets/AddHubBannerImage';
-import { addHubIconImages } from '../../assets/AddHubIconImages';
+import { addHubGroupImage } from '../../assets/add-hub/GroupImage';
+import { addHubInvitationsImage } from '../../assets/add-hub/InvitationsImage';
+import { addHubManualImage } from '../../assets/add-hub/ManualImage';
+import { addHubSearchImage } from '../../assets/add-hub/SearchImage';
+import { addHubTipImage } from '../../assets/add-hub/TipImage';
 import { addHubActionStyles as actionStyles } from '../../components/AddHubActionCard.styles';
 import { addHubScreenStyles as styles } from '../../components/AddHubScreen.styles';
 import { colors } from '../../theme/colors';
@@ -103,7 +107,7 @@ function TipCard({ compact }: { compact: boolean }) {
         ]}>
           <Image
             contentFit="contain"
-            source={addHubIconImages.tip}
+            source={addHubTipImage}
             style={styles.tipIconImage}
           />
         </View>
@@ -193,28 +197,28 @@ export default function AddScreen() {
         ]}>
           <ActionCard
             compact={compact}
-            imageSource={addHubIconImages.search}
+            imageSource={addHubSearchImage}
             onPress={() => chooseGroup('SEARCH')}
             subtitle="Busca y guárdalo en un grupo"
             title="Buscar restaurante"
           />
           <ActionCard
             compact={compact}
-            imageSource={addHubIconImages.manual}
+            imageSource={addHubManualImage}
             onPress={() => chooseGroup('MANUAL')}
             subtitle="Añade un sitio que no encuentres"
             title="Añadir manualmente"
           />
           <ActionCard
             compact={compact}
-            imageSource={addHubIconImages.group}
+            imageSource={addHubGroupImage}
             onPress={() => router.push('/groups/create')}
             subtitle="Privado o público"
             title="Crear grupo"
           />
           <ActionCard
             compact={compact}
-            imageSource={addHubIconImages.invitations}
+            imageSource={addHubInvitationsImage}
             onPress={() => router.push('/group-invitations')}
             subtitle="Revisa solicitudes y pendientes"
             title="Abrir invitaciones"
