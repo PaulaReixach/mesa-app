@@ -1,8 +1,8 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
-import type { ComponentProps } from 'react';
 import {
   Image,
+  type ImageSourcePropType,
   Pressable,
   ScrollView,
   Text,
@@ -11,31 +11,27 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { addHubBannerImage } from '../../assets/AddHubBannerImage';
+import { addHubIconImages } from '../../assets/AddHubIconImages';
 import { addHubActionStyles as actionStyles } from '../../components/AddHubActionCard.styles';
 import { addHubScreenStyles as styles } from '../../components/AddHubScreen.styles';
 import { colors } from '../../theme/colors';
 
-type SymbolName = ComponentProps<typeof SymbolView>['name'];
-
 type ActionCardProps = {
   compact: boolean;
-  icon: SymbolName;
+  imageSource: ImageSourcePropType;
   onPress: () => void;
   subtitle: string;
   title: string;
-  tone: 'terracotta' | 'sage';
 };
 
 function ActionCard({
   compact,
-  icon,
+  imageSource,
   onPress,
   subtitle,
   title,
-  tone,
 }: ActionCardProps) {
-  const sage = tone === 'sage';
-
   return (
     <Pressable
       accessibilityRole="button"
@@ -49,14 +45,11 @@ function ActionCard({
       <View style={[
         actionStyles.iconCircle,
         compact ? actionStyles.iconCircleCompact : null,
-        sage
-          ? actionStyles.iconCircleSage
-          : actionStyles.iconCircleTerracotta,
       ]}>
-        <SymbolView
-          name={icon}
-          size={compact ? 31 : 36}
-          tintColor={sage ? '#678047' : colors.primary}
+        <Image
+          resizeMode="contain"
+          source={imageSource}
+          style={actionStyles.iconImage}
         />
       </View>
 
@@ -105,14 +98,10 @@ function TipCard({ compact }: { compact: boolean }) {
           styles.tipIcon,
           compact ? styles.tipIconCompact : null,
         ]}>
-          <SymbolView
-            name={{
-              ios: 'lightbulb.fill',
-              android: 'lightbulb',
-              web: 'lightbulb',
-            }}
-            size={compact ? 21 : 25}
-            tintColor="#E29A2C"
+          <Image
+            resizeMode="contain"
+            source={addHubIconImages.tip}
+            style={styles.tipIconImage}
           />
         </View>
         <Text style={[
@@ -130,7 +119,7 @@ function TipCard({ compact }: { compact: boolean }) {
       ]}>
         <Image
           resizeMode="contain"
-          source={require('../../../assets/add-hub-tip.png')}
+          source={addHubBannerImage}
           style={[
             styles.illustrationImage,
             compact ? styles.illustrationImageCompact : null,
@@ -194,35 +183,31 @@ export default function AddScreen() {
         ]}>
           <ActionCard
             compact={compact}
-            icon={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+            imageSource={addHubIconImages.search}
             onPress={() => chooseGroup('SEARCH')}
             subtitle="Busca y guárdalo en un grupo"
             title="Buscar restaurante"
-            tone="terracotta"
           />
           <ActionCard
             compact={compact}
-            icon={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+            imageSource={addHubIconImages.manual}
             onPress={() => chooseGroup('MANUAL')}
             subtitle="Añade un sitio que no encuentres"
             title="Añadir manualmente"
-            tone="sage"
           />
           <ActionCard
             compact={compact}
-            icon={{ ios: 'person.2.fill', android: 'group', web: 'group' }}
+            imageSource={addHubIconImages.group}
             onPress={() => router.push('/groups/create')}
             subtitle="Privado o público"
             title="Crear grupo"
-            tone="terracotta"
           />
           <ActionCard
             compact={compact}
-            icon={{ ios: 'envelope', android: 'mail', web: 'mail' }}
+            imageSource={addHubIconImages.invitations}
             onPress={() => router.push('/group-invitations')}
             subtitle="Revisa solicitudes y pendientes"
             title="Abrir invitaciones"
-            tone="sage"
           />
         </View>
 
