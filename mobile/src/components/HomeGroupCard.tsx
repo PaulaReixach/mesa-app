@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(30, 22, 18, 0.34)',
   },
   fallbackIcon: {
