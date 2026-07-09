@@ -17,14 +17,14 @@ const mediumFont = Platform.select({
 export const addHubScreenStyles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FDF8F4',
+    backgroundColor: '#FBF6F3',
   },
   content: {
     flexGrow: 1,
     paddingHorizontal: 18,
     paddingTop: 7,
     paddingBottom: 26,
-    backgroundColor: '#FDF8F4',
+    backgroundColor: '#FBF6F3',
   },
   header: {
     minHeight: 54,
