@@ -45,6 +45,9 @@ public class GroupRestaurant {
     @Column(name = "status", nullable = false, length = 30)
     private GroupRestaurantStatus status;
 
+    @Column(name = "favorite", nullable = false)
+    private boolean favorite;
+
     @Column(name = "proposed_by_user_id", nullable = false)
     private UUID proposedByUserId;
 
@@ -100,6 +103,7 @@ public class GroupRestaurant {
         this.groupId = groupId;
         this.restaurantId = restaurantId;
         this.status = status;
+        this.favorite = false;
         this.proposedByUserId = proposedByUserId;
         this.groupNotes = groupNotes;
         this.statusUpdatedByUserId = null;
@@ -127,6 +131,10 @@ public class GroupRestaurant {
                 updatedByUserId,
                 "La persona que actualiza el estado es obligatoria."
         );
+    }
+
+    public void changeFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 
     public void changeRestaurantId(UUID restaurantId) {
@@ -173,6 +181,10 @@ public class GroupRestaurant {
 
     public GroupRestaurantStatus getStatus() {
         return status;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
     }
 
     public UUID getProposedByUserId() {
