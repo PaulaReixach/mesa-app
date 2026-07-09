@@ -15,6 +15,7 @@ public record MapRestaurantResponse(
         String groupName,
 
         GroupRestaurantStatus status,
+        boolean favorite,
 
         UUID restaurantId,
         String name,
@@ -40,6 +41,7 @@ public record MapRestaurantResponse(
                 group.getName(),
 
                 groupRestaurant.getStatus(),
+                groupRestaurant.isFavorite(),
 
                 restaurant.getId(),
                 restaurant.getName(),
