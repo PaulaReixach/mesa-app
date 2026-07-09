@@ -1,5 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
+import type { Href } from 'expo-router';
 import {
   Pressable,
   Text,
@@ -38,7 +39,7 @@ export function HomeDashboardContent({
 
   function openGroup(group: RestaurantGroup): void {
     if (group.privacy === 'PUBLIC') {
-      router.push(`/groups/public/${group.id}`);
+      router.push(`/groups/public/${group.id}` as Href);
       return;
     }
 
