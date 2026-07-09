@@ -1,84 +1,65 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
-
-const regularFont = Platform.select({
-  ios: 'System',
-  android: 'sans-serif',
-  default: 'System',
-});
-
-const mediumFont = Platform.select({
-  ios: 'System',
-  android: 'sans-serif-medium',
-  default: 'System',
-});
 
 export const addHubActionStyles = StyleSheet.create({
   card: {
     minHeight: 106,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 13,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    gap: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
     borderWidth: 1,
     borderColor: '#E8DED7',
-    borderRadius: 22,
+    borderRadius: 23,
     backgroundColor: '#FFFDFC',
   },
   cardCompact: {
-    minHeight: 94,
-    gap: 11,
-    paddingHorizontal: 13,
-    paddingVertical: 10,
-    borderRadius: 20,
+    minHeight: 104,
+    gap: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 22,
   },
   cardPressed: {
     opacity: 0.76,
     transform: [{ scale: 0.994 }],
   },
   iconCircle: {
-    width: 72,
-    height: 72,
+    width: 76,
+    height: 76,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    borderRadius: 36,
+    borderRadius: 38,
   },
   iconCircleCompact: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
-  iconImage: {
-    width: '100%',
-    height: '100%',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
   },
   copy: {
     flex: 1,
     minWidth: 0,
-    gap: 3,
+    gap: 4,
   },
   title: {
     color: colors.text,
-    fontFamily: mediumFont,
-    fontSize: 16.5,
-    fontWeight: '600',
-    letterSpacing: -0.15,
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.25,
   },
   titleCompact: {
-    fontSize: 15.5,
+    fontSize: 19,
   },
   subtitle: {
     color: '#706A66',
-    fontFamily: regularFont,
-    fontSize: 11,
+    fontSize: 15.5,
     fontWeight: '400',
-    lineHeight: 16,
+    lineHeight: 21,
   },
   subtitleCompact: {
-    fontSize: 10.25,
-    lineHeight: 14.5,
+    fontSize: 15,
+    lineHeight: 20,
   },
 });
