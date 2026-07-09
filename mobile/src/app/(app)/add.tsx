@@ -57,7 +57,7 @@ function ActionCard({
         <MaterialCommunityIcons
           color={iconColor}
           name={iconName}
-          size={compact ? 34 : 37}
+          size={compact ? 34 : 30}
         />
       </View>
 
@@ -229,7 +229,7 @@ export default function AddScreen() {
             compact={compact}
             iconBackgroundColor="#FFF4EA"
             iconColor="#C85B3D"
-            iconName="account-group-outline"
+            iconName="account-group"
             onPress={() => router.push('/groups/create')}
             subtitle="Privado o público"
             title="Crear grupo"

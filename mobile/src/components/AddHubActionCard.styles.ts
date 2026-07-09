@@ -28,15 +28,15 @@ export const addHubActionStyles = StyleSheet.create({
     transform: [{ scale: 0.994 }],
   },
   iconCircle: {
-    width: 72,
-    height: 72,
+    width: 62,
+    height: 62,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 36,
   },
   iconCircleCompact: {
-    width: 66,
-    height: 66,
+    width: 52,
+    height: 52,
     borderRadius: 33,
   },
   copy: {
@@ -47,9 +47,9 @@ export const addHubActionStyles = StyleSheet.create({
   title: {
     color: colors.text,
     fontFamily: fonts.semiBold,
-    fontSize: 17,
+    fontSize: 16,
     lineHeight: 21,
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
   },
   titleCompact: {
     fontSize: 16.5,
@@ -58,7 +58,7 @@ export const addHubActionStyles = StyleSheet.create({
   subtitle: {
     color: '#706A66',
     fontFamily: fonts.regular,
-    fontSize: 13.2,
+    fontSize: 12,
     lineHeight: 18,
   },
   subtitleCompact: {
