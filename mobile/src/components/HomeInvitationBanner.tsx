@@ -53,24 +53,24 @@ export function HomeInvitationBanner({
 
 const styles = StyleSheet.create({
   banner: {
-    minHeight: 62,
+    minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 13,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#EDE3DD',
-    borderRadius: 17,
-    backgroundColor: colors.surface,
+    borderColor: '#E3D6CE',
+    borderRadius: 18,
+    backgroundColor: '#FCF9F7',
   },
   iconWrap: {
-    width: 40,
-    height: 40,
+    width: 41,
+    height: 41,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 14,
-    backgroundColor: '#FBE9E2',
+    backgroundColor: '#F7E7DF',
   },
   copy: {
     flex: 1,
