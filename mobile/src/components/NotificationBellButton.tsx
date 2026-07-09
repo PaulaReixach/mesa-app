@@ -1,24 +1,13 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useNotifications } from '../contexts/notification-context';
 import { colors } from '../theme/colors';
 
 export function NotificationBellButton() {
-  const {
-    unreadCount,
-  } = useNotifications();
-
-  const badgeText =
-    unreadCount > 9
-      ? '9+'
-      : String(unreadCount);
+  const { unreadCount } = useNotifications();
+  const badgeText = unreadCount > 9 ? '9+' : String(unreadCount);
 
   return (
     <Pressable
@@ -28,34 +17,22 @@ export function NotificationBellButton() {
           : 'Notificaciones'
       }
       accessibilityRole="button"
-      onPress={() => {
-        router.push('/notifications');
-      }}
-      style={({ pressed }) => [
-        styles.button,
-        pressed
-          ? styles.buttonPressed
-          : null,
-      ]}
+      onPress={() => router.push('/notifications')}
+      style={({ pressed }) => [styles.button, pressed ? styles.buttonPressed : null]}
     >
       <SymbolView
         name={{
-          ios:
-            unreadCount > 0
-              ? 'bell.fill'
-              : 'bell',
+          ios: unreadCount > 0 ? 'bell.fill' : 'bell',
           android: 'notifications',
           web: 'notifications',
         }}
-        size={21}
+        size={20}
         tintColor={colors.text}
       />
 
       {unreadCount > 0 ? (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>
-            {badgeText}
-          </Text>
+          <Text style={styles.badgeText}>{badgeText}</Text>
         </View>
       ) : null}
     </Pressable>
@@ -64,38 +41,33 @@ export function NotificationBellButton() {
 
 const styles = StyleSheet.create({
   button: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
+    borderColor: '#E4D8D0',
+    borderRadius: 21,
+    backgroundColor: '#FDF9F8',
   },
-
-  buttonPressed: {
-    opacity: 0.7,
-  },
-
+  buttonPressed: { opacity: 0.7 },
   badge: {
     position: 'absolute',
     top: -3,
     right: -4,
-    minWidth: 19,
-    height: 19,
+    minWidth: 18,
+    height: 18,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.background,
-    borderRadius: 10,
+    borderColor: '#FBF7F4',
+    borderRadius: 9,
     backgroundColor: colors.primary,
     paddingHorizontal: 4,
   },
-
   badgeText: {
     color: colors.white,
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '800',
   },
 });
