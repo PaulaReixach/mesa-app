@@ -143,7 +143,7 @@ function TipCard({ compact }: { compact: boolean }) {
 
 export default function AddScreen() {
   const { height } = useWindowDimensions();
-  const compact = height < 780;
+  const compact = height < 900;
 
   function chooseGroup(addMode: 'SEARCH' | 'MANUAL'): void {
     router.push({
