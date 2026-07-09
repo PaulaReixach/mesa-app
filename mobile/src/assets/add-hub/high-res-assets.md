@@ -1,1 +1,0 @@
-High-resolution add hub assets are stored through generated TypeScript image modules.
