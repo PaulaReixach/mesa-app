@@ -9,6 +9,7 @@ import {
 
 import { HomeQuickActionCard } from './HomeQuickActionCard';
 import { homeStyles as styles } from './HomeDashboardStyles';
+import { refinedHomeStyles as refined } from './HomeRefinedStyles';
 import { NotificationBellButton } from './NotificationBellButton';
 import { colors } from '../theme/colors';
 
@@ -24,9 +25,9 @@ export function HomeHeader({
   return (
     <>
       <View style={styles.topBar}>
-        <Text style={styles.brand}>Mesa</Text>
+        <Text style={[styles.brand, refined.brand]}>Mesa</Text>
 
-        <View style={styles.topActions}>
+        <View style={[styles.topActions, refined.topActions]}>
           <NotificationBellButton />
 
           <Pressable
@@ -35,6 +36,7 @@ export function HomeHeader({
             onPress={() => router.push('/profile')}
             style={({ pressed }) => [
               styles.avatarButton,
+              refined.avatarButton,
               pressed ? styles.pressed : null,
             ]}
           >
@@ -50,9 +52,9 @@ export function HomeHeader({
         </View>
       </View>
 
-      <View style={styles.hero}>
-        <Text style={styles.title}>¿Qué te apetece hoy?</Text>
-        <Text style={styles.subtitle}>
+      <View style={[styles.hero, refined.hero]}>
+        <Text style={[styles.title, refined.title]}>¿Qué te apetece hoy?</Text>
+        <Text style={[styles.subtitle, refined.subtitle]}>
           Descubre restaurantes increíbles y organiza planes con tus grupos.
         </Text>
       </View>
@@ -62,20 +64,21 @@ export function HomeHeader({
         onPress={() => router.push('/map')}
         style={({ pressed }) => [
           styles.searchBar,
+          refined.searchBar,
           pressed ? styles.pressed : null,
         ]}
       >
         <SymbolView
           name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-          size={19}
+          size={18}
           tintColor={colors.muted}
         />
-        <Text style={styles.searchText}>
+        <Text style={[styles.searchText, refined.searchText]}>
           Busca restaurantes, cocinas o ubicaciones
         </Text>
       </Pressable>
 
-      <View style={styles.quickActions}>
+      <View style={[styles.quickActions, refined.quickActions]}>
         <HomeQuickActionCard
           icon={{ ios: 'person.2.fill', android: 'group_add', web: 'group_add' }}
           onPress={() => router.push('/groups/create')}
