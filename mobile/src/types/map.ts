@@ -8,6 +8,7 @@ export type MapRestaurant = {
   groupName: string;
 
   status: GroupRestaurantStatus;
+  favorite: boolean;
 
   restaurantId: string;
   name: string;
