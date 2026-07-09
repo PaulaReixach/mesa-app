@@ -48,7 +48,6 @@ function ActionCard({
         compact ? actionStyles.iconCircleCompact : null,
       ]}>
         <Image
-          allowDownscaling={false}
           contentFit="contain"
           source={imageSource}
           style={actionStyles.iconImage}
@@ -66,7 +65,7 @@ function ActionCard({
           {title}
         </Text>
         <Text
-          numberOfLines={2}
+          numberOfLines={1}
           style={[
             actionStyles.subtitle,
             compact ? actionStyles.subtitleCompact : null,
@@ -101,7 +100,6 @@ function TipCard({ compact }: { compact: boolean }) {
           compact ? styles.tipIconCompact : null,
         ]}>
           <Image
-            allowDownscaling={false}
             contentFit="contain"
             source={addHubIconImages.tip}
             style={styles.tipIconImage}
@@ -121,9 +119,8 @@ function TipCard({ compact }: { compact: boolean }) {
         compact ? styles.illustrationCompact : null,
       ]}>
         <Image
-          allowDownscaling={false}
           contentFit="contain"
-          contentPosition="bottom right"
+          contentPosition={{ right: 0, bottom: 0 }}
           source={addHubBannerImage}
           style={[
             styles.illustrationImage,
@@ -169,7 +166,7 @@ export default function AddScreen() {
           >
             <SymbolView
               name={{ ios: 'xmark', android: 'close', web: 'close' }}
-              size={compact ? 21 : 23}
+              size={compact ? 20 : 22}
               tintColor={colors.text}
             />
           </Pressable>
@@ -216,7 +213,9 @@ export default function AddScreen() {
           />
         </View>
 
-        <TipCard compact={compact} />
+        <View style={styles.tipSlot}>
+          <TipCard compact={compact} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
