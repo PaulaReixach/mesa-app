@@ -56,6 +56,7 @@ function ActionCard({
 
       <View style={actionStyles.copy}>
         <Text
+          allowFontScaling={false}
           numberOfLines={1}
           style={[
             actionStyles.title,
@@ -65,6 +66,7 @@ function ActionCard({
           {title}
         </Text>
         <Text
+          allowFontScaling={false}
           numberOfLines={1}
           style={[
             actionStyles.subtitle,
@@ -105,10 +107,13 @@ function TipCard({ compact }: { compact: boolean }) {
             style={styles.tipIconImage}
           />
         </View>
-        <Text style={[
-          styles.tipText,
-          compact ? styles.tipTextCompact : null,
-        ]}>
+        <Text
+          allowFontScaling={false}
+          style={[
+            styles.tipText,
+            compact ? styles.tipTextCompact : null,
+          ]}
+        >
           <Text style={styles.tipStrong}>Consejo: </Text>
           guarda tus favoritos en grupos temáticos
         </Text>
@@ -171,10 +176,13 @@ export default function AddScreen() {
             />
           </Pressable>
 
-          <Text style={[
-            styles.title,
-            compact ? styles.titleCompact : null,
-          ]}>
+          <Text
+            allowFontScaling={false}
+            style={[
+              styles.title,
+              compact ? styles.titleCompact : null,
+            ]}
+          >
             ¿Qué quieres hacer?
           </Text>
         </View>
