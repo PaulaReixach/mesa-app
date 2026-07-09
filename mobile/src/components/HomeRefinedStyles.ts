@@ -1,13 +1,13 @@
 import { StyleSheet } from 'react-native';
 
 export const refinedHomeStyles = StyleSheet.create({
-  safeArea: { backgroundColor: '#FBF7F4' },
+  safeArea: { backgroundColor: '#FBF6F3' },
   content: {
     gap: 14,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 22,
-    backgroundColor: '#FBF7F4',
+    backgroundColor: '#FBF6F3',
   },
   brand: { fontSize: 27, letterSpacing: -0.8 },
   topActions: { gap: 8 },
