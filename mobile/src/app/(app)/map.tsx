@@ -1,1 +1,1 @@
-export { default } from '../../screens/MapScreen';
+export { default } from '../../screens/MapScreenFinal';
