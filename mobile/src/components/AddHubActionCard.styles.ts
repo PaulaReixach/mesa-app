@@ -31,6 +31,7 @@ export const addHubActionStyles = StyleSheet.create({
     height: 90,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     borderRadius: 45,
   },
   iconCircleCompact: {
@@ -38,11 +39,9 @@ export const addHubActionStyles = StyleSheet.create({
     height: 72,
     borderRadius: 36,
   },
-  iconCircleTerracotta: {
-    backgroundColor: '#F8EEE8',
-  },
-  iconCircleSage: {
-    backgroundColor: '#F0F3E8',
+  iconImage: {
+    width: '100%',
+    height: '100%',
   },
   copy: {
     flex: 1,
