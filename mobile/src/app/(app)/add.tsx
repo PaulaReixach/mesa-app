@@ -2,6 +2,7 @@ import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import type { ComponentProps } from 'react';
 import {
+  Image,
   Pressable,
   ScrollView,
   Text,
@@ -127,46 +128,14 @@ function TipCard({ compact }: { compact: boolean }) {
         styles.illustration,
         compact ? styles.illustrationCompact : null,
       ]}>
-        <View style={styles.sun} />
-        <View style={styles.table} />
-        <View style={styles.plate} />
-        <View style={styles.plateFood} />
-
-        <View style={styles.wineOne}>
-          <SymbolView
-            name={{ ios: 'wineglass', android: 'wine_bar', web: 'wine_bar' }}
-            size={24}
-            tintColor="#FFF3E7"
-          />
-        </View>
-        <View style={styles.wineTwo}>
-          <SymbolView
-            name={{ ios: 'wineglass', android: 'wine_bar', web: 'wine_bar' }}
-            size={19}
-            tintColor="#FFF3E7"
-          />
-        </View>
-        <View style={styles.leafOne}>
-          <SymbolView
-            name={{ ios: 'leaf.fill', android: 'eco', web: 'eco' }}
-            size={30}
-            tintColor="#6C874E"
-          />
-        </View>
-        <View style={styles.leafTwo}>
-          <SymbolView
-            name={{ ios: 'leaf.fill', android: 'eco', web: 'eco' }}
-            size={23}
-            tintColor="#789557"
-          />
-        </View>
-        <View style={styles.sparkle}>
-          <SymbolView
-            name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }}
-            size={17}
-            tintColor="#F3C766"
-          />
-        </View>
+        <Image
+          resizeMode="contain"
+          source={require('../../../assets/add-hub-tip.png')}
+          style={[
+            styles.illustrationImage,
+            compact ? styles.illustrationImageCompact : null,
+          ]}
+        />
       </View>
     </View>
   );
