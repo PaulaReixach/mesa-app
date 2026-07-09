@@ -1,0 +1,1 @@
+These image modules are generated from the user-provided transparent artwork.
