@@ -1,8 +1,7 @@
+import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import {
-  Image,
-  type ImageSourcePropType,
   Pressable,
   ScrollView,
   Text,
@@ -17,9 +16,11 @@ import { addHubActionStyles as actionStyles } from '../../components/AddHubActio
 import { addHubScreenStyles as styles } from '../../components/AddHubScreen.styles';
 import { colors } from '../../theme/colors';
 
+type AddHubImageSource = { uri: string };
+
 type ActionCardProps = {
   compact: boolean;
-  imageSource: ImageSourcePropType;
+  imageSource: AddHubImageSource;
   onPress: () => void;
   subtitle: string;
   title: string;
@@ -47,7 +48,8 @@ function ActionCard({
         compact ? actionStyles.iconCircleCompact : null,
       ]}>
         <Image
-          resizeMode="contain"
+          allowDownscaling={false}
+          contentFit="contain"
           source={imageSource}
           style={actionStyles.iconImage}
         />
@@ -80,7 +82,7 @@ function ActionCard({
           android: 'chevron_right',
           web: 'chevron_right',
         }}
-        size={compact ? 20 : 23}
+        size={compact ? 18 : 20}
         tintColor="#77716D"
       />
     </Pressable>
@@ -99,7 +101,8 @@ function TipCard({ compact }: { compact: boolean }) {
           compact ? styles.tipIconCompact : null,
         ]}>
           <Image
-            resizeMode="contain"
+            allowDownscaling={false}
+            contentFit="contain"
             source={addHubIconImages.tip}
             style={styles.tipIconImage}
           />
@@ -118,7 +121,9 @@ function TipCard({ compact }: { compact: boolean }) {
         compact ? styles.illustrationCompact : null,
       ]}>
         <Image
-          resizeMode="contain"
+          allowDownscaling={false}
+          contentFit="contain"
+          contentPosition="bottom right"
           source={addHubBannerImage}
           style={[
             styles.illustrationImage,
@@ -132,7 +137,7 @@ function TipCard({ compact }: { compact: boolean }) {
 
 export default function AddScreen() {
   const { height } = useWindowDimensions();
-  const compact = height < 850;
+  const compact = height < 780;
 
   function chooseGroup(addMode: 'SEARCH' | 'MANUAL'): void {
     router.push({
@@ -164,7 +169,7 @@ export default function AddScreen() {
           >
             <SymbolView
               name={{ ios: 'xmark', android: 'close', web: 'close' }}
-              size={compact ? 22 : 25}
+              size={compact ? 21 : 23}
               tintColor={colors.text}
             />
           </Pressable>
