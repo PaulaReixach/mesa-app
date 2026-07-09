@@ -11,7 +11,7 @@ export const homeBrandFont = Platform.select({
 export const homeStyles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FBF7F4',
+    backgroundColor: '#FBF6F3',
   },
   content: {
     flexGrow: 1,
@@ -19,7 +19,7 @@ export const homeStyles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 14,
     paddingBottom: 28,
-    backgroundColor: '#FBF7F4',
+    backgroundColor: '#FBF6F3',
   },
   topBar: {
     flexDirection: 'row',
