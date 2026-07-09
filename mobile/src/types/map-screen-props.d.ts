@@ -1,15 +1,9 @@
-import type { MapRestaurant } from './map';
-
-declare global {
-  type RestaurantRowProps = {
-    onFavoritePress: () => void;
-    onPress: () => void;
-    restaurant: MapRestaurant & {
-      distanceKm: number | null;
-    };
-    selected: boolean;
-    updating: boolean;
+type RestaurantRowProps = {
+  onFavoritePress: () => void;
+  onPress: () => void;
+  restaurant: import('./map').MapRestaurant & {
+    distanceKm: number | null;
   };
-}
-
-export {};
+  selected: boolean;
+  updating: boolean;
+};
