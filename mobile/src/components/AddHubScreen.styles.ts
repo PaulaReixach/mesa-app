@@ -1,0 +1,181 @@
+import { StyleSheet } from 'react-native';
+
+import { colors } from '../theme/colors';
+
+export const addHubScreenStyles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FBF6F3',
+  },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 22,
+    backgroundColor: '#FBF6F3',
+  },
+  header: {
+    minHeight: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+  },
+  closeButton: {
+    position: 'absolute',
+    left: 0,
+    width: 52,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E5DAD3',
+    borderRadius: 26,
+    backgroundColor: '#FDF9F8',
+  },
+  closeButtonCompact: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 21,
+    fontWeight: '900',
+    letterSpacing: -0.35,
+  },
+  titleCompact: {
+    fontSize: 19,
+  },
+  actions: {
+    gap: 15,
+  },
+  actionsCompact: {
+    gap: 11,
+  },
+  tipCard: {
+    minHeight: 104,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    marginTop: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#EADFD6',
+    borderRadius: 22,
+    backgroundColor: '#F8F0E8',
+  },
+  tipCardCompact: {
+    minHeight: 82,
+    marginTop: 14,
+    borderRadius: 19,
+  },
+  tipCopyRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    zIndex: 2,
+  },
+  tipIcon: {
+    width: 46,
+    height: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 23,
+    backgroundColor: '#FCE9D2',
+  },
+  tipIconCompact: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+  },
+  tipText: {
+    flex: 1,
+    color: '#625C58',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  tipTextCompact: {
+    fontSize: 10,
+    lineHeight: 15,
+  },
+  tipStrong: {
+    color: colors.primary,
+    fontWeight: '900',
+  },
+  illustration: {
+    width: 142,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  illustrationCompact: {
+    width: 112,
+  },
+  sun: {
+    position: 'absolute',
+    right: -18,
+    bottom: -32,
+    width: 128,
+    height: 128,
+    borderRadius: 64,
+    backgroundColor: '#D96A3D',
+  },
+  table: {
+    position: 'absolute',
+    right: -2,
+    bottom: 0,
+    width: 126,
+    height: 35,
+    borderTopLeftRadius: 24,
+    backgroundColor: '#E8C494',
+  },
+  plate: {
+    position: 'absolute',
+    right: 45,
+    bottom: 18,
+    width: 39,
+    height: 17,
+    borderRadius: 20,
+    backgroundColor: '#FFF8F1',
+  },
+  plateFood: {
+    position: 'absolute',
+    right: 57,
+    bottom: 23,
+    width: 16,
+    height: 9,
+    borderRadius: 8,
+    backgroundColor: '#DFA24A',
+  },
+  wineOne: {
+    position: 'absolute',
+    right: 91,
+    bottom: 22,
+  },
+  wineTwo: {
+    position: 'absolute',
+    right: 74,
+    bottom: 21,
+  },
+  leafOne: {
+    position: 'absolute',
+    right: 4,
+    bottom: 15,
+    transform: [{ rotate: '-18deg' }],
+  },
+  leafTwo: {
+    position: 'absolute',
+    right: 16,
+    bottom: 34,
+    transform: [{ rotate: '12deg' }],
+  },
+  sparkle: {
+    position: 'absolute',
+    right: 29,
+    top: 17,
+  },
+  pressed: {
+    opacity: 0.74,
+  },
+});
