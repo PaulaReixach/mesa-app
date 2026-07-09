@@ -58,7 +58,6 @@ function ActionCard({
           color={iconColor}
           name={iconName}
           size={34}
-          strokeWidth={2.4}
         />
       </View>
 
