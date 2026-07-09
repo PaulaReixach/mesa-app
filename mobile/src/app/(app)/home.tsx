@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import type { HomeActivityEntry } from '../../components/HomeActivityRow';
 import { HomeDashboardContent } from '../../components/HomeDashboardContent';
 import { HomeHeader } from '../../components/HomeHeader';
 import { homeStyles as styles } from '../../components/HomeDashboardStyles';
@@ -82,7 +83,7 @@ export default function HomeScreen() {
 
   const [groups, setGroups] = useState<RestaurantGroup[]>([]);
   const [membersByGroup, setMembersByGroup] = useState<Record<string, GroupMember[]>>({});
-  const [activity, setActivity] = useState<GroupActivityItem[]>([]);
+  const [activity, setActivity] = useState<HomeActivityEntry[]>([]);
   const [recommendation, setRecommendation] = useState<HomeRecommendation | null>(null);
   const [pendingInvitationCount, setPendingInvitationCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -133,10 +134,14 @@ export default function HomeScreen() {
       );
 
       const recentActivity = dashboardData
-        .flatMap(item => item.activity)
+        .flatMap(item => item.activity.map(activityItem => ({
+          activity: activityItem,
+          groupId: item.group.id,
+          groupName: item.group.name,
+        })))
         .sort((left, right) => {
-          return new Date(right.createdAt).getTime()
-            - new Date(left.createdAt).getTime();
+          return new Date(right.activity.createdAt).getTime()
+            - new Date(left.activity.createdAt).getTime();
         })
         .slice(0, 3);
 
