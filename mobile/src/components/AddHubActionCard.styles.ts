@@ -1,43 +1,55 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
 
+const regularFont = Platform.select({
+  ios: 'System',
+  android: 'sans-serif',
+  default: 'System',
+});
+
+const mediumFont = Platform.select({
+  ios: 'System',
+  android: 'sans-serif-medium',
+  default: 'System',
+});
+
 export const addHubActionStyles = StyleSheet.create({
   card: {
-    minHeight: 126,
+    minHeight: 112,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 18,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    gap: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#E5DAD3',
-    borderRadius: 25,
-    backgroundColor: '#FDF9F8',
+    borderColor: '#E8DED7',
+    borderRadius: 23,
+    backgroundColor: '#FFFDFC',
   },
   cardCompact: {
-    minHeight: 104,
-    gap: 15,
-    paddingHorizontal: 17,
-    paddingVertical: 13,
-    borderRadius: 22,
+    minHeight: 102,
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 21,
   },
   cardPressed: {
     opacity: 0.76,
-    transform: [{ scale: 0.992 }],
+    transform: [{ scale: 0.994 }],
   },
   iconCircle: {
-    width: 90,
-    height: 90,
+    width: 76,
+    height: 76,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 45,
+    borderRadius: 38,
   },
   iconCircleCompact: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
   },
   iconImage: {
     width: '100%',
@@ -46,24 +58,27 @@ export const addHubActionStyles = StyleSheet.create({
   copy: {
     flex: 1,
     minWidth: 0,
-    gap: 5,
+    gap: 4,
   },
   title: {
     color: colors.text,
-    fontSize: 20,
-    fontWeight: '900',
-    letterSpacing: -0.35,
+    fontFamily: mediumFont,
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
   titleCompact: {
-    fontSize: 17,
+    fontSize: 16,
   },
   subtitle: {
-    color: '#716B67',
-    fontSize: 13,
-    lineHeight: 19,
+    color: '#706A66',
+    fontFamily: regularFont,
+    fontSize: 11.5,
+    fontWeight: '400',
+    lineHeight: 17,
   },
   subtitleCompact: {
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 10.5,
+    lineHeight: 15,
   },
 });
