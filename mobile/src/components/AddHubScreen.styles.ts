@@ -82,13 +82,17 @@ export const addHubScreenStyles = StyleSheet.create({
     height: 46,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     borderRadius: 23,
-    backgroundColor: '#FCE9D2',
   },
   tipIconCompact: {
     width: 38,
     height: 38,
     borderRadius: 19,
+  },
+  tipIconImage: {
+    width: '100%',
+    height: '100%',
   },
   tipText: {
     flex: 1,
