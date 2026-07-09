@@ -1,6 +1,6 @@
 import { SymbolView } from 'expo-symbols';
-import { router, Tabs } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { router, Tabs, usePathname } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { appTabsStyles as styles, tabNavigationColors as navigationColors } from './AppTabsLayout.styles';
@@ -13,7 +13,9 @@ const hiddenScreenOptions = {
 
 export default function AppTabsLayout() {
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
   const bottomPadding = Math.max(insets.bottom, 6);
+  const highlightGroups = pathname === '/add';
 
   return (
     <Tabs
@@ -126,11 +128,27 @@ export default function AppTabsLayout() {
           title: 'Grupos',
           tabBarAccessibilityLabel: 'Grupos',
           popToTopOnBlur: true,
+          tabBarLabel: ({ color }) => (
+            <Text
+              style={{
+                color: highlightGroups ? navigationColors.active : color,
+                fontSize: 10,
+                fontWeight: highlightGroups ? '600' : '500',
+                lineHeight: 13,
+              }}
+            >
+              Grupos
+            </Text>
+          ),
           tabBarIcon: ({ focused, color }) => (
             <SymbolView
-              name={{ ios: focused ? 'person.2.fill' : 'person.2', android: 'group', web: 'group' }}
+              name={{
+                ios: focused || highlightGroups ? 'person.2.fill' : 'person.2',
+                android: 'group',
+                web: 'group',
+              }}
               size={21}
-              tintColor={color}
+              tintColor={highlightGroups ? navigationColors.active : color}
             />
           ),
         }}
