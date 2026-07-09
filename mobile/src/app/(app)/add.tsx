@@ -1,8 +1,8 @@
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import {
+  Image,
   Pressable,
   ScrollView,
   Text,
@@ -16,7 +16,7 @@ import { addHubActionStyles as actionStyles } from '../../components/AddHubActio
 import { addHubScreenStyles as styles } from '../../components/AddHubScreen.styles';
 import { colors } from '../../theme/colors';
 
-type ActionIconName = keyof typeof Feather.glyphMap;
+type ActionIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 type ActionCardProps = {
   compact: boolean;
@@ -54,10 +54,10 @@ function ActionCard({
           compact ? actionStyles.iconCircleCompact : null,
         ]}
       >
-        <Feather
+        <MaterialCommunityIcons
           color={iconColor}
           name={iconName}
-          size={34}
+          size={compact ? 34 : 37}
         />
       </View>
 
@@ -74,7 +74,7 @@ function ActionCard({
         </Text>
         <Text
           allowFontScaling={false}
-          numberOfLines={1}
+          numberOfLines={2}
           style={[
             actionStyles.subtitle,
             compact ? actionStyles.subtitleCompact : null,
@@ -99,21 +99,26 @@ function ActionCard({
 
 function TipCard({ compact }: { compact: boolean }) {
   return (
-    <View style={[
-      styles.tipCard,
-      compact ? styles.tipCardCompact : null,
-    ]}>
+    <View
+      style={[
+        styles.tipCard,
+        compact ? styles.tipCardCompact : null,
+      ]}
+    >
       <View style={styles.tipCopyRow}>
-        <View style={[
-          styles.tipIcon,
-          compact ? styles.tipIconCompact : null,
-        ]}>
+        <View
+          style={[
+            styles.tipIcon,
+            compact ? styles.tipIconCompact : null,
+          ]}
+        >
           <MaterialCommunityIcons
             color="#D9892C"
             name="lightbulb-on-outline"
-            size={compact ? 23 : 25}
+            size={compact ? 22 : 24}
           />
         </View>
+
         <Text
           allowFontScaling={false}
           style={[
@@ -126,13 +131,15 @@ function TipCard({ compact }: { compact: boolean }) {
         </Text>
       </View>
 
-      <View style={[
-        styles.illustration,
-        compact ? styles.illustrationCompact : null,
-      ]}>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.illustration,
+          compact ? styles.illustrationCompact : null,
+        ]}
+      >
         <Image
-          contentFit="contain"
-          contentPosition={{ right: 0, bottom: 0 }}
+          resizeMode="contain"
           source={addHubBannerImage}
           style={[
             styles.illustrationImage,
@@ -146,7 +153,7 @@ function TipCard({ compact }: { compact: boolean }) {
 
 export default function AddScreen() {
   const { height } = useWindowDimensions();
-  const compact = height < 900;
+  const compact = height < 820;
 
   function chooseGroup(addMode: 'SEARCH' | 'MANUAL'): void {
     router.push({
@@ -194,15 +201,17 @@ export default function AddScreen() {
           </Text>
         </View>
 
-        <View style={[
-          styles.actions,
-          compact ? styles.actionsCompact : null,
-        ]}>
+        <View
+          style={[
+            styles.actions,
+            compact ? styles.actionsCompact : null,
+          ]}
+        >
           <ActionCard
             compact={compact}
             iconBackgroundColor="#FFF4EA"
             iconColor="#B94F38"
-            iconName="search"
+            iconName="magnify"
             onPress={() => chooseGroup('SEARCH')}
             subtitle="Busca y guárdalo en un grupo"
             title="Buscar restaurante"
@@ -211,7 +220,7 @@ export default function AddScreen() {
             compact={compact}
             iconBackgroundColor="#F2F6EC"
             iconColor="#5B743A"
-            iconName="edit-3"
+            iconName="pencil-outline"
             onPress={() => chooseGroup('MANUAL')}
             subtitle="Añade un sitio que no encuentres"
             title="Añadir manualmente"
@@ -220,7 +229,7 @@ export default function AddScreen() {
             compact={compact}
             iconBackgroundColor="#FFF4EA"
             iconColor="#C85B3D"
-            iconName="users"
+            iconName="account-group-outline"
             onPress={() => router.push('/groups/create')}
             subtitle="Privado o público"
             title="Crear grupo"
@@ -229,7 +238,7 @@ export default function AddScreen() {
             compact={compact}
             iconBackgroundColor="#F2F6EC"
             iconColor="#5B743A"
-            iconName="mail"
+            iconName="email-outline"
             onPress={() => router.push('/group-invitations')}
             subtitle="Revisa solicitudes y pendientes"
             title="Abrir invitaciones"
