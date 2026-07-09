@@ -1,3 +1,4 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { router, useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -40,12 +41,12 @@ import { getMapRestaurants } from '../../services/map-service';
 import {
   updateGroupRestaurantStatus,
 } from '../../services/restaurant-service';
+import { styles } from '../../styles/map-screen.styles';
 import { colors } from '../../theme/colors';
 import type { MapRestaurant } from '../../types/map';
 import type {
   GroupRestaurantStatus,
 } from '../../types/restaurant';
-import { styles } from './MapScreen.styles';
 
 type Coordinates = {
   latitude: number;
@@ -340,14 +341,14 @@ function RestaurantMarker({
         latitude: restaurant.latitude,
         longitude: restaurant.longitude,
       }}
-      onPress={onPress}
+      onPress={event => {
+        event.stopPropagation();
+        onPress();
+      }}
+      tracksViewChanges
       zIndex={selected ? 2 : 1}
     >
       <View style={styles.marker}>
-        {selected ? (
-          <View style={styles.markerHalo} />
-        ) : null}
-
         <View
           style={[
             styles.markerBubble,
@@ -504,24 +505,18 @@ function RestaurantRow({
             size="small"
           />
         ) : (
-          <SymbolView
-            name={{
-              android: favorite
-                ? 'favorite'
-                : 'favorite_border',
-              ios: favorite
-                ? 'heart.fill'
-                : 'heart',
-              web: favorite
-                ? 'favorite'
-                : 'favorite_border',
-            }}
-            size={20}
-            tintColor={
+          <MaterialIcons
+            color={
               favorite
                 ? colors.primary
                 : colors.muted
             }
+            name={
+              favorite
+                ? 'favorite'
+                : 'favorite-border'
+            }
+            size={22}
           />
         )}
       </Pressable>
@@ -862,6 +857,15 @@ export default function MapScreen() {
     userLocation,
   ]);
 
+  const markerSetKey = useMemo(() => (
+    visibleRestaurants
+      .map(restaurant => (
+        `${restaurant.groupRestaurantId}:${restaurant.status}`
+      ))
+      .sort()
+      .join('|') || 'empty'
+  ), [visibleRestaurants]);
+
   const selectedRestaurant = useMemo(() => (
     visibleRestaurants.find(
       restaurant =>
@@ -965,6 +969,7 @@ export default function MapScreen() {
     };
   }, [
     isMapReady,
+    markerSetKey,
     selectedRestaurantId,
     userLocation,
     visibleRestaurants,
@@ -977,6 +982,7 @@ export default function MapScreen() {
   }
 
   function resetFilters(): void {
+    setSelectedRestaurantId(null);
     setDistance(null);
     setFavoritesOnly(false);
     setSearchQuery('');
@@ -984,16 +990,19 @@ export default function MapScreen() {
   }
 
   function showAll(): void {
+    setSelectedRestaurantId(null);
     setFavoritesOnly(false);
     setStatusFilter('ALL');
   }
 
   function showPending(): void {
+    setSelectedRestaurantId(null);
     setFavoritesOnly(false);
     setStatusFilter('WANT_TO_GO');
   }
 
   function showFavorites(): void {
+    setSelectedRestaurantId(null);
     setStatusFilter('ALL');
     setFavoritesOnly(true);
   }
@@ -1281,6 +1290,7 @@ export default function MapScreen() {
         style={styles.mapContainer}
       >
         <MapView
+          key={markerSetKey}
           customMapStyle={MAP_STYLE}
           initialRegion={DEFAULT_REGION}
           mapPadding={{
@@ -1550,26 +1560,15 @@ export default function MapScreen() {
                         size="small"
                       />
                     ) : (
-                      <SymbolView
-                        name={{
-                          android:
-                            selectedRestaurant.status
-                            === 'FAVORITE'
-                              ? 'favorite'
-                              : 'favorite_border',
-                          ios:
-                            selectedRestaurant.status
-                            === 'FAVORITE'
-                              ? 'heart.fill'
-                              : 'heart',
-                          web:
-                            selectedRestaurant.status
-                            === 'FAVORITE'
-                              ? 'favorite'
-                              : 'favorite_border',
-                        }}
-                        size={19}
-                        tintColor={colors.primary}
+                      <MaterialIcons
+                        color={colors.primary}
+                        name={
+                          selectedRestaurant.status
+                          === 'FAVORITE'
+                            ? 'favorite'
+                            : 'favorite-border'
+                        }
+                        size={21}
                       />
                     )}
                   </Pressable>
@@ -1817,7 +1816,10 @@ export default function MapScreen() {
                         <Pressable
                           key={option ?? 'all-distance'}
                           accessibilityRole="button"
-                          onPress={() => setDistance(option)}
+                          onPress={() => {
+                            setSelectedRestaurantId(null);
+                            setDistance(option);
+                          }}
                           style={[
                             styles.modalOption,
                             selected
@@ -1860,6 +1862,7 @@ export default function MapScreen() {
                         key={option.value}
                         accessibilityRole="button"
                         onPress={() => {
+                          setSelectedRestaurantId(null);
                           setStatusFilter(option.value);
                           if (option.value !== 'ALL') {
                             setFavoritesOnly(false);
