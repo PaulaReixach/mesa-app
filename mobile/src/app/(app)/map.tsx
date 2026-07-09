@@ -19,6 +19,7 @@ import {
   PanResponder,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
@@ -67,10 +68,8 @@ type MapRestaurantItem = MapRestaurant & {
 
 type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
-type FilterChipProps = {
-  active?: boolean;
-  chevron?: boolean;
-  disabled?: boolean;
+type QuickFilterProps = {
+  active: boolean;
   icon: SymbolName;
   label: string;
   onPress: () => void;
@@ -102,30 +101,12 @@ const STATUS_OPTIONS: Array<{
   label: string;
   value: StatusFilter;
 }> = [
-  {
-    label: 'Todos',
-    value: 'ALL',
-  },
-  {
-    label: 'Pendiente de ir',
-    value: 'WANT_TO_GO',
-  },
-  {
-    label: 'Visitado',
-    value: 'VISITED',
-  },
-  {
-    label: 'Queremos repetir',
-    value: 'WANT_TO_REPEAT',
-  },
-  {
-    label: 'No repetir',
-    value: 'DO_NOT_REPEAT',
-  },
-  {
-    label: 'Archivado',
-    value: 'ARCHIVED',
-  },
+  { label: 'Todos', value: 'ALL' },
+  { label: 'Pendiente de ir', value: 'WANT_TO_GO' },
+  { label: 'Visitado', value: 'VISITED' },
+  { label: 'Queremos repetir', value: 'WANT_TO_REPEAT' },
+  { label: 'No repetir', value: 'DO_NOT_REPEAT' },
+  { label: 'Archivado', value: 'ARCHIVED' },
 ];
 
 const STATUS_PRESENTATION: Record<
@@ -299,65 +280,44 @@ function normalizeSearch(value: string): string {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-function FilterChip({
-  active = false,
-  chevron = false,
-  disabled = false,
+function QuickFilter({
+  active,
   icon,
   label,
   onPress,
-}: FilterChipProps) {
+}: QuickFilterProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{
-        disabled,
-        selected: active,
-      }}
-      disabled={disabled}
+      accessibilityState={{ selected: active }}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.filterChip,
-        active ? styles.filterChipActive : null,
-        disabled ? styles.filterChipDisabled : null,
-        pressed && !disabled ? styles.pressed : null,
+        styles.quickChip,
+        active ? styles.quickChipActive : null,
+        pressed ? styles.pressed : null,
       ]}
     >
       <SymbolView
         name={icon}
-        size={16}
+        size={14}
         tintColor={
           active
-            ? colors.primary
+            ? colors.white
             : colors.muted
         }
       />
-
       <Text
+        maxFontSizeMultiplier={1.15}
         numberOfLines={1}
         style={[
-          styles.filterText,
-          active ? styles.filterTextActive : null,
+          styles.quickChipText,
+          active
+            ? styles.quickChipTextActive
+            : null,
         ]}
       >
         {label}
       </Text>
-
-      {chevron ? (
-        <SymbolView
-          name={{
-            android: 'keyboard_arrow_down',
-            ios: 'chevron.down',
-            web: 'keyboard_arrow_down',
-          }}
-          size={12}
-          tintColor={
-            active
-              ? colors.primary
-              : colors.muted
-          }
-        />
-      ) : null}
     </Pressable>
   );
 }
@@ -383,7 +343,7 @@ function RestaurantMarker({
       onPress={onPress}
       zIndex={selected ? 2 : 1}
     >
-      <View style={styles.markerWrapper}>
+      <View style={styles.marker}>
         {selected ? (
           <View style={styles.markerHalo} />
         ) : null}
@@ -406,7 +366,7 @@ function RestaurantMarker({
               ios: 'fork.knife',
               web: 'restaurant',
             }}
-            size={selected ? 19 : 16}
+            size={selected ? 18 : 15}
             tintColor={colors.white}
           />
         </View>
@@ -451,7 +411,7 @@ function RestaurantRow({
     >
       <View
         style={[
-          styles.restaurantThumbnail,
+          styles.rowIcon,
           {
             backgroundColor:
               presentation.backgroundColor,
@@ -464,32 +424,34 @@ function RestaurantRow({
             ios: 'fork.knife',
             web: 'restaurant',
           }}
-          size={21}
+          size={18}
           tintColor={presentation.markerColor}
         />
       </View>
 
-      <View style={styles.restaurantCopy}>
+      <View style={styles.rowCopy}>
         <Text
+          maxFontSizeMultiplier={1.2}
           numberOfLines={1}
-          style={styles.restaurantName}
+          style={styles.rowName}
         >
           {restaurant.name}
         </Text>
 
         <Text
+          maxFontSizeMultiplier={1.2}
           numberOfLines={1}
-          style={styles.restaurantMeta}
+          style={styles.rowMeta}
         >
           {restaurant.category ?? 'Restaurante'}
           {' · '}
           {restaurant.groupName}
         </Text>
 
-        <View style={styles.restaurantFooter}>
+        <View style={styles.rowFooter}>
           <View
             style={[
-              styles.statusBadge,
+              styles.statusPill,
               {
                 backgroundColor:
                   presentation.backgroundColor,
@@ -497,11 +459,10 @@ function RestaurantRow({
             ]}
           >
             <Text
+              maxFontSizeMultiplier={1.15}
               style={[
-                styles.statusBadgeText,
-                {
-                  color: presentation.textColor,
-                },
+                styles.statusPillText,
+                { color: presentation.textColor },
               ]}
             >
               {presentation.label}
@@ -509,7 +470,10 @@ function RestaurantRow({
           </View>
 
           {restaurant.distanceKm !== null ? (
-            <Text style={styles.restaurantDistance}>
+            <Text
+              maxFontSizeMultiplier={1.15}
+              style={styles.rowDistance}
+            >
               {formatDistance(restaurant.distanceKm)}
             </Text>
           ) : null}
@@ -530,10 +494,8 @@ function RestaurantRow({
           onFavoritePress();
         }}
         style={({ pressed }) => [
-          styles.rowFavoriteButton,
-          pressed
-            ? styles.rowFavoriteButtonPressed
-            : null,
+          styles.favoriteButton,
+          pressed ? styles.pressed : null,
         ]}
       >
         {updating ? (
@@ -554,7 +516,7 @@ function RestaurantRow({
                 ? 'favorite'
                 : 'favorite_border',
             }}
-            size={21}
+            size={20}
             tintColor={
               favorite
                 ? colors.primary
@@ -573,10 +535,10 @@ export default function MapScreen() {
 
   const mapRef = useRef<MapView | null>(null);
   const sheetTop = useRef(
-    new Animated.Value(0),
+    new Animated.Value(1000),
   ).current;
-  const currentSheetTopRef = useRef(0);
-  const panStartTopRef = useRef(0);
+  const currentSheetTopRef = useRef(1000);
+  const panStartTopRef = useRef(1000);
   const sheetWasPositionedRef = useRef(false);
 
   const [restaurants, setRestaurants] =
@@ -614,19 +576,19 @@ export default function MapScreen() {
   const snapPoints = useMemo(() => {
     if (mapHeight <= 0) {
       return {
-        collapsed: 0,
-        expanded: 0,
-        middle: 0,
+        collapsed: 1000,
+        expanded: 1000,
+        middle: 1000,
       };
     }
 
-    const expanded = 14;
-    const middle = Math.round(mapHeight * 0.5);
+    const expanded = 12;
+    const middle = Math.round(mapHeight * 0.44);
     const collapsedHeight = selectedRestaurantId
-      ? 194
-      : 112;
+      ? 166
+      : 94;
     const collapsed = Math.max(
-      middle + 70,
+      middle + 64,
       mapHeight - collapsedHeight,
     );
 
@@ -640,9 +602,9 @@ export default function MapScreen() {
   const animateSheetTo = useCallback(
     (value: number) => {
       Animated.spring(sheetTop, {
-        damping: 25,
+        damping: 26,
         mass: 0.82,
-        stiffness: 220,
+        stiffness: 230,
         toValue: value,
         useNativeDriver: false,
       }).start();
@@ -685,14 +647,14 @@ export default function MapScreen() {
         _,
         gestureState,
       ) => {
-        const nextTop = clamp(
-          panStartTopRef.current
-            + gestureState.dy,
-          snapPoints.expanded,
-          snapPoints.collapsed,
+        sheetTop.setValue(
+          clamp(
+            panStartTopRef.current
+              + gestureState.dy,
+            snapPoints.expanded,
+            snapPoints.collapsed,
+          ),
         );
-
-        sheetTop.setValue(nextTop);
       },
       onPanResponderRelease: (
         _,
@@ -701,7 +663,7 @@ export default function MapScreen() {
         const currentTop =
           currentSheetTopRef.current;
 
-        if (gestureState.vy > 0.75) {
+        if (gestureState.vy > 0.7) {
           animateSheetTo(
             currentTop < snapPoints.middle
               ? snapPoints.middle
@@ -710,7 +672,7 @@ export default function MapScreen() {
           return;
         }
 
-        if (gestureState.vy < -0.75) {
+        if (gestureState.vy < -0.7) {
           animateSheetTo(
             currentTop > snapPoints.middle
               ? snapPoints.middle
@@ -751,6 +713,8 @@ export default function MapScreen() {
 
     if (!sheetWasPositionedRef.current) {
       sheetTop.setValue(snapPoints.collapsed);
+      currentSheetTopRef.current =
+        snapPoints.collapsed;
       sheetWasPositionedRef.current = true;
       return;
     }
@@ -766,8 +730,8 @@ export default function MapScreen() {
 
   useEffect(() => {
     if (
-      mapHeight <= 0
-      || !sheetWasPositionedRef.current
+      !sheetWasPositionedRef.current
+      || mapHeight <= 0
     ) {
       return;
     }
@@ -926,14 +890,10 @@ export default function MapScreen() {
         setIsLoading(true);
         setErrorMessage(null);
 
-        const restaurantsPromise =
-          getMapRestaurants(accessToken);
-        const locationPromise =
-          requestCurrentLocation();
         const [response, currentLocation] =
           await Promise.all([
-            restaurantsPromise,
-            locationPromise,
+            getMapRestaurants(accessToken),
+            requestCurrentLocation(),
           ]);
 
         setRestaurants(response);
@@ -991,10 +951,10 @@ export default function MapScreen() {
         {
           animated: true,
           edgePadding: {
-            bottom: 150,
-            left: 45,
-            right: 45,
-            top: 55,
+            bottom: 125,
+            left: 42,
+            right: 42,
+            top: 52,
           },
         },
       );
@@ -1013,45 +973,7 @@ export default function MapScreen() {
   function handleMapLayout(
     event: LayoutChangeEvent,
   ): void {
-    setMapHeight(
-      event.nativeEvent.layout.height,
-    );
-  }
-
-  function openFilterModal(): void {
-    setFilterModalVisible(true);
-  }
-
-  function closeFilterModal(): void {
-    setFilterModalVisible(false);
-  }
-
-  function selectDistance(
-    nextDistance: DistanceOption,
-  ): void {
-    setDistance(nextDistance);
-  }
-
-  function selectStatus(
-    nextStatus: StatusFilter,
-  ): void {
-    setStatusFilter(nextStatus);
-
-    if (nextStatus !== 'ALL') {
-      setFavoritesOnly(false);
-    }
-  }
-
-  function toggleFavorites(): void {
-    setFavoritesOnly(current => {
-      const nextValue = !current;
-
-      if (nextValue) {
-        setStatusFilter('ALL');
-      }
-
-      return nextValue;
-    });
+    setMapHeight(event.nativeEvent.layout.height);
   }
 
   function resetFilters(): void {
@@ -1059,6 +981,21 @@ export default function MapScreen() {
     setFavoritesOnly(false);
     setSearchQuery('');
     setStatusFilter('ALL');
+  }
+
+  function showAll(): void {
+    setFavoritesOnly(false);
+    setStatusFilter('ALL');
+  }
+
+  function showPending(): void {
+    setFavoritesOnly(false);
+    setStatusFilter('WANT_TO_GO');
+  }
+
+  function showFavorites(): void {
+    setStatusFilter('ALL');
+    setFavoritesOnly(true);
   }
 
   function openRestaurant(
@@ -1085,16 +1022,12 @@ export default function MapScreen() {
     mapRef.current?.animateToRegion(
       {
         latitude: restaurant.latitude,
-        latitudeDelta: 0.025,
+        latitudeDelta: 0.022,
         longitude: restaurant.longitude,
-        longitudeDelta: 0.025,
+        longitudeDelta: 0.022,
       },
-      360,
+      350,
     );
-  }
-
-  function clearRestaurantSelection(): void {
-    setSelectedRestaurantId(null);
   }
 
   async function centerOnUser(): Promise<void> {
@@ -1113,10 +1046,10 @@ export default function MapScreen() {
     mapRef.current?.animateToRegion(
       {
         ...location,
-        latitudeDelta: 0.025,
-        longitudeDelta: 0.025,
+        latitudeDelta: 0.022,
+        longitudeDelta: 0.022,
       },
-      380,
+      360,
     );
   }
 
@@ -1196,41 +1129,45 @@ export default function MapScreen() {
     }
   }
 
-  const distanceLabel =
-    distance === null
-      ? 'Distancia'
-      : `A ${distance} km`;
-  const statusLabel =
-    STATUS_OPTIONS.find(
-      option => option.value === statusFilter,
-    )?.label ?? 'Estado';
+  const allQuickFilterActive =
+    statusFilter === 'ALL'
+    && !favoritesOnly;
+  const pendingQuickFilterActive =
+    statusFilter === 'WANT_TO_GO'
+    && !favoritesOnly;
   const filtersActive =
     distance !== null
     || statusFilter !== 'ALL'
     || favoritesOnly;
-  const mapLocationButtonBottom =
-    selectedRestaurant ? 210 : 126;
+  const locationButtonBottom =
+    selectedRestaurant ? 182 : 110;
 
   return (
     <SafeAreaView
       edges={['top', 'right', 'left']}
       style={styles.safeArea}
     >
-      <View style={styles.topPanel}>
-        <View style={styles.headingRow}>
-          <View style={styles.headingCopy}>
-            <Text style={styles.title}>
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View style={styles.headerCopy}>
+            <Text
+              maxFontSizeMultiplier={1.15}
+              style={styles.title}
+            >
               Mapa
             </Text>
-            <Text style={styles.subtitle}>
-              Encuentra tus restaurantes guardados
+            <Text
+              maxFontSizeMultiplier={1.2}
+              style={styles.subtitle}
+            >
+              Tus restaurantes guardados, de un vistazo
             </Text>
           </View>
 
           <Pressable
             accessibilityLabel="Abrir filtros"
             accessibilityRole="button"
-            onPress={openFilterModal}
+            onPress={() => setFilterModalVisible(true)}
             style={({ pressed }) => [
               styles.filterButton,
               pressed ? styles.pressed : null,
@@ -1242,10 +1179,9 @@ export default function MapScreen() {
                 ios: 'slider.horizontal.3',
                 web: 'tune',
               }}
-              size={21}
+              size={20}
               tintColor={colors.primary}
             />
-
             {filtersActive ? (
               <View style={styles.filterDot} />
             ) : null}
@@ -1259,13 +1195,14 @@ export default function MapScreen() {
               ios: 'magnifyingglass',
               web: 'search',
             }}
-            size={20}
+            size={19}
             tintColor={colors.muted}
           />
 
           <TextInput
             autoCapitalize="none"
             autoCorrect={false}
+            maxFontSizeMultiplier={1.2}
             onChangeText={setSearchQuery}
             placeholder="Buscar restaurante o zona"
             placeholderTextColor="#9B918B"
@@ -1287,44 +1224,40 @@ export default function MapScreen() {
                   ios: 'xmark.circle.fill',
                   web: 'cancel',
                 }}
-                size={19}
+                size={18}
                 tintColor="#B5AAA4"
               />
             </Pressable>
           ) : null}
         </View>
 
-        <View style={styles.filtersRow}>
-          <FilterChip
-            active={distance !== null}
-            chevron
-            disabled={!locationGranted}
+        <ScrollView
+          contentContainerStyle={styles.quickFiltersContent}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.quickFilters}
+        >
+          <QuickFilter
+            active={allQuickFilterActive}
             icon={{
-              android: 'near_me',
-              ios: 'location',
-              web: 'near_me',
+              android: 'map',
+              ios: 'map',
+              web: 'map',
             }}
-            label={
-              locationGranted
-                ? distanceLabel
-                : 'Sin ubicación'
-            }
-            onPress={openFilterModal}
+            label="Todos"
+            onPress={showAll}
           />
-
-          <FilterChip
-            active={statusFilter !== 'ALL'}
-            chevron
+          <QuickFilter
+            active={pendingQuickFilterActive}
             icon={{
-              android: 'check_circle_outline',
-              ios: 'checkmark.circle',
-              web: 'check_circle_outline',
+              android: 'schedule',
+              ios: 'clock',
+              web: 'schedule',
             }}
-            label={statusLabel}
-            onPress={openFilterModal}
+            label="Pendientes"
+            onPress={showPending}
           />
-
-          <FilterChip
+          <QuickFilter
             active={favoritesOnly}
             icon={{
               android: favoritesOnly
@@ -1338,9 +1271,9 @@ export default function MapScreen() {
                 : 'favorite_border',
             }}
             label="Favoritos"
-            onPress={toggleFavorites}
+            onPress={showFavorites}
           />
-        </View>
+        </ScrollView>
       </View>
 
       <View
@@ -1351,15 +1284,13 @@ export default function MapScreen() {
           customMapStyle={MAP_STYLE}
           initialRegion={DEFAULT_REGION}
           mapPadding={{
-            bottom: 125,
-            left: 18,
-            right: 18,
-            top: 28,
+            bottom: 112,
+            left: 16,
+            right: 16,
+            top: 26,
           }}
-          onMapReady={() => {
-            setIsMapReady(true);
-          }}
-          onPress={clearRestaurantSelection}
+          onMapReady={() => setIsMapReady(true)}
+          onPress={() => setSelectedRestaurantId(null)}
           provider={
             Platform.OS === 'android'
               ? PROVIDER_GOOGLE
@@ -1373,40 +1304,39 @@ export default function MapScreen() {
           style={styles.map}
           toolbarEnabled={false}
         >
-          {visibleRestaurants.map(
-            restaurant => (
-              <RestaurantMarker
-                key={restaurant.groupRestaurantId}
-                onPress={() => {
-                  focusRestaurant(restaurant);
-                }}
-                restaurant={restaurant}
-                selected={
-                  selectedRestaurantId
-                  === restaurant.groupRestaurantId
-                }
-              />
-            ),
-          )}
+          {visibleRestaurants.map(restaurant => (
+            <RestaurantMarker
+              key={restaurant.groupRestaurantId}
+              onPress={() => focusRestaurant(restaurant)}
+              restaurant={restaurant}
+              selected={
+                selectedRestaurantId
+                === restaurant.groupRestaurantId
+              }
+            />
+          ))}
         </MapView>
 
         {!isLoading && !errorMessage ? (
-          <View style={styles.mapResultBadge}>
+          <View style={styles.resultsPill}>
             <SymbolView
               name={{
                 android: 'restaurant',
                 ios: 'fork.knife',
                 web: 'restaurant',
               }}
-              size={13}
+              size={12}
               tintColor={colors.primary}
             />
-            <Text style={styles.mapResultText}>
+            <Text
+              maxFontSizeMultiplier={1.15}
+              style={styles.resultsPillText}
+            >
               {visibleRestaurants.length}
               {' '}
               {visibleRestaurants.length === 1
-                ? 'restaurante'
-                : 'restaurantes'}
+                ? 'resultado'
+                : 'resultados'}
             </Text>
           </View>
         ) : null}
@@ -1414,14 +1344,10 @@ export default function MapScreen() {
         <Pressable
           accessibilityLabel="Centrar en mi ubicación"
           accessibilityRole="button"
-          onPress={() => {
-            void centerOnUser();
-          }}
+          onPress={() => void centerOnUser()}
           style={({ pressed }) => [
             styles.locationButton,
-            {
-              bottom: mapLocationButtonBottom,
-            },
+            { bottom: locationButtonBottom },
             pressed ? styles.pressed : null,
           ]}
         >
@@ -1431,7 +1357,7 @@ export default function MapScreen() {
               ios: 'location.fill',
               web: 'my_location',
             }}
-            size={21}
+            size={20}
             tintColor={colors.primary}
           />
         </Pressable>
@@ -1439,23 +1365,21 @@ export default function MapScreen() {
         <Animated.View
           style={[
             styles.bottomSheet,
-            {
-              top: sheetTop,
-            },
+            { top: sheetTop },
           ]}
         >
           <View
             {...panResponder.panHandlers}
-            style={styles.dragArea}
+            style={styles.dragZone}
           >
             <View style={styles.handle} />
 
             {selectedRestaurant ? (
-              <View style={styles.selectedSummary}>
-                <View style={styles.selectedTopRow}>
+              <View style={styles.selectedCard}>
+                <View style={styles.selectedMain}>
                   <View
                     style={[
-                      styles.selectedThumbnail,
+                      styles.selectedIcon,
                       {
                         backgroundColor:
                           STATUS_PRESENTATION[
@@ -1470,7 +1394,7 @@ export default function MapScreen() {
                         ios: 'fork.knife',
                         web: 'restaurant',
                       }}
-                      size={25}
+                      size={21}
                       tintColor={
                         STATUS_PRESENTATION[
                           selectedRestaurant.status
@@ -1482,6 +1406,7 @@ export default function MapScreen() {
                   <View style={styles.selectedCopy}>
                     <View style={styles.selectedNameRow}>
                       <Text
+                        maxFontSizeMultiplier={1.15}
                         numberOfLines={1}
                         style={styles.selectedName}
                       >
@@ -1489,11 +1414,12 @@ export default function MapScreen() {
                       </Text>
 
                       <Pressable
-                        accessibilityLabel="Cerrar restaurante seleccionado"
+                        accessibilityLabel="Cerrar selección"
                         accessibilityRole="button"
                         hitSlop={8}
-                        onPress={clearRestaurantSelection}
-                        style={styles.clearSelectionButton}
+                        onPress={() =>
+                          setSelectedRestaurantId(null)}
+                        style={styles.closeSelection}
                       >
                         <SymbolView
                           name={{
@@ -1501,13 +1427,14 @@ export default function MapScreen() {
                             ios: 'xmark',
                             web: 'close',
                           }}
-                          size={15}
+                          size={14}
                           tintColor={colors.muted}
                         />
                       </Pressable>
                     </View>
 
                     <Text
+                      maxFontSizeMultiplier={1.15}
                       numberOfLines={1}
                       style={styles.selectedMeta}
                     >
@@ -1517,10 +1444,10 @@ export default function MapScreen() {
                       {selectedRestaurant.groupName}
                     </Text>
 
-                    <View style={styles.selectedContextRow}>
+                    <View style={styles.selectedStatusRow}>
                       <View
                         style={[
-                          styles.statusBadge,
+                          styles.statusPill,
                           {
                             backgroundColor:
                               STATUS_PRESENTATION[
@@ -1530,8 +1457,9 @@ export default function MapScreen() {
                         ]}
                       >
                         <Text
+                          maxFontSizeMultiplier={1.15}
                           style={[
-                            styles.statusBadgeText,
+                            styles.statusPillText,
                             {
                               color:
                                 STATUS_PRESENTATION[
@@ -1549,7 +1477,10 @@ export default function MapScreen() {
                       </View>
 
                       {selectedRestaurant.distanceKm !== null ? (
-                        <Text style={styles.selectedDistance}>
+                        <Text
+                          maxFontSizeMultiplier={1.15}
+                          style={styles.selectedDistance}
+                        >
                           {formatDistance(
                             selectedRestaurant.distanceKm,
                           )}
@@ -1562,17 +1493,17 @@ export default function MapScreen() {
                 <View style={styles.selectedActions}>
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => {
-                      openRestaurant(selectedRestaurant);
-                    }}
+                    onPress={() =>
+                      openRestaurant(selectedRestaurant)}
                     style={({ pressed }) => [
-                      styles.detailButton,
-                      pressed
-                        ? styles.detailButtonPressed
-                        : null,
+                      styles.primaryButton,
+                      pressed ? styles.pressed : null,
                     ]}
                   >
-                    <Text style={styles.detailButtonText}>
+                    <Text
+                      maxFontSizeMultiplier={1.15}
+                      style={styles.primaryButtonText}
+                    >
                       Ver detalle
                     </Text>
                   </Pressable>
@@ -1580,11 +1511,10 @@ export default function MapScreen() {
                   <Pressable
                     accessibilityLabel="Abrir indicaciones"
                     accessibilityRole="button"
-                    onPress={() => {
-                      void openDirections(selectedRestaurant);
-                    }}
+                    onPress={() =>
+                      void openDirections(selectedRestaurant)}
                     style={({ pressed }) => [
-                      styles.secondaryActionButton,
+                      styles.iconButton,
                       pressed ? styles.pressed : null,
                     ]}
                   >
@@ -1594,27 +1524,22 @@ export default function MapScreen() {
                         ios: 'location.north.line',
                         web: 'navigation',
                       }}
-                      size={19}
+                      size={18}
                       tintColor={colors.primary}
                     />
                   </Pressable>
 
                   <Pressable
-                    accessibilityLabel={
-                      selectedRestaurant.status === 'FAVORITE'
-                        ? 'Quitar de favoritos'
-                        : 'Añadir a favoritos'
-                    }
+                    accessibilityLabel="Cambiar favorito"
                     accessibilityRole="button"
                     disabled={
                       updatingRestaurantId
                       === selectedRestaurant.groupRestaurantId
                     }
-                    onPress={() => {
-                      void toggleFavorite(selectedRestaurant);
-                    }}
+                    onPress={() =>
+                      void toggleFavorite(selectedRestaurant)}
                     style={({ pressed }) => [
-                      styles.secondaryActionButton,
+                      styles.iconButton,
                       pressed ? styles.pressed : null,
                     ]}
                   >
@@ -1643,7 +1568,7 @@ export default function MapScreen() {
                               ? 'favorite'
                               : 'favorite_border',
                         }}
-                        size={20}
+                        size={19}
                         tintColor={colors.primary}
                       />
                     )}
@@ -1651,42 +1576,54 @@ export default function MapScreen() {
                 </View>
               </View>
             ) : (
-              <View style={styles.sheetHeader}>
-                <View style={styles.sheetHeadingCopy}>
-                  <Text style={styles.sheetTitle}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() =>
+                  animateSheetTo(snapPoints.middle)}
+                style={({ pressed }) => [
+                  styles.collapsedHeader,
+                  pressed ? styles.pressed : null,
+                ]}
+              >
+                <View style={styles.collapsedCopy}>
+                  <Text
+                    maxFontSizeMultiplier={1.15}
+                    style={styles.collapsedTitle}
+                  >
                     {userLocation
                       ? 'Cerca de ti'
                       : 'Tus restaurantes'}
                   </Text>
-                  <Text style={styles.sheetSubtitle}>
+                  <Text
+                    maxFontSizeMultiplier={1.2}
+                    style={styles.collapsedSubtitle}
+                  >
                     {visibleRestaurants.length}
                     {' '}
                     {visibleRestaurants.length === 1
                       ? 'restaurante guardado'
                       : 'restaurantes guardados'}
                   </Text>
-                  {!locationGranted ? (
-                    <Text style={styles.locationHint}>
-                      Activa la ubicación para ordenarlos por cercanía
-                    </Text>
-                  ) : (
-                    <Text style={styles.sheetHint}>
-                      Desliza hacia arriba para ver la lista
-                    </Text>
-                  )}
                 </View>
 
-                {filtersActive || searchQuery ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={resetFilters}
+                <View style={styles.listButton}>
+                  <Text
+                    maxFontSizeMultiplier={1.15}
+                    style={styles.listButtonText}
                   >
-                    <Text style={styles.resetText}>
-                      Restablecer
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
+                    Ver lista
+                  </Text>
+                  <SymbolView
+                    name={{
+                      android: 'keyboard_arrow_up',
+                      ios: 'chevron.up',
+                      web: 'keyboard_arrow_up',
+                    }}
+                    size={13}
+                    tintColor={colors.primary}
+                  />
+                </View>
+              </Pressable>
             )}
           </View>
 
@@ -1709,7 +1646,7 @@ export default function MapScreen() {
                     ios: 'wifi.slash',
                     web: 'wifi_off',
                   }}
-                  size={22}
+                  size={21}
                   tintColor={colors.primary}
                 />
               </View>
@@ -1721,9 +1658,7 @@ export default function MapScreen() {
               </Text>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => {
-                  void loadMap();
-                }}
+                onPress={() => void loadMap()}
                 style={styles.retryButton}
               >
                 <Text style={styles.retryButtonText}>
@@ -1736,7 +1671,7 @@ export default function MapScreen() {
               contentContainerStyle={
                 visibleRestaurants.length === 0
                   ? styles.emptyList
-                  : styles.restaurantList
+                  : styles.listContent
               }
               data={visibleRestaurants}
               keyExtractor={item =>
@@ -1751,7 +1686,7 @@ export default function MapScreen() {
                         ios: 'mappin.slash',
                         web: 'location_off',
                       }}
-                      size={22}
+                      size={21}
                       tintColor={colors.primary}
                     />
                   </View>
@@ -1774,12 +1709,9 @@ export default function MapScreen() {
               )}
               renderItem={({ item }) => (
                 <RestaurantRow
-                  onFavoritePress={() => {
-                    void toggleFavorite(item);
-                  }}
-                  onPress={() => {
-                    focusRestaurant(item);
-                  }}
+                  onFavoritePress={() =>
+                    void toggleFavorite(item)}
+                  onPress={() => focusRestaurant(item)}
                   restaurant={item}
                   selected={
                     selectedRestaurantId
@@ -1800,18 +1732,17 @@ export default function MapScreen() {
 
       <Modal
         animationType="slide"
-        onRequestClose={closeFilterModal}
+        onRequestClose={() =>
+          setFilterModalVisible(false)}
         transparent
         visible={filterModalVisible}
       >
         <Pressable
-          onPress={closeFilterModal}
+          onPress={() => setFilterModalVisible(false)}
           style={styles.modalOverlay}
         >
           <Pressable
-            onPress={event => {
-              event.stopPropagation();
-            }}
+            onPress={event => event.stopPropagation()}
             style={[
               styles.modalContent,
               {
@@ -1824,20 +1755,25 @@ export default function MapScreen() {
 
             <View style={styles.modalHeader}>
               <View>
-                <Text style={styles.modalTitle}>
+                <Text
+                  maxFontSizeMultiplier={1.15}
+                  style={styles.modalTitle}
+                >
                   Filtrar mapa
                 </Text>
-                <Text style={styles.modalSubtitle}>
-                  Ajusta los resultados que quieres ver
+                <Text
+                  maxFontSizeMultiplier={1.2}
+                  style={styles.modalSubtitle}
+                >
+                  Ajusta los restaurantes que quieres ver
                 </Text>
               </View>
 
               <Pressable
                 accessibilityLabel="Cerrar filtros"
                 accessibilityRole="button"
-                hitSlop={8}
-                onPress={closeFilterModal}
-                style={styles.modalCloseButton}
+                onPress={() => setFilterModalVisible(false)}
+                style={styles.modalClose}
               >
                 <SymbolView
                   name={{
@@ -1845,7 +1781,7 @@ export default function MapScreen() {
                     ios: 'xmark',
                     web: 'close',
                   }}
-                  size={17}
+                  size={16}
                   tintColor={colors.text}
                 />
               </Pressable>
@@ -1865,26 +1801,23 @@ export default function MapScreen() {
                         ios: 'location.slash',
                         web: 'location_off',
                       }}
-                      size={18}
+                      size={17}
                       tintColor={colors.primary}
                     />
                     <Text style={styles.locationWarningText}>
-                      Activa tu ubicación para usar este filtro.
+                      Activa tu ubicación para utilizar este filtro.
                     </Text>
                   </View>
                 ) : (
                   <View style={styles.modalOptions}>
                     {DISTANCE_OPTIONS.map(option => {
-                      const selected =
-                        option === distance;
+                      const selected = option === distance;
 
                       return (
                         <Pressable
                           key={option ?? 'all-distance'}
                           accessibilityRole="button"
-                          onPress={() => {
-                            selectDistance(option);
-                          }}
+                          onPress={() => setDistance(option)}
                           style={[
                             styles.modalOption,
                             selected
@@ -1893,6 +1826,7 @@ export default function MapScreen() {
                           ]}
                         >
                           <Text
+                            maxFontSizeMultiplier={1.15}
                             style={[
                               styles.modalOptionText,
                               selected
@@ -1926,7 +1860,10 @@ export default function MapScreen() {
                         key={option.value}
                         accessibilityRole="button"
                         onPress={() => {
-                          selectStatus(option.value);
+                          setStatusFilter(option.value);
+                          if (option.value !== 'ALL') {
+                            setFavoritesOnly(false);
+                          }
                         }}
                         style={[
                           styles.modalOption,
@@ -1936,6 +1873,7 @@ export default function MapScreen() {
                         ]}
                       >
                         <Text
+                          maxFontSizeMultiplier={1.15}
                           style={[
                             styles.modalOptionText,
                             selected
@@ -1957,23 +1895,21 @@ export default function MapScreen() {
                 accessibilityRole="button"
                 onPress={resetFilters}
                 style={({ pressed }) => [
-                  styles.modalResetButton,
+                  styles.resetButton,
                   pressed ? styles.pressed : null,
                 ]}
               >
-                <Text style={styles.modalResetText}>
+                <Text style={styles.resetButtonText}>
                   Restablecer
                 </Text>
               </Pressable>
 
               <Pressable
                 accessibilityRole="button"
-                onPress={closeFilterModal}
+                onPress={() => setFilterModalVisible(false)}
                 style={({ pressed }) => [
                   styles.applyButton,
-                  pressed
-                    ? styles.applyButtonPressed
-                    : null,
+                  pressed ? styles.pressed : null,
                 ]}
               >
                 <Text style={styles.applyButtonText}>
