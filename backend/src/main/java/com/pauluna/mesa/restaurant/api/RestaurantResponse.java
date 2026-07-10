@@ -17,6 +17,7 @@ public record RestaurantResponse(
         BigDecimal latitude,
         BigDecimal longitude,
         String category,
+        String imageUrl,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -33,6 +34,7 @@ public record RestaurantResponse(
                 restaurant.getLatitude(),
                 restaurant.getLongitude(),
                 restaurant.getCategory(),
+                restaurant.getImageUrl(),
                 restaurant.getCreatedAt(),
                 restaurant.getUpdatedAt()
         );
