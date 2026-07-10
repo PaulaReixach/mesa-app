@@ -1,1 +1,1 @@
-export { default } from './MapScreenEnhanced';
+export { default } from './MapScreenPolished';
