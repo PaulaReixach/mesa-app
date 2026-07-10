@@ -4,6 +4,7 @@ import {
   router,
   useLocalSearchParams,
 } from 'expo-router';
+import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -46,6 +47,7 @@ import type {
 } from '../types/restaurant';
 
 type CreationMode = 'SEARCH' | 'MANUAL';
+type MaterialIconName = ComponentProps<typeof MaterialIcons>['name'];
 
 type Coordinates = {
   latitude: number;
@@ -166,7 +168,7 @@ function StepHeader({
   subtitle,
   title,
 }: {
-  icon: React.ComponentProps<typeof MaterialIcons>['name'];
+  icon: MaterialIconName;
   step?: number;
   subtitle: string;
   title: string;
@@ -201,7 +203,7 @@ function LocationAction({
   title,
 }: {
   disabled?: boolean;
-  icon: React.ComponentProps<typeof MaterialIcons>['name'];
+  icon: MaterialIconName;
   loading?: boolean;
   onPress: () => void;
   title: string;
