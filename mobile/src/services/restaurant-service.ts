@@ -1,7 +1,13 @@
-import { apiRequest } from '../lib/api';
+import { File } from 'expo-file-system';
+
+import {
+  apiMultipartRequest,
+  apiRequest,
+} from '../lib/api';
 import {
   CreateGroupRestaurantPayload,
   GroupRestaurant,
+  RestaurantImageUploadFile,
   RestaurantLocationResult,
   RestaurantSearchResult,
   UpdateGroupRestaurantFavoritePayload,
@@ -15,9 +21,7 @@ export function getGroupRestaurants(
 ): Promise<GroupRestaurant[]> {
   return apiRequest<GroupRestaurant[]>(
     `/groups/${groupId}/restaurants`,
-    {
-      method: 'GET',
-    },
+    { method: 'GET' },
     accessToken,
   );
 }
@@ -29,9 +33,7 @@ export function getGroupRestaurant(
 ): Promise<GroupRestaurant> {
   return apiRequest<GroupRestaurant>(
     `/groups/${groupId}/restaurants/${groupRestaurantId}`,
-    {
-      method: 'GET',
-    },
+    { method: 'GET' },
     accessToken,
   );
 }
@@ -99,6 +101,43 @@ export function updateGroupRestaurantFavorite(
   );
 }
 
+export function uploadRestaurantImage(
+  groupId: string,
+  groupRestaurantId: string,
+  file: RestaurantImageUploadFile,
+  accessToken: string,
+): Promise<GroupRestaurant> {
+  const restaurantImageFile = new File(file.uri);
+
+  if (!restaurantImageFile.exists) {
+    throw new Error(
+      'No se ha podido acceder a la imagen seleccionada.',
+    );
+  }
+
+  const formData = new FormData();
+  formData.append('file', restaurantImageFile);
+
+  return apiMultipartRequest<GroupRestaurant>(
+    `/groups/${groupId}/restaurants/${groupRestaurantId}/image`,
+    formData,
+    accessToken,
+    'PUT',
+  );
+}
+
+export function deleteRestaurantImage(
+  groupId: string,
+  groupRestaurantId: string,
+  accessToken: string,
+): Promise<GroupRestaurant> {
+  return apiRequest<GroupRestaurant>(
+    `/groups/${groupId}/restaurants/${groupRestaurantId}/image`,
+    { method: 'DELETE' },
+    accessToken,
+  );
+}
+
 export function searchRestaurants(
   query: string,
   city: string,
@@ -113,9 +152,7 @@ export function searchRestaurants(
 
   return apiRequest<RestaurantSearchResult[]>(
     `/restaurants/search?query=${queryParameter}${cityParameter}`,
-    {
-      method: 'GET',
-    },
+    { method: 'GET' },
     accessToken,
   );
 }
@@ -145,9 +182,7 @@ export function searchRestaurantLocations(
 
   return apiRequest<RestaurantLocationResult[]>(
     `/restaurants/geocode?${parameters.toString()}`,
-    {
-      method: 'GET',
-    },
+    { method: 'GET' },
     accessToken,
   );
 }
