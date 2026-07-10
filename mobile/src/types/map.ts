@@ -20,4 +20,5 @@ export type MapRestaurant = {
   longitude: number;
 
   category: string | null;
+  imageUrl: string | null;
 };
