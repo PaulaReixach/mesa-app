@@ -5,7 +5,7 @@ import { fonts } from '../theme/fonts';
 
 export const groupFilterStyles = StyleSheet.create({
   constrainedChipLabel: {
-    maxWidth: 88,
+    maxWidth: 72,
   },
   modalContent: {
     maxHeight: '82%',
@@ -61,15 +61,22 @@ export const groupFilterStyles = StyleSheet.create({
     opacity: 0.72,
   },
   groupIcon: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 13,
+    overflow: 'hidden',
+    borderRadius: 14,
     backgroundColor: '#EDF1E7',
   },
   groupIconSelected: {
+    borderWidth: 1.5,
+    borderColor: '#D9896C',
     backgroundColor: '#FBE3D9',
+  },
+  groupImage: {
+    width: '100%',
+    height: '100%',
   },
   groupCopy: {
     flex: 1,
