@@ -2,16 +2,16 @@ import { restaurantFallbackImages } from '../constants/restaurant-fallback-image
 
 export function getRestaurantFallbackImage(name: string): string {
   const normalizedName = name.trim() || 'restaurant';
-  const imageCount = restaurantFallbackImages.length;
+  const images: readonly string[] = restaurantFallbackImages;
 
-  if (imageCount === 0) {
+  if (images.length === 0) {
     return '';
   }
 
   const index = Array.from(normalizedName).reduce(
     (total, character) => total + character.charCodeAt(0),
     0,
-  ) % imageCount;
+  ) % images.length;
 
-  return restaurantFallbackImages[index];
+  return images[index];
 }
