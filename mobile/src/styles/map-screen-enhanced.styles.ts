@@ -46,7 +46,7 @@ export const styles = StyleSheet.create({
     marginTop: 1,
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 12.5,
+    fontSize: 11,
     lineHeight: 18,
   },
   searchBar: {

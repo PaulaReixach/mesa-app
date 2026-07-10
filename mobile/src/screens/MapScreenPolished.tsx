@@ -1311,7 +1311,7 @@ export default function MapScreenPolished() {
                 styles.title,
                 {
                   fontFamily: fonts.semiBold,
-                  fontSize: 27,
+                  fontSize: 24,
                   letterSpacing: -0.55,
                   lineHeight: 33,
                 },
