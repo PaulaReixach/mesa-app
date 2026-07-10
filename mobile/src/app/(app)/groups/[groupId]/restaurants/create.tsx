@@ -1,8 +1,9 @@
-import { SymbolView } from 'expo-symbols';
+import * as Location from 'expo-location';
 import {
   router,
   useLocalSearchParams,
 } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import {
   useEffect,
   useState,
@@ -12,12 +13,17 @@ import {
   Image,
   KeyboardAvoidingView,
   Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   Text,
   View,
 } from 'react-native';
+import MapView, {
+  Marker,
+  PROVIDER_GOOGLE,
+} from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FormField } from '../../../../../components/FormField';
@@ -31,14 +37,134 @@ import {
 import { getGroup } from '../../../../../services/group-service';
 import {
   createGroupRestaurant,
+  searchRestaurantLocations,
   searchRestaurants,
 } from '../../../../../services/restaurant-service';
 import { addRestaurantStyles as styles } from '../../../../../styles/add-restaurant-screen.styles';
 import { colors } from '../../../../../theme/colors';
 import type { RestaurantGroup } from '../../../../../types/group';
-import type { RestaurantSearchResult } from '../../../../../types/restaurant';
+import type {
+  RestaurantLocationResult,
+  RestaurantSearchResult,
+} from '../../../../../types/restaurant';
 
 type CreationMode = 'SEARCH' | 'MANUAL';
+
+type Coordinates = {
+  latitude: number;
+  longitude: number;
+};
+
+const DEFAULT_PICKER_COORDINATE: Coordinates = {
+  latitude: 41.9794,
+  longitude: 2.8214,
+};
+
+function LocationPickerModal({
+  coordinate,
+  onChange,
+  onClose,
+  onConfirm,
+  visible,
+}: {
+  coordinate: Coordinates;
+  onChange: (coordinate: Coordinates) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+  visible: boolean;
+}) {
+  return (
+    <Modal
+      animationType="slide"
+      onRequestClose={onClose}
+      presentationStyle="fullScreen"
+      visible={visible}
+    >
+      <SafeAreaView
+        edges={['top', 'right', 'bottom', 'left']}
+        style={styles.pickerSafeArea}
+      >
+        <View style={styles.pickerContainer}>
+          <View style={styles.pickerHeader}>
+            <Pressable
+              accessibilityLabel="Cerrar mapa"
+              accessibilityRole="button"
+              onPress={onClose}
+              style={({ pressed }) => [
+                styles.pickerHeaderButton,
+                pressed ? styles.headerButtonPressed : null,
+              ]}
+            >
+              <SymbolView
+                name={{
+                  ios: 'xmark',
+                  android: 'close',
+                  web: 'close',
+                }}
+                size={20}
+                tintColor={colors.text}
+              />
+            </Pressable>
+
+            <Text style={styles.pickerHeaderTitle}>
+              Ajustar ubicación
+            </Text>
+
+            <View style={styles.pickerHeaderSpacer} />
+          </View>
+
+          {visible ? (
+            <MapView
+              initialRegion={{
+                ...coordinate,
+                latitudeDelta: 0.012,
+                longitudeDelta: 0.012,
+              }}
+              onPress={(event) => {
+                onChange(event.nativeEvent.coordinate);
+              }}
+              provider={
+                Platform.OS === 'android'
+                  ? PROVIDER_GOOGLE
+                  : undefined
+              }
+              style={styles.pickerMap}
+            >
+              <Marker
+                coordinate={coordinate}
+                draggable
+                onDragEnd={(event) => {
+                  onChange(event.nativeEvent.coordinate);
+                }}
+              />
+            </MapView>
+          ) : null}
+
+          <View style={styles.pickerPanel}>
+            <View style={styles.pickerPanelHandle} />
+
+            <Text style={styles.pickerPanelTitle}>
+              Coloca el pin en el restaurante
+            </Text>
+
+            <Text style={styles.pickerPanelText}>
+              Toca el mapa o arrastra el marcador hasta la ubicación exacta.
+            </Text>
+
+            <Text style={styles.pickerCoordinates}>
+              {coordinate.latitude.toFixed(6)}, {coordinate.longitude.toFixed(6)}
+            </Text>
+
+            <PrimaryButton
+              onPress={onConfirm}
+              title="Confirmar ubicación"
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
+}
 
 export default function CreateRestaurantScreen() {
   const {
@@ -84,6 +210,23 @@ export default function CreateRestaurantScreen() {
   const [manualCountry, setManualCountry] = useState('');
   const [manualCategory, setManualCategory] =
     useState('');
+  const [detailsExpanded, setDetailsExpanded] =
+    useState(true);
+
+  const [locationResults, setLocationResults] = useState<
+    RestaurantLocationResult[]
+  >([]);
+  const [selectedLocation, setSelectedLocation] =
+    useState<RestaurantLocationResult | null>(null);
+  const [isLocationSearching, setIsLocationSearching] =
+    useState(false);
+  const [isUsingCurrentLocation, setIsUsingCurrentLocation] =
+    useState(false);
+  const [locationError, setLocationError] =
+    useState<string | null>(null);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [pickerCoordinate, setPickerCoordinate] =
+    useState<Coordinates>(DEFAULT_PICKER_COORDINATE);
 
   const [groupNotes, setGroupNotes] = useState('');
   const [requestError, setRequestError] =
@@ -168,6 +311,28 @@ export default function CreateRestaurantScreen() {
     setRequestError(null);
   }
 
+  function invalidateManualLocation() {
+    setSelectedLocation(null);
+    setLocationResults([]);
+    setLocationError(null);
+    setRequestError(null);
+  }
+
+  function updateManualAddress(value: string) {
+    setManualAddress(value);
+    invalidateManualLocation();
+  }
+
+  function updateManualCity(value: string) {
+    setManualCity(value);
+    invalidateManualLocation();
+  }
+
+  function updateManualCountry(value: string) {
+    setManualCountry(value);
+    invalidateManualLocation();
+  }
+
   async function handleSearch() {
     setSearchError(null);
     setRequestError(null);
@@ -208,6 +373,219 @@ export default function CreateRestaurantScreen() {
     }
   }
 
+  async function handleLocationSearch() {
+    setLocationError(null);
+    setRequestError(null);
+    setLocationResults([]);
+    setSelectedLocation(null);
+
+    if (!accessToken) {
+      setLocationError(
+        'No se ha podido recuperar tu sesión.',
+      );
+      return;
+    }
+
+    if (!manualAddress.trim() && !manualCity.trim()) {
+      setLocationError(
+        'Introduce una dirección o una ciudad para buscarla.',
+      );
+      return;
+    }
+
+    try {
+      setIsLocationSearching(true);
+
+      const results = await searchRestaurantLocations(
+        manualAddress,
+        manualCity,
+        manualCountry,
+        accessToken,
+      );
+
+      setLocationResults(results);
+
+      if (results.length === 0) {
+        setLocationError(
+          'No hemos encontrado esa ubicación. Puedes colocar el pin manualmente.',
+        );
+      }
+    } catch (error) {
+      setLocationError(getErrorMessage(error));
+    } finally {
+      setIsLocationSearching(false);
+    }
+  }
+
+  function selectManualLocation(
+    locationResult: RestaurantLocationResult,
+  ) {
+    setSelectedLocation(locationResult);
+    setPickerCoordinate({
+      latitude: locationResult.latitude,
+      longitude: locationResult.longitude,
+    });
+    setLocationError(null);
+    setRequestError(null);
+
+    setManualAddress((currentAddress) =>
+      currentAddress.trim()
+        ? currentAddress
+        : locationResult.address ?? ''
+    );
+    setManualCity((currentCity) =>
+      currentCity.trim()
+        ? currentCity
+        : locationResult.city ?? ''
+    );
+    setManualCountry((currentCountry) =>
+      currentCountry.trim()
+        ? currentCountry
+        : locationResult.country ?? ''
+    );
+  }
+
+  async function enrichAddressFromCoordinate(
+    coordinate: Coordinates,
+  ) {
+    try {
+      const [place] = await Location.reverseGeocodeAsync(
+        coordinate,
+      );
+
+      if (!place) {
+        return;
+      }
+
+      const resolvedAddress = [
+        place.street,
+        place.streetNumber,
+      ]
+        .filter(Boolean)
+        .join(', ');
+
+      setManualAddress((currentAddress) =>
+        currentAddress.trim()
+          ? currentAddress
+          : resolvedAddress
+      );
+      setManualCity((currentCity) =>
+        currentCity.trim()
+          ? currentCity
+          : place.city
+            ?? place.subregion
+            ?? ''
+      );
+      setManualCountry((currentCountry) =>
+        currentCountry.trim()
+          ? currentCountry
+          : place.country ?? ''
+      );
+    } catch {
+      // La ubicación ya está confirmada aunque no pueda resolverse la dirección.
+    }
+  }
+
+  async function useCurrentLocation() {
+    setLocationError(null);
+    setRequestError(null);
+
+    try {
+      setIsUsingCurrentLocation(true);
+
+      const permission =
+        await Location.requestForegroundPermissionsAsync();
+
+      if (permission.status !== 'granted') {
+        setLocationError(
+          'Necesitamos permiso de ubicación para usar tu posición actual.',
+        );
+        return;
+      }
+
+      const currentPosition =
+        await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+      const coordinate = {
+        latitude: currentPosition.coords.latitude,
+        longitude: currentPosition.coords.longitude,
+      };
+
+      const currentLocationResult: RestaurantLocationResult = {
+        label: 'Ubicación actual',
+        address: manualAddress.trim() || null,
+        city: manualCity.trim() || null,
+        country: manualCountry.trim() || null,
+        latitude: coordinate.latitude,
+        longitude: coordinate.longitude,
+      };
+
+      setSelectedLocation(currentLocationResult);
+      setLocationResults([]);
+      setPickerCoordinate(coordinate);
+
+      await enrichAddressFromCoordinate(coordinate);
+    } catch (error) {
+      setLocationError(getErrorMessage(error));
+    } finally {
+      setIsUsingCurrentLocation(false);
+    }
+  }
+
+  async function openMapPicker() {
+    let coordinate = selectedLocation
+      ? {
+          latitude: selectedLocation.latitude,
+          longitude: selectedLocation.longitude,
+        }
+      : DEFAULT_PICKER_COORDINATE;
+
+    if (!selectedLocation) {
+      try {
+        const permission =
+          await Location.getForegroundPermissionsAsync();
+
+        if (permission.status === 'granted') {
+          const lastKnownPosition =
+            await Location.getLastKnownPositionAsync();
+
+          if (lastKnownPosition) {
+            coordinate = {
+              latitude: lastKnownPosition.coords.latitude,
+              longitude: lastKnownPosition.coords.longitude,
+            };
+          }
+        }
+      } catch {
+        // El selector puede abrirse igualmente con la región por defecto.
+      }
+    }
+
+    setPickerCoordinate(coordinate);
+    setPickerVisible(true);
+  }
+
+  function confirmPickerLocation() {
+    const locationResult: RestaurantLocationResult = {
+      label: 'Punto elegido en el mapa',
+      address: manualAddress.trim() || null,
+      city: manualCity.trim() || null,
+      country: manualCountry.trim() || null,
+      latitude: pickerCoordinate.latitude,
+      longitude: pickerCoordinate.longitude,
+    };
+
+    setSelectedLocation(locationResult);
+    setLocationResults([]);
+    setLocationError(null);
+    setRequestError(null);
+    setPickerVisible(false);
+
+    void enrichAddressFromCoordinate(pickerCoordinate);
+  }
+
   async function handleSaveRestaurant() {
     setRequestError(null);
 
@@ -238,6 +616,16 @@ export default function CreateRestaurantScreen() {
       return;
     }
 
+    if (
+      creationMode === 'MANUAL'
+      && !selectedLocation
+    ) {
+      setRequestError(
+        'Confirma la ubicación del restaurante para que aparezca en el mapa.',
+      );
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -264,7 +652,10 @@ export default function CreateRestaurantScreen() {
         );
       }
 
-      if (creationMode === 'MANUAL') {
+      if (
+        creationMode === 'MANUAL'
+        && selectedLocation
+      ) {
         await createGroupRestaurant(
           groupId,
           {
@@ -274,8 +665,8 @@ export default function CreateRestaurantScreen() {
             address: manualAddress.trim() || null,
             city: manualCity.trim() || null,
             country: manualCountry.trim() || null,
-            latitude: null,
-            longitude: null,
+            latitude: selectedLocation.latitude,
+            longitude: selectedLocation.longitude,
             category:
               manualCategory.trim() || null,
             groupNotes: groupNotes.trim() || null,
@@ -298,11 +689,14 @@ export default function CreateRestaurantScreen() {
   const saveDisabled =
     creationMode === 'SEARCH'
       ? selectedResult === null
-      : !manualName.trim();
+      : !manualName.trim() || selectedLocation === null;
 
-  const showSaveSection =
-    creationMode === 'MANUAL'
-    || selectedResult !== null;
+  const showSearchSaveSection =
+    creationMode === 'SEARCH'
+    && selectedResult !== null;
+
+  const locationSearchDisabled =
+    !manualAddress.trim() && !manualCity.trim();
 
   const groupImageUrl =
     group?.imageUrl && !groupImageFailed
@@ -328,7 +722,7 @@ export default function CreateRestaurantScreen() {
         >
           <View style={styles.header}>
             <Pressable
-              accessibilityLabel="Volver"
+              accessibilityLabel="Cerrar"
               accessibilityRole="button"
               onPress={() => router.back()}
               style={({ pressed }) => [
@@ -338,11 +732,11 @@ export default function CreateRestaurantScreen() {
             >
               <SymbolView
                 name={{
-                  ios: 'chevron.left',
-                  android: 'arrow_back',
-                  web: 'arrow_back',
+                  ios: 'xmark',
+                  android: 'close',
+                  web: 'close',
                 }}
-                size={21}
+                size={20}
                 tintColor={colors.text}
               />
             </Pressable>
@@ -380,7 +774,7 @@ export default function CreateRestaurantScreen() {
                     android: 'group',
                     web: 'group',
                   }}
-                  size={23}
+                  size={22}
                   tintColor="#66834A"
                 />
               </View>
@@ -419,7 +813,7 @@ export default function CreateRestaurantScreen() {
                 android: 'chevron_right',
                 web: 'chevron_right',
               }}
-              size={20}
+              size={19}
               tintColor={colors.muted}
             />
           </Pressable>
@@ -429,8 +823,7 @@ export default function CreateRestaurantScreen() {
               ¿Qué sitio queréis probar?
             </Text>
             <Text style={styles.subtitle}>
-              Busca un restaurante real o añádelo
-              manualmente si todavía no aparece.
+              Busca un restaurante real o añádelo manualmente si todavía no aparece.
             </Text>
           </View>
 
@@ -506,7 +899,7 @@ export default function CreateRestaurantScreen() {
                       Busca el restaurante
                     </Text>
                     <Text style={styles.sectionDescription}>
-                      La ciudad es opcional, pero ayuda a afinar.
+                      La ciudad es opcional, pero ayuda a afinar los resultados.
                     </Text>
                   </View>
                 </View>
@@ -519,7 +912,7 @@ export default function CreateRestaurantScreen() {
                     maxLength={150}
                     onChangeText={updateSearchQuery}
                     onSubmitEditing={() => void handleSearch()}
-                    placeholder="Kaizen Sushi"
+                    placeholder="Escribe el nombre del restaurante"
                     returnKeyType="search"
                     rightAccessory={
                       <SymbolView
@@ -541,7 +934,7 @@ export default function CreateRestaurantScreen() {
                     maxLength={100}
                     onChangeText={updateSearchCity}
                     onSubmitEditing={() => void handleSearch()}
-                    placeholder="Palma de Mallorca"
+                    placeholder="Escribe una ciudad (opcional)"
                     returnKeyType="search"
                     rightAccessory={
                       <SymbolView
@@ -603,8 +996,7 @@ export default function CreateRestaurantScreen() {
                     No encontramos resultados
                   </Text>
                   <Text style={styles.emptyText}>
-                    Prueba con otro nombre o crea el restaurante
-                    manualmente con los datos que conozcas.
+                    Prueba con otro nombre o crea el restaurante manualmente.
                   </Text>
                 </View>
               ) : null}
@@ -665,7 +1057,7 @@ export default function CreateRestaurantScreen() {
                       android: 'help_outline',
                       web: 'help_outline',
                     }}
-                    size={22}
+                    size={21}
                     tintColor={colors.primary}
                   />
                 </View>
@@ -690,138 +1082,551 @@ export default function CreateRestaurantScreen() {
                   ]}
                 >
                   <Text style={styles.manualShortcutButtonText}>
-                    Añadir manual
+                    Añadir manualmente
                   </Text>
                 </Pressable>
               </View>
+
+              {showSearchSaveSection ? (
+                <View style={styles.saveSection}>
+                  <View style={styles.selectedSummary}>
+                    <SymbolView
+                      name={{
+                        ios: 'checkmark.circle.fill',
+                        android: 'check_circle',
+                        web: 'check_circle',
+                      }}
+                      size={22}
+                      tintColor="#557547"
+                    />
+                    <View style={styles.selectedSummaryCopy}>
+                      <Text style={styles.selectedSummaryEyebrow}>
+                        Restaurante seleccionado
+                      </Text>
+                      <Text
+                        numberOfLines={1}
+                        style={styles.selectedSummaryName}
+                      >
+                        {selectedResult?.name}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.notesCard}>
+                    <View style={styles.notesHeader}>
+                      <Text style={styles.notesTitle}>
+                        Notas del grupo
+                      </Text>
+                      <Text style={styles.notesDescription}>
+                        Estas notas solo pertenecen a este grupo.
+                      </Text>
+                    </View>
+
+                    <FormField
+                      label="Notas opcionales"
+                      maxLength={1000}
+                      multiline
+                      onChangeText={setGroupNotes}
+                      placeholder="Nos lo han recomendado"
+                      style={styles.notesInput}
+                      textAlignVertical="top"
+                      value={groupNotes}
+                    />
+                  </View>
+
+                  {requestError ? (
+                    <View style={styles.requestErrorCard}>
+                      <SymbolView
+                        name={{
+                          ios: 'exclamationmark.triangle.fill',
+                          android: 'warning',
+                          web: 'warning',
+                        }}
+                        size={19}
+                        tintColor={colors.danger}
+                      />
+                      <Text style={styles.requestErrorText}>
+                        {requestError}
+                      </Text>
+                    </View>
+                  ) : null}
+
+                  <PrimaryButton
+                    disabled={saveDisabled}
+                    loading={isSubmitting}
+                    onPress={handleSaveRestaurant}
+                    title="Guardar restaurante"
+                  />
+                </View>
+              ) : null}
             </View>
           ) : (
-            <View style={styles.sectionCard}>
-              <View style={styles.sectionHeading}>
-                <View style={styles.sectionIcon}>
-                  <SymbolView
-                    name={{
-                      ios: 'square.and.pencil',
-                      android: 'edit',
-                      web: 'edit',
-                    }}
-                    size={21}
-                    tintColor={colors.primary}
-                  />
-                </View>
-                <View style={styles.sectionHeadingCopy}>
-                  <Text style={styles.sectionTitle}>
-                    Datos del restaurante
-                  </Text>
-                  <Text style={styles.sectionDescription}>
-                    Solo el nombre es obligatorio.
-                  </Text>
-                </View>
-              </View>
-
-              <Text style={styles.manualIntro}>
-                Completa lo que conozcas. Podrás editar estos
-                datos más adelante desde el grupo.
-              </Text>
-
-              <View style={styles.formStack}>
-                <FormField
-                  autoCapitalize="words"
-                  label="Nombre del restaurante"
-                  maxLength={150}
-                  onChangeText={(value) => {
-                    setManualName(value);
-                    setRequestError(null);
-                  }}
-                  placeholder="Kaizen Sushi"
-                  value={manualName}
-                />
-
-                <FormField
-                  autoCapitalize="sentences"
-                  label="Dirección"
-                  maxLength={300}
-                  onChangeText={setManualAddress}
-                  placeholder="Carrer de Exemple, 10"
-                  value={manualAddress}
-                />
-
-                <FormField
-                  autoCapitalize="words"
-                  label="Ciudad"
-                  maxLength={100}
-                  onChangeText={setManualCity}
-                  placeholder="Palma"
-                  value={manualCity}
-                />
-
-                <FormField
-                  autoCapitalize="words"
-                  label="País"
-                  maxLength={100}
-                  onChangeText={setManualCountry}
-                  placeholder="España"
-                  value={manualCountry}
-                />
-
-                <FormField
-                  autoCapitalize="words"
-                  label="Categoría"
-                  maxLength={100}
-                  onChangeText={setManualCategory}
-                  placeholder="Japonés"
-                  value={manualCategory}
-                />
-              </View>
-            </View>
-          )}
-
-          {showSaveSection ? (
-            <View style={styles.saveSection}>
-              {creationMode === 'SEARCH' && selectedResult ? (
-                <View style={styles.selectedSummary}>
-                  <SymbolView
-                    name={{
-                      ios: 'checkmark.circle.fill',
-                      android: 'check_circle',
-                      web: 'check_circle',
-                    }}
-                    size={22}
-                    tintColor="#557547"
-                  />
-                  <View style={styles.selectedSummaryCopy}>
-                    <Text style={styles.selectedSummaryEyebrow}>
-                      Restaurante seleccionado
+            <View style={styles.section}>
+              <View style={styles.sectionCard}>
+                <View style={styles.sectionHeading}>
+                  <View style={styles.sectionIcon}>
+                    <SymbolView
+                      name={{
+                        ios: 'square.and.pencil',
+                        android: 'edit',
+                        web: 'edit',
+                      }}
+                      size={21}
+                      tintColor={colors.primary}
+                    />
+                  </View>
+                  <View style={styles.sectionHeadingCopy}>
+                    <Text style={styles.sectionTitle}>
+                      Datos básicos
                     </Text>
-                    <Text
-                      numberOfLines={1}
-                      style={styles.selectedSummaryName}
-                    >
-                      {selectedResult.name}
+                    <Text style={styles.sectionDescription}>
+                      El nombre y la ubicación son necesarios.
                     </Text>
                   </View>
                 </View>
-              ) : null}
 
-              <View style={styles.notesHeader}>
-                <Text style={styles.notesTitle}>
-                  Notas del grupo
-                </Text>
-                <Text style={styles.notesDescription}>
-                  Estas notas solo pertenecen a este grupo.
-                </Text>
+                <View style={styles.formStack}>
+                  <FormField
+                    autoCapitalize="words"
+                    label="Nombre del restaurante"
+                    maxLength={150}
+                    onChangeText={(value) => {
+                      setManualName(value);
+                      setRequestError(null);
+                    }}
+                    placeholder="Escribe el nombre del restaurante"
+                    value={manualName}
+                  />
+
+                  <FormField
+                    autoCapitalize="words"
+                    label="Ciudad"
+                    maxLength={100}
+                    onChangeText={updateManualCity}
+                    placeholder="Escribe una ciudad"
+                    rightAccessory={
+                      <SymbolView
+                        name={{
+                          ios: 'location.circle',
+                          android: 'location_city',
+                          web: 'location_city',
+                        }}
+                        size={20}
+                        tintColor={colors.primary}
+                      />
+                    }
+                    value={manualCity}
+                  />
+                </View>
               </View>
 
-              <FormField
-                label="Notas opcionales"
-                maxLength={1000}
-                multiline
-                onChangeText={setGroupNotes}
-                placeholder="Nos lo han recomendado"
-                style={styles.notesInput}
-                textAlignVertical="top"
-                value={groupNotes}
-              />
+              <View style={styles.detailsCard}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{
+                    expanded: detailsExpanded,
+                  }}
+                  onPress={() => {
+                    setDetailsExpanded((current) => !current);
+                  }}
+                  style={styles.detailsHeader}
+                >
+                  <View style={styles.detailsHeaderContent}>
+                    <View style={styles.greenSectionIcon}>
+                      <SymbolView
+                        name={{
+                          ios: 'info.circle',
+                          android: 'info_outline',
+                          web: 'info_outline',
+                        }}
+                        size={20}
+                        tintColor="#62794D"
+                      />
+                    </View>
+                    <View style={styles.sectionHeadingCopy}>
+                      <Text style={styles.sectionTitle}>
+                        Más información
+                      </Text>
+                      <Text style={styles.sectionDescription}>
+                        Opcional, pero mejora la ficha del restaurante.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <SymbolView
+                    name={{
+                      ios: detailsExpanded
+                        ? 'chevron.up'
+                        : 'chevron.down',
+                      android: detailsExpanded
+                        ? 'expand_less'
+                        : 'expand_more',
+                      web: detailsExpanded
+                        ? 'expand_less'
+                        : 'expand_more',
+                    }}
+                    size={20}
+                    tintColor={colors.muted}
+                  />
+                </Pressable>
+
+                {detailsExpanded ? (
+                  <View style={styles.detailsBody}>
+                    <FormField
+                      autoCapitalize="sentences"
+                      label="Dirección"
+                      maxLength={300}
+                      onChangeText={updateManualAddress}
+                      placeholder="Calle, número, etc."
+                      value={manualAddress}
+                    />
+
+                    <FormField
+                      autoCapitalize="words"
+                      label="País"
+                      maxLength={100}
+                      onChangeText={updateManualCountry}
+                      placeholder="España"
+                      value={manualCountry}
+                    />
+
+                    <FormField
+                      autoCapitalize="words"
+                      label="Categoría"
+                      maxLength={100}
+                      onChangeText={setManualCategory}
+                      placeholder="Japonés, cafetería, brunch…"
+                      value={manualCategory}
+                    />
+                  </View>
+                ) : null}
+              </View>
+
+              <View style={styles.locationCard}>
+                <View style={styles.sectionHeading}>
+                  <View style={styles.greenSectionIcon}>
+                    <SymbolView
+                      name={{
+                        ios: 'map.fill',
+                        android: 'map',
+                        web: 'map',
+                      }}
+                      size={20}
+                      tintColor="#62794D"
+                    />
+                  </View>
+                  <View style={styles.sectionHeadingCopy}>
+                    <Text style={styles.sectionTitle}>
+                      Ubicación en el mapa
+                    </Text>
+                    <Text style={styles.sectionDescription}>
+                      Confirma el punto exacto para que aparezca en Mapa.
+                    </Text>
+                  </View>
+                </View>
+
+                {selectedLocation ? (
+                  <View style={styles.mapPreviewCard}>
+                    <MapView
+                      key={`${selectedLocation.latitude}:${selectedLocation.longitude}`}
+                      initialRegion={{
+                        latitude: selectedLocation.latitude,
+                        longitude: selectedLocation.longitude,
+                        latitudeDelta: 0.008,
+                        longitudeDelta: 0.008,
+                      }}
+                      pointerEvents="none"
+                      provider={
+                        Platform.OS === 'android'
+                          ? PROVIDER_GOOGLE
+                          : undefined
+                      }
+                      style={styles.mapPreview}
+                    >
+                      <Marker
+                        coordinate={{
+                          latitude: selectedLocation.latitude,
+                          longitude: selectedLocation.longitude,
+                        }}
+                      />
+                    </MapView>
+
+                    <View style={styles.mapPreviewHeader}>
+                      <View style={styles.mapPreviewIcon}>
+                        <SymbolView
+                          name={{
+                            ios: 'checkmark.circle.fill',
+                            android: 'check_circle',
+                            web: 'check_circle',
+                          }}
+                          size={21}
+                          tintColor="#557547"
+                        />
+                      </View>
+
+                      <View style={styles.mapPreviewCopy}>
+                        <Text style={styles.mapPreviewTitle}>
+                          Ubicación confirmada
+                        </Text>
+                        <Text
+                          numberOfLines={2}
+                          style={styles.mapPreviewText}
+                        >
+                          {selectedLocation.label}
+                        </Text>
+                      </View>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => void openMapPicker()}
+                        style={({ pressed }) => [
+                          styles.mapPreviewEdit,
+                          pressed
+                            ? styles.manualShortcutButtonPressed
+                            : null,
+                        ]}
+                      >
+                        <Text style={styles.mapPreviewEditText}>
+                          Ajustar
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.locationEmpty}>
+                    <Text style={styles.locationEmptyTitle}>
+                      Todavía falta confirmar la ubicación
+                    </Text>
+                    <Text style={styles.locationEmptyText}>
+                      Busca la dirección, usa tu posición actual o coloca el pin manualmente.
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.locationActions}>
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={
+                      locationSearchDisabled
+                      || isLocationSearching
+                    }
+                    onPress={handleLocationSearch}
+                    style={({ pressed }) => [
+                      styles.locationPrimaryAction,
+                      locationSearchDisabled
+                      || isLocationSearching
+                        ? styles.locationPrimaryActionDisabled
+                        : null,
+                      pressed
+                      && !locationSearchDisabled
+                      && !isLocationSearching
+                        ? styles.locationActionPressed
+                        : null,
+                    ]}
+                  >
+                    {isLocationSearching ? (
+                      <ActivityIndicator
+                        color={colors.white}
+                        size="small"
+                      />
+                    ) : (
+                      <SymbolView
+                        name={{
+                          ios: 'magnifyingglass',
+                          android: 'search',
+                          web: 'search',
+                        }}
+                        size={18}
+                        tintColor={colors.white}
+                      />
+                    )}
+                    <Text style={styles.locationPrimaryActionText}>
+                      Buscar dirección
+                    </Text>
+                  </Pressable>
+
+                  <View style={styles.locationSecondaryRow}>
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={isUsingCurrentLocation}
+                      onPress={useCurrentLocation}
+                      style={({ pressed }) => [
+                        styles.locationSecondaryAction,
+                        pressed
+                          ? styles.locationSecondaryActionPressed
+                          : null,
+                      ]}
+                    >
+                      {isUsingCurrentLocation ? (
+                        <ActivityIndicator
+                          color={colors.primary}
+                          size="small"
+                        />
+                      ) : (
+                        <SymbolView
+                          name={{
+                            ios: 'location.fill',
+                            android: 'my_location',
+                            web: 'my_location',
+                          }}
+                          size={17}
+                          tintColor={colors.primary}
+                        />
+                      )}
+                      <Text style={styles.locationSecondaryActionText}>
+                        Mi ubicación
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => void openMapPicker()}
+                      style={({ pressed }) => [
+                        styles.locationSecondaryAction,
+                        pressed
+                          ? styles.locationSecondaryActionPressed
+                          : null,
+                      ]}
+                    >
+                      <SymbolView
+                        name={{
+                          ios: 'mappin.and.ellipse',
+                          android: 'add_location_alt',
+                          web: 'add_location_alt',
+                        }}
+                        size={18}
+                        tintColor={colors.primary}
+                      />
+                      <Text style={styles.locationSecondaryActionText}>
+                        Elegir en mapa
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                {locationError ? (
+                  <View style={styles.inlineError}>
+                    <SymbolView
+                      name={{
+                        ios: 'exclamationmark.circle.fill',
+                        android: 'error',
+                        web: 'error',
+                      }}
+                      size={18}
+                      tintColor={colors.danger}
+                    />
+                    <Text style={styles.inlineErrorText}>
+                      {locationError}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {locationResults.length > 0 ? (
+                  <View style={styles.locationResults}>
+                    <Text style={styles.locationResultsTitle}>
+                      Elige la ubicación correcta
+                    </Text>
+
+                    {locationResults.map((locationResult) => (
+                      <Pressable
+                        accessibilityRole="button"
+                        key={`${locationResult.latitude}-${locationResult.longitude}`}
+                        onPress={() => {
+                          selectManualLocation(locationResult);
+                        }}
+                        style={({ pressed }) => [
+                          styles.locationResultCard,
+                          pressed
+                            ? styles.locationResultCardPressed
+                            : null,
+                        ]}
+                      >
+                        <View style={styles.locationResultIcon}>
+                          <SymbolView
+                            name={{
+                              ios: 'mappin',
+                              android: 'location_on',
+                              web: 'location_on',
+                            }}
+                            size={19}
+                            tintColor={colors.primary}
+                          />
+                        </View>
+
+                        <View style={styles.locationResultCopy}>
+                          <Text
+                            numberOfLines={2}
+                            style={styles.locationResultLabel}
+                          >
+                            {locationResult.label}
+                          </Text>
+                          <Text style={styles.locationResultMeta}>
+                            Toca para confirmar este punto
+                          </Text>
+                        </View>
+
+                        <SymbolView
+                          name={{
+                            ios: 'chevron.right',
+                            android: 'chevron_right',
+                            web: 'chevron_right',
+                          }}
+                          size={18}
+                          tintColor={colors.muted}
+                        />
+                      </Pressable>
+                    ))}
+
+                    <Pressable
+                      accessibilityRole="link"
+                      onPress={() => {
+                        void Linking.openURL(
+                          'https://www.openstreetmap.org/copyright',
+                        );
+                      }}
+                    >
+                      <Text style={styles.attribution}>
+                        Datos © colaboradores de OpenStreetMap
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+              </View>
+
+              <View style={styles.notesCard}>
+                <View style={styles.sectionHeading}>
+                  <View style={styles.greenSectionIcon}>
+                    <SymbolView
+                      name={{
+                        ios: 'person.2.fill',
+                        android: 'group',
+                        web: 'group',
+                      }}
+                      size={20}
+                      tintColor="#62794D"
+                    />
+                  </View>
+                  <View style={styles.sectionHeadingCopy}>
+                    <Text style={styles.sectionTitle}>
+                      Notas del grupo
+                    </Text>
+                    <Text style={styles.sectionDescription}>
+                      Estas notas solo pertenecen a este grupo.
+                    </Text>
+                  </View>
+                </View>
+
+                <FormField
+                  label="Notas opcionales"
+                  maxLength={1000}
+                  multiline
+                  onChangeText={setGroupNotes}
+                  placeholder="Nos lo han recomendado"
+                  style={styles.notesInput}
+                  textAlignVertical="top"
+                  value={groupNotes}
+                />
+              </View>
 
               {requestError ? (
                 <View style={styles.requestErrorCard}>
@@ -840,6 +1645,12 @@ export default function CreateRestaurantScreen() {
                 </View>
               ) : null}
 
+              {!selectedLocation ? (
+                <Text style={styles.saveHint}>
+                  Confirma la ubicación para activar el guardado y mostrar el restaurante en Mapa.
+                </Text>
+              ) : null}
+
               <PrimaryButton
                 disabled={saveDisabled}
                 loading={isSubmitting}
@@ -847,9 +1658,17 @@ export default function CreateRestaurantScreen() {
                 title="Guardar restaurante"
               />
             </View>
-          ) : null}
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <LocationPickerModal
+        coordinate={pickerCoordinate}
+        onChange={setPickerCoordinate}
+        onClose={() => setPickerVisible(false)}
+        onConfirm={confirmPickerLocation}
+        visible={pickerVisible}
+      />
     </SafeAreaView>
   );
 }
