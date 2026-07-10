@@ -26,9 +26,43 @@ public record MapRestaurantResponse(
         BigDecimal latitude,
         BigDecimal longitude,
 
-        String category
+        String category,
+        String imageUrl
 
 ) {
+
+    public MapRestaurantResponse(
+            UUID groupRestaurantId,
+            UUID groupId,
+            String groupName,
+            GroupRestaurantStatus status,
+            boolean favorite,
+            UUID restaurantId,
+            String name,
+            String address,
+            String city,
+            String country,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String category
+    ) {
+        this(
+                groupRestaurantId,
+                groupId,
+                groupName,
+                status,
+                favorite,
+                restaurantId,
+                name,
+                address,
+                city,
+                country,
+                latitude,
+                longitude,
+                category,
+                null
+        );
+    }
 
     public static MapRestaurantResponse from(
             GroupRestaurant groupRestaurant,
@@ -52,7 +86,8 @@ public record MapRestaurantResponse(
                 restaurant.getLatitude(),
                 restaurant.getLongitude(),
 
-                restaurant.getCategory()
+                restaurant.getCategory(),
+                restaurant.getImageUrl()
         );
     }
 }

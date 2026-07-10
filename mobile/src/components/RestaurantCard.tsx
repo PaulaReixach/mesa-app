@@ -1,12 +1,14 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import {
+  Image,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
+import { resolveApiUrl } from '../lib/api';
 import { colors } from '../theme/colors';
 import type {
   GroupRestaurant,
@@ -63,6 +65,9 @@ export function RestaurantCard({
   presentation = 'status',
 }: RestaurantCardProps) {
   const { restaurant } = groupRestaurant;
+  const imageUri = restaurant.imageUrl
+    ? resolveApiUrl(restaurant.imageUrl)
+    : null;
 
   const location = [
     restaurant.address,
@@ -101,15 +106,23 @@ export function RestaurantCard({
       ]}
     >
       <View style={styles.artwork}>
-        <SymbolView
-          name={{
-            ios: 'fork.knife',
-            android: 'restaurant',
-            web: 'restaurant',
-          }}
-          size={23}
-          tintColor={colors.primary}
-        />
+        {imageUri ? (
+          <Image
+            resizeMode="cover"
+            source={{ uri: imageUri }}
+            style={styles.coverImage}
+          />
+        ) : (
+          <SymbolView
+            name={{
+              ios: 'fork.knife',
+              android: 'restaurant',
+              web: 'restaurant',
+            }}
+            size={23}
+            tintColor={colors.primary}
+          />
+        )}
       </View>
 
       <View style={styles.content}>
@@ -151,9 +164,7 @@ export function RestaurantCard({
               <Text
                 style={[
                   styles.statusText,
-                  {
-                    color: status.textColor,
-                  },
+                  { color: status.textColor },
                 ]}
               >
                 {status.label}
@@ -215,6 +226,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 16,
     backgroundColor: '#F3DED5',
+    overflow: 'hidden',
+  },
+  coverImage: {
+    width: '100%',
+    height: '100%',
   },
   content: {
     flex: 1,

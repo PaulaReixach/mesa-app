@@ -8,25 +8,36 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 type FormFieldProps = TextInputProps & {
   label: string;
   error?: string | null;
   rightAccessory?: ReactNode;
+  compact?: boolean;
 };
 
 export function FormField({
   label,
   error,
   rightAccessory,
+  compact = false,
   style,
   ...textInputProps
 }: FormFieldProps) {
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        compact ? styles.compactContainer : null,
+      ]}
+    >
       <Text
         maxFontSizeMultiplier={1.15}
-        style={styles.label}
+        style={[
+          styles.label,
+          compact ? styles.compactLabel : null,
+        ]}
       >
         {label}
       </Text>
@@ -34,6 +45,7 @@ export function FormField({
       <View
         style={[
           styles.inputContainer,
+          compact ? styles.compactInputContainer : null,
           error ? styles.inputError : null,
         ]}
       >
@@ -43,6 +55,7 @@ export function FormField({
           placeholderTextColor={colors.muted}
           style={[
             styles.input,
+            compact ? styles.compactInput : null,
             rightAccessory
               ? styles.inputWithAccessory
               : null,
@@ -51,7 +64,12 @@ export function FormField({
         />
 
         {rightAccessory ? (
-          <View style={styles.accessory}>
+          <View
+            style={[
+              styles.accessory,
+              compact ? styles.compactAccessory : null,
+            ]}
+          >
             {rightAccessory}
           </View>
         ) : null}
@@ -73,10 +91,16 @@ const styles = StyleSheet.create({
   container: {
     gap: 7,
   },
+  compactContainer: {
+    gap: 5,
+  },
   label: {
     color: colors.text,
+    fontFamily: fonts.semiBold,
     fontSize: 13,
-    fontWeight: '700',
+  },
+  compactLabel: {
+    fontSize: 12,
   },
   inputContainer: {
     minHeight: 52,
@@ -87,6 +111,10 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     backgroundColor: colors.inputBackground,
   },
+  compactInputContainer: {
+    minHeight: 46,
+    borderRadius: 12,
+  },
   inputError: {
     borderColor: colors.danger,
   },
@@ -95,7 +123,13 @@ const styles = StyleSheet.create({
     minHeight: 50,
     paddingHorizontal: 15,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 14,
+  },
+  compactInput: {
+    minHeight: 44,
+    paddingHorizontal: 13,
+    fontSize: 13,
   },
   inputWithAccessory: {
     paddingRight: 4,
@@ -106,8 +140,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  compactAccessory: {
+    width: 42,
+    minHeight: 44,
+  },
   error: {
     color: colors.danger,
+    fontFamily: fonts.medium,
     fontSize: 12,
     lineHeight: 17,
   },

@@ -49,6 +49,9 @@ public class Restaurant {
     @Column(name = "category", length = 100)
     private String category;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -70,6 +73,32 @@ public class Restaurant {
             BigDecimal longitude,
             String category
     ) {
+        this(
+                provider,
+                externalPlaceId,
+                name,
+                address,
+                city,
+                country,
+                latitude,
+                longitude,
+                category,
+                null
+        );
+    }
+
+    public Restaurant(
+            String provider,
+            String externalPlaceId,
+            String name,
+            String address,
+            String city,
+            String country,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String category,
+            String imageUrl
+    ) {
         this.provider = provider;
         this.externalPlaceId = externalPlaceId;
         this.name = name;
@@ -79,6 +108,7 @@ public class Restaurant {
         this.latitude = latitude;
         this.longitude = longitude;
         this.category = category;
+        this.imageUrl = imageUrl;
     }
 
     public void updateDetails(
@@ -96,6 +126,10 @@ public class Restaurant {
         this.city = city;
         this.country = country;
         this.category = category;
+    }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     @PrePersist
@@ -148,6 +182,10 @@ public class Restaurant {
 
     public String getCategory() {
         return category;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
     }
 
     public Instant getCreatedAt() {

@@ -32,6 +32,7 @@ public class NominatimRestaurantSearchClient {
     private static final int MAX_CACHE_ENTRIES = 100;
 
     private static final int NOMINATIM_RESULT_LIMIT = 40;
+    private static final int NOMINATIM_LOCATION_RESULT_LIMIT = 8;
 
     private final RestClient restClient;
 
@@ -123,6 +124,44 @@ public class NominatimRestaurantSearchClient {
                                 normalizedQuery,
                                 normalizedCity
                         )
+        );
+    }
+
+    public List<NominatimPlaceResponse> searchLocations(
+            String searchTerm
+    ) {
+        String normalizedSearchTerm = searchTerm.trim();
+
+        String cacheKey =
+                "location:"
+                        + normalizeCacheValue(normalizedSearchTerm);
+
+        return search(
+                cacheKey,
+                uriBuilder ->
+                        uriBuilder
+                                .path("/search")
+                                .queryParam(
+                                        "q",
+                                        normalizedSearchTerm
+                                )
+                                .queryParam(
+                                        "format",
+                                        "jsonv2"
+                                )
+                                .queryParam(
+                                        "addressdetails",
+                                        1
+                                )
+                                .queryParam(
+                                        "limit",
+                                        NOMINATIM_LOCATION_RESULT_LIMIT
+                                )
+                                .queryParam(
+                                        "dedupe",
+                                        1
+                                )
+                                .build()
         );
     }
 
