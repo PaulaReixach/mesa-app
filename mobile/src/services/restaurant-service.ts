@@ -2,6 +2,7 @@ import { apiRequest } from '../lib/api';
 import {
   CreateGroupRestaurantPayload,
   GroupRestaurant,
+  RestaurantLocationResult,
   RestaurantSearchResult,
   UpdateGroupRestaurantFavoritePayload,
   UpdateGroupRestaurantPayload,
@@ -112,6 +113,38 @@ export function searchRestaurants(
 
   return apiRequest<RestaurantSearchResult[]>(
     `/restaurants/search?query=${queryParameter}${cityParameter}`,
+    {
+      method: 'GET',
+    },
+    accessToken,
+  );
+}
+
+export function searchRestaurantLocations(
+  address: string,
+  city: string,
+  country: string,
+  accessToken: string,
+): Promise<RestaurantLocationResult[]> {
+  const parameters = new URLSearchParams();
+  const normalizedAddress = address.trim();
+  const normalizedCity = city.trim();
+  const normalizedCountry = country.trim();
+
+  if (normalizedAddress) {
+    parameters.set('address', normalizedAddress);
+  }
+
+  if (normalizedCity) {
+    parameters.set('city', normalizedCity);
+  }
+
+  if (normalizedCountry) {
+    parameters.set('country', normalizedCountry);
+  }
+
+  return apiRequest<RestaurantLocationResult[]>(
+    `/restaurants/geocode?${parameters.toString()}`,
     {
       method: 'GET',
     },
