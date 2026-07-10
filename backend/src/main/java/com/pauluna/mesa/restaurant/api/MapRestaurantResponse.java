@@ -26,7 +26,8 @@ public record MapRestaurantResponse(
         BigDecimal latitude,
         BigDecimal longitude,
 
-        String category
+        String category,
+        String imageUrl
 
 ) {
 
@@ -52,7 +53,8 @@ public record MapRestaurantResponse(
                 restaurant.getLatitude(),
                 restaurant.getLongitude(),
 
-                restaurant.getCategory()
+                restaurant.getCategory(),
+                restaurant.getImageUrl()
         );
     }
 }
