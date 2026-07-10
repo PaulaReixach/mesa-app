@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 type FormFieldProps = TextInputProps & {
   label: string;
@@ -75,8 +76,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.text,
+    fontFamily: fonts.semiBold,
     fontSize: 13,
-    fontWeight: '700',
   },
   inputContainer: {
     minHeight: 52,
@@ -95,6 +96,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
     paddingHorizontal: 15,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 14,
   },
   inputWithAccessory: {
@@ -108,6 +110,7 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.danger,
+    fontFamily: fonts.medium,
     fontSize: 12,
     lineHeight: 17,
   },
