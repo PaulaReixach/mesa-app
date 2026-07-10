@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 type PrimaryButtonProps = {
   title: string;
@@ -55,13 +56,14 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     backgroundColor: colors.primaryPressed,
+    transform: [{ scale: 0.995 }],
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.55,
   },
   title: {
     color: colors.white,
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '700',
   },
 });
