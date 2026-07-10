@@ -1,11 +1,15 @@
+import { SymbolView } from 'expo-symbols';
 import {
+  Image,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
+import { getRestaurantFallbackImage } from '../lib/restaurant-images';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import { RestaurantSearchResult } from '../types/restaurant';
 
 type RestaurantSearchResultCardProps = {
@@ -28,7 +32,9 @@ export function RestaurantSearchResultCard({
 
   return (
     <Pressable
+      accessibilityLabel={`${result.name}${selected ? ', seleccionado' : ''}`}
       accessibilityRole="button"
+      accessibilityState={{ selected }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
@@ -36,21 +42,13 @@ export function RestaurantSearchResultCard({
         pressed ? styles.pressedCard : null,
       ]}
     >
-      <View
-        style={[
-          styles.icon,
-          selected ? styles.selectedIcon : null,
-        ]}
-      >
-        <Text
-          style={[
-            styles.iconText,
-            selected ? styles.selectedIconText : null,
-          ]}
-        >
-          {result.name.charAt(0).toUpperCase()}
-        </Text>
-      </View>
+      <Image
+        resizeMode="cover"
+        source={{
+          uri: getRestaurantFallbackImage(result.name),
+        }}
+        style={styles.image}
+      />
 
       <View style={styles.content}>
         <View style={styles.titleRow}>
@@ -63,6 +61,15 @@ export function RestaurantSearchResultCard({
 
           {selected ? (
             <View style={styles.selectedBadge}>
+              <SymbolView
+                name={{
+                  ios: 'checkmark.circle.fill',
+                  android: 'check_circle',
+                  web: 'check_circle',
+                }}
+                size={14}
+                tintColor="#557547"
+              />
               <Text style={styles.selectedBadgeText}>
                 Elegido
               </Text>
@@ -71,20 +78,31 @@ export function RestaurantSearchResultCard({
         </View>
 
         {result.category ? (
-          <Text style={styles.category}>
+          <Text numberOfLines={1} style={styles.category}>
             {result.category}
           </Text>
         ) : null}
 
-        <Text
-          numberOfLines={2}
-          style={styles.location}
-        >
-          {location || 'Sin dirección disponible'}
-        </Text>
+        <View style={styles.locationRow}>
+          <SymbolView
+            name={{
+              ios: 'mappin',
+              android: 'location_on',
+              web: 'location_on',
+            }}
+            size={15}
+            tintColor={colors.muted}
+          />
+          <Text
+            numberOfLines={2}
+            style={styles.location}
+          >
+            {location || 'Sin dirección disponible'}
+          </Text>
+        </View>
 
         {result.country ? (
-          <Text style={styles.country}>
+          <Text numberOfLines={1} style={styles.country}>
             {result.country}
           </Text>
         ) : null}
@@ -95,41 +113,34 @@ export function RestaurantSearchResultCard({
 
 const styles = StyleSheet.create({
   card: {
+    minHeight: 100,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 13,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#ECE4DE',
     borderRadius: 20,
     backgroundColor: colors.surface,
-    padding: 15,
+    padding: 11,
+    shadowColor: '#3B241D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 1,
   },
   selectedCard: {
-    borderWidth: 2,
     borderColor: colors.primary,
-    padding: 14,
+    backgroundColor: '#FFF8F5',
   },
   pressedCard: {
-    opacity: 0.75,
+    opacity: 0.78,
+    transform: [{ scale: 0.995 }],
   },
-  icon: {
-    width: 50,
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+  image: {
+    width: 76,
+    height: 76,
     borderRadius: 16,
-    backgroundColor: '#F7D9CF',
-  },
-  selectedIcon: {
-    backgroundColor: colors.primary,
-  },
-  iconText: {
-    color: colors.primary,
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  selectedIconText: {
-    color: colors.white,
+    backgroundColor: '#F4ECE7',
   },
   content: {
     flex: 1,
@@ -138,38 +149,49 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 7,
   },
   title: {
     flex: 1,
     color: colors.text,
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '800',
-    lineHeight: 21,
+    lineHeight: 20,
   },
   selectedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     borderRadius: 999,
-    backgroundColor: '#F7D9CF',
+    backgroundColor: '#EAF2E3',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 5,
   },
   selectedBadgeText: {
-    color: colors.primary,
+    color: '#557547',
+    fontFamily: fonts.semiBold,
     fontSize: 10,
-    fontWeight: '800',
   },
   category: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '700',
+    color: colors.muted,
+    fontFamily: fonts.medium,
+    fontSize: 12,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 4,
   },
   location: {
+    flex: 1,
     color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    lineHeight: 17,
   },
   country: {
-    color: colors.muted,
-    fontSize: 12,
+    color: '#958B86',
+    fontFamily: fonts.regular,
+    fontSize: 11,
   },
 });
