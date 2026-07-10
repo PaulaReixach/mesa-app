@@ -102,7 +102,7 @@ public class GroupRestaurant {
     ) {
         this.groupId = groupId;
         this.restaurantId = restaurantId;
-        this.status = status;
+        this.status = validateSelectableStatus(status);
         this.favorite = false;
         this.proposedByUserId = proposedByUserId;
         this.groupNotes = groupNotes;
@@ -112,10 +112,7 @@ public class GroupRestaurant {
     }
 
     public void changeStatus(GroupRestaurantStatus status) {
-        this.status = Objects.requireNonNull(
-                status,
-                "El estado del restaurante es obligatorio."
-        );
+        this.status = validateSelectableStatus(status);
         this.statusUpdatedByUserId = null;
     }
 
@@ -123,10 +120,7 @@ public class GroupRestaurant {
             GroupRestaurantStatus status,
             UUID updatedByUserId
     ) {
-        this.status = Objects.requireNonNull(
-                status,
-                "El estado del restaurante es obligatorio."
-        );
+        this.status = validateSelectableStatus(status);
         this.statusUpdatedByUserId = Objects.requireNonNull(
                 updatedByUserId,
                 "La persona que actualiza el estado es obligatoria."
@@ -153,6 +147,23 @@ public class GroupRestaurant {
                 proposedByUserId,
                 "El usuario que propone el restaurante es obligatorio."
         );
+    }
+
+    private static GroupRestaurantStatus validateSelectableStatus(
+            GroupRestaurantStatus status
+    ) {
+        GroupRestaurantStatus requiredStatus = Objects.requireNonNull(
+                status,
+                "El estado del restaurante es obligatorio."
+        );
+
+        if (requiredStatus == GroupRestaurantStatus.FAVORITE) {
+            throw new IllegalArgumentException(
+                    "Favorito no es un estado del restaurante."
+            );
+        }
+
+        return requiredStatus;
     }
 
     @PrePersist
