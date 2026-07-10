@@ -1,4 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import {
   router,
@@ -8,6 +9,7 @@ import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Linking,
@@ -37,11 +39,13 @@ import {
   createGroupRestaurant,
   searchRestaurantLocations,
   searchRestaurants,
+  uploadRestaurantImage,
 } from '../services/restaurant-service';
 import { addRestaurantStyles as styles } from '../styles/add-restaurant-screen.styles';
 import { colors } from '../theme/colors';
 import type { RestaurantGroup } from '../types/group';
 import type {
+  GroupRestaurant,
   RestaurantLocationResult,
   RestaurantSearchResult,
 } from '../types/restaurant';
@@ -58,6 +62,8 @@ const DEFAULT_PICKER_COORDINATE: Coordinates = {
   latitude: 41.9794,
   longitude: 2.8214,
 };
+
+const MAXIMUM_IMAGE_SIZE = 5 * 1024 * 1024;
 
 function LocationPickerModal({
   coordinate,
@@ -100,11 +106,9 @@ function LocationPickerModal({
                 size={21}
               />
             </Pressable>
-
             <Text style={styles.pickerHeaderTitle}>
               Ajustar ubicación
             </Text>
-
             <View style={styles.pickerHeaderSpacer} />
           </View>
 
@@ -115,9 +119,7 @@ function LocationPickerModal({
                 latitudeDelta: 0.012,
                 longitudeDelta: 0.012,
               }}
-              onPress={(event) => {
-                onChange(event.nativeEvent.coordinate);
-              }}
+              onPress={(event) => onChange(event.nativeEvent.coordinate)}
               provider={
                 Platform.OS === 'android'
                   ? PROVIDER_GOOGLE
@@ -128,28 +130,22 @@ function LocationPickerModal({
               <Marker
                 coordinate={coordinate}
                 draggable
-                onDragEnd={(event) => {
-                  onChange(event.nativeEvent.coordinate);
-                }}
+                onDragEnd={(event) => onChange(event.nativeEvent.coordinate)}
               />
             </MapView>
           ) : null}
 
           <View style={styles.pickerPanel}>
             <View style={styles.pickerPanelHandle} />
-
             <Text style={styles.pickerPanelTitle}>
               Coloca el pin en el restaurante
             </Text>
-
             <Text style={styles.pickerPanelText}>
               Toca el mapa o arrastra el marcador hasta la ubicación exacta.
             </Text>
-
             <Text style={styles.pickerCoordinates}>
               {coordinate.latitude.toFixed(6)}, {coordinate.longitude.toFixed(6)}
             </Text>
-
             <PrimaryButton
               compact
               onPress={onConfirm}
@@ -182,7 +178,6 @@ function StepHeader({
           size={19}
         />
       </View>
-
       <View style={styles.sectionHeadingCopy}>
         <Text style={styles.sectionTitle}>
           {step ? `${step}. ` : ''}{title}
@@ -235,12 +230,60 @@ function LocationAction({
           size={17}
         />
       )}
-      <Text
-        numberOfLines={1}
-        style={styles.locationActionText}
-      >
+      <Text numberOfLines={1} style={styles.locationActionText}>
         {title}
       </Text>
+    </Pressable>
+  );
+}
+
+function PhotoPicker({
+  imageUri,
+  onPress,
+}: {
+  imageUri: string | null;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityHint="Abre las opciones para elegir o hacer una foto"
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.photoPicker,
+        pressed ? styles.photoPickerPressed : null,
+      ]}
+    >
+      <View style={styles.photoPreview}>
+        {imageUri ? (
+          <Image
+            resizeMode="cover"
+            source={{ uri: imageUri }}
+            style={styles.photoImage}
+          />
+        ) : (
+          <MaterialIcons
+            color={colors.primary}
+            name="add-a-photo"
+            size={24}
+          />
+        )}
+      </View>
+      <View style={styles.photoCopy}>
+        <Text style={styles.photoTitle}>
+          Foto de portada
+        </Text>
+        <Text style={styles.photoSubtitle}>
+          {imageUri
+            ? 'Toca para cambiarla o eliminarla.'
+            : 'Opcional · Se verá en tarjetas y en el mapa.'}
+        </Text>
+      </View>
+      <View style={styles.photoAction}>
+        <Text style={styles.photoActionText}>
+          {imageUri ? 'Cambiar' : 'Añadir'}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -253,29 +296,22 @@ export default function CreateRestaurantScreen() {
     groupId: string;
     mode?: string;
   }>();
-
   const { accessToken } = useAuth();
 
-  const initialMode: CreationMode =
-    modeParam === 'MANUAL' ? 'MANUAL' : 'SEARCH';
-
   const [creationMode, setCreationMode] =
-    useState<CreationMode>(initialMode);
-
-  const [group, setGroup] =
-    useState<RestaurantGroup | null>(null);
-  const [isGroupLoading, setIsGroupLoading] =
-    useState(true);
+    useState<CreationMode>(
+      modeParam === 'MANUAL' ? 'MANUAL' : 'SEARCH',
+    );
+  const [group, setGroup] = useState<RestaurantGroup | null>(null);
+  const [isGroupLoading, setIsGroupLoading] = useState(true);
   const [groupLoadError, setGroupLoadError] =
     useState<string | null>(null);
-  const [groupImageFailed, setGroupImageFailed] =
-    useState(false);
+  const [groupImageFailed, setGroupImageFailed] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchCity, setSearchCity] = useState('');
-  const [searchResults, setSearchResults] = useState<
-    RestaurantSearchResult[]
-  >([]);
+  const [searchResults, setSearchResults] =
+    useState<RestaurantSearchResult[]>([]);
   const [selectedResult, setSelectedResult] =
     useState<RestaurantSearchResult | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -289,9 +325,8 @@ export default function CreateRestaurantScreen() {
   const [manualCountry, setManualCountry] = useState('');
   const [manualCategory, setManualCategory] = useState('');
 
-  const [locationResults, setLocationResults] = useState<
-    RestaurantLocationResult[]
-  >([]);
+  const [locationResults, setLocationResults] =
+    useState<RestaurantLocationResult[]>([]);
   const [selectedLocation, setSelectedLocation] =
     useState<RestaurantLocationResult | null>(null);
   const [isLocationSearching, setIsLocationSearching] =
@@ -304,11 +339,12 @@ export default function CreateRestaurantScreen() {
   const [pickerCoordinate, setPickerCoordinate] =
     useState<Coordinates>(DEFAULT_PICKER_COORDINATE);
 
+  const [selectedImage, setSelectedImage] =
+    useState<ImagePicker.ImagePickerAsset | null>(null);
   const [groupNotes, setGroupNotes] = useState('');
   const [requestError, setRequestError] =
     useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -327,11 +363,7 @@ export default function CreateRestaurantScreen() {
       try {
         setIsGroupLoading(true);
         setGroupLoadError(null);
-
-        const selectedGroup = await getGroup(
-          groupId,
-          accessToken,
-        );
+        const selectedGroup = await getGroup(groupId, accessToken);
 
         if (active) {
           setGroup(selectedGroup);
@@ -361,30 +393,9 @@ export default function CreateRestaurantScreen() {
   }
 
   function openManualModeFromSearch() {
-    setManualName((currentName) =>
-      currentName || searchQuery.trim()
-    );
-    setManualCity((currentCity) =>
-      currentCity || searchCity.trim()
-    );
+    setManualName(current => current || searchQuery.trim());
+    setManualCity(current => current || searchCity.trim());
     changeCreationMode('MANUAL');
-  }
-
-  function updateSearchQuery(value: string) {
-    setSearchQuery(value);
-    setSelectedResult(null);
-    setRequestError(null);
-  }
-
-  function updateSearchCity(value: string) {
-    setSearchCity(value);
-    setSelectedResult(null);
-    setRequestError(null);
-  }
-
-  function selectRestaurant(result: RestaurantSearchResult) {
-    setSelectedResult(result);
-    setRequestError(null);
   }
 
   function invalidateManualLocation() {
@@ -394,19 +405,97 @@ export default function CreateRestaurantScreen() {
     setRequestError(null);
   }
 
-  function updateManualAddress(value: string) {
-    setManualAddress(value);
-    invalidateManualLocation();
+  function validateImage(
+    asset: ImagePicker.ImagePickerAsset,
+  ): boolean {
+    if (asset.fileSize && asset.fileSize > MAXIMUM_IMAGE_SIZE) {
+      Alert.alert(
+        'Imagen demasiado grande',
+        'La foto no puede superar los 5 MB.',
+      );
+      return false;
+    }
+    return true;
   }
 
-  function updateManualCity(value: string) {
-    setManualCity(value);
-    invalidateManualLocation();
+  async function selectPhotoFromGallery(): Promise<void> {
+    const permission = await ImagePicker
+      .requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        'Permiso necesario',
+        'Mesa necesita acceder a tus fotos para elegir una portada.',
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.78,
+    });
+
+    if (
+      !result.canceled
+      && result.assets.length > 0
+      && validateImage(result.assets[0])
+    ) {
+      setSelectedImage(result.assets[0]);
+    }
   }
 
-  function updateManualCountry(value: string) {
-    setManualCountry(value);
-    invalidateManualLocation();
+  async function takePhoto(): Promise<void> {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        'Permiso necesario',
+        'Mesa necesita acceder a la cámara para hacer una foto.',
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.78,
+    });
+
+    if (
+      !result.canceled
+      && result.assets.length > 0
+      && validateImage(result.assets[0])
+    ) {
+      setSelectedImage(result.assets[0]);
+    }
+  }
+
+  function openPhotoOptions(): void {
+    Alert.alert(
+      'Foto de portada',
+      'Elige cómo quieres añadirla.',
+      [
+        {
+          text: 'Elegir de la galería',
+          onPress: () => void selectPhotoFromGallery(),
+        },
+        {
+          text: 'Hacer una foto',
+          onPress: () => void takePhoto(),
+        },
+        ...(selectedImage
+          ? [{
+              text: 'Eliminar foto',
+              style: 'destructive' as const,
+              onPress: () => setSelectedImage(null),
+            }]
+          : []),
+        { text: 'Cancelar', style: 'cancel' as const },
+      ],
+    );
   }
 
   async function handleSearch() {
@@ -425,23 +514,20 @@ export default function CreateRestaurantScreen() {
     }
 
     if (!accessToken) {
-      setSearchError(
-        'No se ha podido recuperar tu sesión.',
-      );
+      setSearchError('No se ha podido recuperar tu sesión.');
       return;
     }
 
     try {
       setIsSearching(true);
       setHasSearched(true);
-
-      const results = await searchRestaurants(
-        normalizedQuery,
-        searchCity,
-        accessToken,
+      setSearchResults(
+        await searchRestaurants(
+          normalizedQuery,
+          searchCity,
+          accessToken,
+        ),
       );
-
-      setSearchResults(results);
     } catch (error) {
       setSearchError(getErrorMessage(error));
     } finally {
@@ -456,9 +542,7 @@ export default function CreateRestaurantScreen() {
     setSelectedLocation(null);
 
     if (!accessToken) {
-      setLocationError(
-        'No se ha podido recuperar tu sesión.',
-      );
+      setLocationError('No se ha podido recuperar tu sesión.');
       return;
     }
 
@@ -471,14 +555,12 @@ export default function CreateRestaurantScreen() {
 
     try {
       setIsLocationSearching(true);
-
       const results = await searchRestaurantLocations(
         manualAddress,
         manualCity,
         manualCountry,
         accessToken,
       );
-
       setLocationResults(results);
 
       if (results.length === 0) {
@@ -501,23 +583,17 @@ export default function CreateRestaurantScreen() {
       latitude: locationResult.latitude,
       longitude: locationResult.longitude,
     });
+    setLocationResults([]);
     setLocationError(null);
     setRequestError(null);
-
-    setManualAddress((currentAddress) =>
-      currentAddress.trim()
-        ? currentAddress
-        : locationResult.address ?? ''
+    setManualAddress(current =>
+      current.trim() ? current : locationResult.address ?? '',
     );
-    setManualCity((currentCity) =>
-      currentCity.trim()
-        ? currentCity
-        : locationResult.city ?? ''
+    setManualCity(current =>
+      current.trim() ? current : locationResult.city ?? '',
     );
-    setManualCountry((currentCountry) =>
-      currentCountry.trim()
-        ? currentCountry
-        : locationResult.country ?? ''
+    setManualCountry(current =>
+      current.trim() ? current : locationResult.country ?? '',
     );
   }
 
@@ -525,40 +601,26 @@ export default function CreateRestaurantScreen() {
     coordinate: Coordinates,
   ) {
     try {
-      const [place] = await Location.reverseGeocodeAsync(
-        coordinate,
-      );
-
+      const [place] = await Location.reverseGeocodeAsync(coordinate);
       if (!place) {
         return;
       }
 
-      const resolvedAddress = [
-        place.street,
-        place.streetNumber,
-      ]
+      const resolvedAddress = [place.street, place.streetNumber]
         .filter(Boolean)
         .join(', ');
 
-      setManualAddress((currentAddress) =>
-        currentAddress.trim()
-          ? currentAddress
-          : resolvedAddress
-      );
-      setManualCity((currentCity) =>
-        currentCity.trim()
-          ? currentCity
-          : place.city
-            ?? place.subregion
-            ?? ''
-      );
-      setManualCountry((currentCountry) =>
-        currentCountry.trim()
-          ? currentCountry
-          : place.country ?? ''
-      );
+      setManualAddress(current => current.trim()
+        ? current
+        : resolvedAddress);
+      setManualCity(current => current.trim()
+        ? current
+        : place.city ?? place.subregion ?? '');
+      setManualCountry(current => current.trim()
+        ? current
+        : place.country ?? '');
     } catch {
-      // La ubicación ya está confirmada aunque no pueda resolverse la dirección.
+      // El punto sigue siendo válido aunque no pueda resolverse su dirección.
     }
   }
 
@@ -568,7 +630,6 @@ export default function CreateRestaurantScreen() {
 
     try {
       setIsUsingCurrentLocation(true);
-
       const permission =
         await Location.requestForegroundPermissionsAsync();
 
@@ -579,29 +640,23 @@ export default function CreateRestaurantScreen() {
         return;
       }
 
-      const currentPosition =
-        await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
       const coordinate = {
-        latitude: currentPosition.coords.latitude,
-        longitude: currentPosition.coords.longitude,
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
       };
 
-      const currentLocationResult: RestaurantLocationResult = {
+      setSelectedLocation({
         label: 'Ubicación actual',
         address: manualAddress.trim() || null,
         city: manualCity.trim() || null,
         country: manualCountry.trim() || null,
-        latitude: coordinate.latitude,
-        longitude: coordinate.longitude,
-      };
-
-      setSelectedLocation(currentLocationResult);
+        ...coordinate,
+      });
       setLocationResults([]);
       setPickerCoordinate(coordinate);
-
       await enrichAddressFromCoordinate(coordinate);
     } catch (error) {
       setLocationError(getErrorMessage(error));
@@ -622,20 +677,18 @@ export default function CreateRestaurantScreen() {
       try {
         const permission =
           await Location.getForegroundPermissionsAsync();
-
         if (permission.status === 'granted') {
-          const lastKnownPosition =
+          const lastPosition =
             await Location.getLastKnownPositionAsync();
-
-          if (lastKnownPosition) {
+          if (lastPosition) {
             coordinate = {
-              latitude: lastKnownPosition.coords.latitude,
-              longitude: lastKnownPosition.coords.longitude,
+              latitude: lastPosition.coords.latitude,
+              longitude: lastPosition.coords.longitude,
             };
           }
         }
       } catch {
-        // El selector puede abrirse igualmente con la región por defecto.
+        // El mapa puede abrirse con la región por defecto.
       }
     }
 
@@ -644,22 +697,40 @@ export default function CreateRestaurantScreen() {
   }
 
   function confirmPickerLocation() {
-    const locationResult: RestaurantLocationResult = {
+    setSelectedLocation({
       label: 'Punto elegido en el mapa',
       address: manualAddress.trim() || null,
       city: manualCity.trim() || null,
       country: manualCountry.trim() || null,
-      latitude: pickerCoordinate.latitude,
-      longitude: pickerCoordinate.longitude,
-    };
-
-    setSelectedLocation(locationResult);
+      ...pickerCoordinate,
+    });
     setLocationResults([]);
     setLocationError(null);
     setRequestError(null);
     setPickerVisible(false);
-
     void enrichAddressFromCoordinate(pickerCoordinate);
+  }
+
+  async function uploadSelectedImage(
+    createdRestaurant: GroupRestaurant,
+  ): Promise<void> {
+    if (!selectedImage || !accessToken || !groupId) {
+      return;
+    }
+
+    try {
+      await uploadRestaurantImage(
+        groupId,
+        createdRestaurant.id,
+        { uri: selectedImage.uri },
+        accessToken,
+      );
+    } catch (error) {
+      Alert.alert(
+        'Restaurante guardado',
+        `Se ha creado correctamente, pero no hemos podido subir la foto. ${getErrorMessage(error)}`,
+      );
+    }
   }
 
   async function handleSaveRestaurant() {
@@ -680,9 +751,7 @@ export default function CreateRestaurantScreen() {
     }
 
     if (creationMode === 'MANUAL' && !manualName.trim()) {
-      setRequestError(
-        'Introduce el nombre del restaurante.',
-      );
+      setRequestError('Introduce el nombre del restaurante.');
       return;
     }
 
@@ -695,9 +764,10 @@ export default function CreateRestaurantScreen() {
 
     try {
       setIsSubmitting(true);
+      let createdRestaurant: GroupRestaurant;
 
       if (creationMode === 'SEARCH' && selectedResult) {
-        await createGroupRestaurant(
+        createdRestaurant = await createGroupRestaurant(
           groupId,
           {
             provider: selectedResult.provider,
@@ -713,10 +783,8 @@ export default function CreateRestaurantScreen() {
           },
           accessToken,
         );
-      }
-
-      if (creationMode === 'MANUAL' && selectedLocation) {
-        await createGroupRestaurant(
+      } else {
+        createdRestaurant = await createGroupRestaurant(
           groupId,
           {
             provider: null,
@@ -725,8 +793,8 @@ export default function CreateRestaurantScreen() {
             address: manualAddress.trim() || null,
             city: manualCity.trim() || null,
             country: manualCountry.trim() || null,
-            latitude: selectedLocation.latitude,
-            longitude: selectedLocation.longitude,
+            latitude: selectedLocation!.latitude,
+            longitude: selectedLocation!.longitude,
             category: manualCategory.trim() || null,
             groupNotes: groupNotes.trim() || null,
           },
@@ -734,6 +802,7 @@ export default function CreateRestaurantScreen() {
         );
       }
 
+      await uploadSelectedImage(createdRestaurant);
       router.replace({
         pathname: '/groups/[groupId]',
         params: { groupId },
@@ -745,21 +814,17 @@ export default function CreateRestaurantScreen() {
     }
   }
 
-  const saveDisabled =
-    creationMode === 'SEARCH'
-      ? selectedResult === null
-      : !manualName.trim() || selectedLocation === null;
-
-  const footerVisible =
-    creationMode === 'MANUAL' || selectedResult !== null;
-
+  const saveDisabled = creationMode === 'SEARCH'
+    ? selectedResult === null
+    : !manualName.trim() || selectedLocation === null;
+  const showFooter = creationMode === 'MANUAL'
+    || selectedResult !== null;
   const locationSearchDisabled =
     !manualAddress.trim() && !manualCity.trim();
-
-  const groupImageUrl =
-    group?.imageUrl && !groupImageFailed
-      ? resolveApiUrl(group.imageUrl)
-      : null;
+  const groupImageUrl = group?.imageUrl && !groupImageFailed
+    ? resolveApiUrl(group.imageUrl)
+    : null;
+  const selectedImageUri = selectedImage?.uri ?? null;
 
   return (
     <SafeAreaView
@@ -767,15 +832,13 @@ export default function CreateRestaurantScreen() {
       style={styles.safeArea}
     >
       <KeyboardAvoidingView
-        behavior={
-          Platform.OS === 'ios' ? 'padding' : undefined
-        }
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
           contentContainerStyle={[
             styles.content,
-            footerVisible ? styles.contentWithFooter : null,
+            showFooter ? styles.contentWithFooter : null,
           ]}
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
@@ -797,11 +860,9 @@ export default function CreateRestaurantScreen() {
                 size={21}
               />
             </Pressable>
-
             <Text style={styles.headerTitle}>
               Añadir restaurante
             </Text>
-
             <View style={styles.headerSpacer} />
           </View>
 
@@ -815,49 +876,40 @@ export default function CreateRestaurantScreen() {
             ]}
           >
             {groupImageUrl ? (
-              <Image
-                onError={() => setGroupImageFailed(true)}
-                resizeMode="cover"
-                source={{ uri: groupImageUrl }}
-                style={styles.groupThumbnail}
-              />
+              <View style={styles.groupThumbnail}>
+                <Image
+                  onError={() => setGroupImageFailed(true)}
+                  resizeMode="cover"
+                  source={{ uri: groupImageUrl }}
+                  style={styles.groupImage}
+                />
+              </View>
             ) : (
               <View style={styles.groupFallback}>
                 <MaterialIcons
-                  color="#62794D"
+                  color="#66834A"
                   name="group"
-                  size={20}
+                  size={21}
                 />
               </View>
             )}
-
             <View style={styles.groupCopy}>
               <Text style={styles.groupEyebrow}>
                 Se guardará en
               </Text>
-
               {isGroupLoading ? (
-                <View style={styles.groupLoading}>
-                  <ActivityIndicator
-                    color={colors.primary}
-                    size="small"
-                  />
-                  <Text style={styles.groupLoadingText}>
-                    Cargando grupo…
-                  </Text>
-                </View>
+                <ActivityIndicator
+                  color={colors.primary}
+                  size="small"
+                />
               ) : (
-                <Text
-                  numberOfLines={1}
-                  style={styles.groupName}
-                >
+                <Text numberOfLines={1} style={styles.groupName}>
                   {group?.name
                     ?? groupLoadError
                     ?? 'Grupo seleccionado'}
                 </Text>
               )}
             </View>
-
             <MaterialIcons
               color={colors.muted}
               name="chevron-right"
@@ -875,127 +927,103 @@ export default function CreateRestaurantScreen() {
           </View>
 
           <View style={styles.modeSelector}>
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{
-                selected: creationMode === 'SEARCH',
-              }}
-              onPress={() => changeCreationMode('SEARCH')}
-              style={[
-                styles.modeButton,
-                creationMode === 'SEARCH'
-                  ? styles.activeModeButton
-                  : null,
-              ]}
-            >
-              <Text
+            {(['SEARCH', 'MANUAL'] as const).map(mode => (
+              <Pressable
+                accessibilityRole="tab"
+                accessibilityState={{ selected: creationMode === mode }}
+                key={mode}
+                onPress={() => changeCreationMode(mode)}
                 style={[
-                  styles.modeButtonText,
-                  creationMode === 'SEARCH'
-                    ? styles.activeModeButtonText
+                  styles.modeButton,
+                  creationMode === mode
+                    ? styles.activeModeButton
                     : null,
                 ]}
               >
-                Buscar
-              </Text>
-            </Pressable>
-
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{
-                selected: creationMode === 'MANUAL',
-              }}
-              onPress={() => changeCreationMode('MANUAL')}
-              style={[
-                styles.modeButton,
-                creationMode === 'MANUAL'
-                  ? styles.activeModeButton
-                  : null,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.modeButtonText,
-                  creationMode === 'MANUAL'
-                    ? styles.activeModeButtonText
-                    : null,
-                ]}
-              >
-                Manual
-              </Text>
-            </Pressable>
+                <Text
+                  style={[
+                    styles.modeButtonText,
+                    creationMode === mode
+                      ? styles.activeModeButtonText
+                      : null,
+                  ]}
+                >
+                  {mode === 'SEARCH' ? 'Buscar' : 'Manual'}
+                </Text>
+              </Pressable>
+            ))}
           </View>
 
           {creationMode === 'SEARCH' ? (
             <View style={styles.section}>
-              <View style={styles.card}>
+              <View style={styles.sectionCard}>
                 <StepHeader
                   icon="search"
-                  subtitle="La ciudad es opcional y ayuda a afinar."
+                  subtitle="La ciudad es opcional, pero ayuda a afinar."
                   title="Busca el restaurante"
                 />
-
-                <View style={styles.formStack}>
-                  <FormField
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    compact
-                    label="Nombre del restaurante"
-                    maxLength={150}
-                    onChangeText={updateSearchQuery}
-                    onSubmitEditing={() => void handleSearch()}
-                    placeholder="Ej. Kaizen Sushi"
-                    returnKeyType="search"
-                    rightAccessory={
-                      <MaterialIcons
-                        color={colors.primary}
-                        name="search"
-                        size={19}
-                      />
-                    }
-                    value={searchQuery}
-                  />
-
-                  <FormField
-                    autoCapitalize="words"
-                    compact
-                    label="Ciudad"
-                    maxLength={100}
-                    onChangeText={updateSearchCity}
-                    onSubmitEditing={() => void handleSearch()}
-                    placeholder="Ej. Palma (opcional)"
-                    returnKeyType="search"
-                    rightAccessory={
-                      <MaterialIcons
-                        color={colors.primary}
-                        name="my-location"
-                        size={18}
-                      />
-                    }
-                    value={searchCity}
-                  />
-
-                  {searchError ? (
-                    <View style={styles.inlineError}>
-                      <MaterialIcons
-                        color={colors.danger}
-                        name="error-outline"
-                        size={18}
-                      />
-                      <Text style={styles.inlineErrorText}>
-                        {searchError}
-                      </Text>
-                    </View>
-                  ) : null}
-
-                  <PrimaryButton
-                    compact
-                    disabled={searchQuery.trim().length < 2}
-                    loading={isSearching}
-                    onPress={handleSearch}
-                    title="Buscar restaurantes"
-                  />
-                </View>
+                <FormField
+                  compact
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  label="Nombre del restaurante"
+                  maxLength={150}
+                  onChangeText={(value) => {
+                    setSearchQuery(value);
+                    setSelectedResult(null);
+                  }}
+                  onSubmitEditing={() => void handleSearch()}
+                  placeholder="Ej. Kaizen Sushi"
+                  returnKeyType="search"
+                  rightAccessory={(
+                    <MaterialIcons
+                      color={colors.primary}
+                      name="search"
+                      size={20}
+                    />
+                  )}
+                  value={searchQuery}
+                />
+                <FormField
+                  compact
+                  autoCapitalize="words"
+                  label="Ciudad"
+                  maxLength={100}
+                  onChangeText={(value) => {
+                    setSearchCity(value);
+                    setSelectedResult(null);
+                  }}
+                  onSubmitEditing={() => void handleSearch()}
+                  placeholder="Ej. Palma (opcional)"
+                  returnKeyType="search"
+                  rightAccessory={(
+                    <MaterialIcons
+                      color={colors.primary}
+                      name="my-location"
+                      size={19}
+                    />
+                  )}
+                  value={searchCity}
+                />
+                {searchError ? (
+                  <View style={styles.inlineError}>
+                    <MaterialIcons
+                      color={colors.danger}
+                      name="error-outline"
+                      size={18}
+                    />
+                    <Text style={styles.inlineErrorText}>
+                      {searchError}
+                    </Text>
+                  </View>
+                ) : null}
+                <PrimaryButton
+                  compact
+                  disabled={searchQuery.trim().length < 2}
+                  loading={isSearching}
+                  onPress={handleSearch}
+                  title="Buscar restaurantes"
+                />
               </View>
 
               {hasSearched
@@ -1006,14 +1034,14 @@ export default function CreateRestaurantScreen() {
                   <MaterialIcons
                     color={colors.primary}
                     name="search-off"
-                    size={22}
+                    size={24}
                   />
                   <View style={styles.emptySearchCopy}>
                     <Text style={styles.emptyTitle}>
                       No encontramos resultados
                     </Text>
                     <Text style={styles.emptyText}>
-                      Prueba con otro nombre o añádelo manualmente.
+                      Prueba con otro nombre o créalo manualmente.
                     </Text>
                   </View>
                 </View>
@@ -1025,40 +1053,32 @@ export default function CreateRestaurantScreen() {
                     <Text style={styles.resultsTitle}>
                       Resultados
                     </Text>
-                    <View style={styles.resultsCountBadge}>
-                      <Text style={styles.resultsCount}>
-                        {searchResults.length}
-                      </Text>
-                    </View>
+                    <Text style={styles.resultsCount}>
+                      {searchResults.length}
+                    </Text>
                   </View>
-
-                  <Text style={styles.resultsHelp}>
-                    Selecciona el sitio correcto para continuar.
-                  </Text>
-
                   <View style={styles.resultsList}>
-                    {searchResults.map((result) => (
+                    {searchResults.map(result => (
                       <RestaurantSearchResultCard
                         key={`${result.provider}-${result.externalPlaceId}`}
-                        onPress={() => selectRestaurant(result)}
+                        onPress={() => {
+                          setSelectedResult(result);
+                          setRequestError(null);
+                        }}
                         result={result}
                         selected={
-                          selectedResult?.provider
-                            === result.provider
+                          selectedResult?.provider === result.provider
                           && selectedResult?.externalPlaceId
                             === result.externalPlaceId
                         }
                       />
                     ))}
                   </View>
-
                   <Pressable
                     accessibilityRole="link"
-                    onPress={() => {
-                      void Linking.openURL(
-                        'https://www.openstreetmap.org/copyright',
-                      );
-                    }}
+                    onPress={() => void Linking.openURL(
+                      'https://www.openstreetmap.org/copyright',
+                    )}
                   >
                     <Text style={styles.attribution}>
                       Datos © colaboradores de OpenStreetMap
@@ -1068,14 +1088,11 @@ export default function CreateRestaurantScreen() {
               ) : null}
 
               <View style={styles.manualShortcut}>
-                <View style={styles.manualShortcutIcon}>
-                  <MaterialIcons
-                    color={colors.primary}
-                    name="help-outline"
-                    size={20}
-                  />
-                </View>
-
+                <MaterialIcons
+                  color={colors.primary}
+                  name="help-outline"
+                  size={21}
+                />
                 <View style={styles.manualShortcutContent}>
                   <Text style={styles.manualShortcutTitle}>
                     ¿No aparece?
@@ -1084,14 +1101,10 @@ export default function CreateRestaurantScreen() {
                     Añádelo con tus propios datos.
                   </Text>
                 </View>
-
                 <Pressable
                   accessibilityRole="button"
                   onPress={openManualModeFromSearch}
-                  style={({ pressed }) => [
-                    styles.manualShortcutButton,
-                    pressed ? styles.secondaryPressed : null,
-                  ]}
+                  style={styles.manualShortcutButton}
                 >
                   <Text style={styles.manualShortcutButtonText}>
                     Añadir manual
@@ -1100,7 +1113,7 @@ export default function CreateRestaurantScreen() {
               </View>
 
               {selectedResult ? (
-                <View style={styles.selectedArea}>
+                <View style={styles.afterSelection}>
                   <View style={styles.selectedSummary}>
                     <MaterialIcons
                       color="#557547"
@@ -1111,19 +1124,19 @@ export default function CreateRestaurantScreen() {
                       <Text style={styles.selectedSummaryEyebrow}>
                         Restaurante seleccionado
                       </Text>
-                      <Text
-                        numberOfLines={1}
-                        style={styles.selectedSummaryName}
-                      >
+                      <Text numberOfLines={1} style={styles.selectedSummaryName}>
                         {selectedResult.name}
                       </Text>
                     </View>
                   </View>
-
-                  <View style={styles.card}>
+                  <PhotoPicker
+                    imageUri={selectedImageUri}
+                    onPress={openPhotoOptions}
+                  />
+                  <View style={styles.notesCard}>
                     <StepHeader
-                      icon="notes"
-                      subtitle="Solo se verán dentro de este grupo."
+                      icon="groups"
+                      subtitle="Solo la verán las personas de este grupo."
                       title="Notas del grupo"
                     />
                     <FormField
@@ -1132,7 +1145,7 @@ export default function CreateRestaurantScreen() {
                       maxLength={1000}
                       multiline
                       onChangeText={setGroupNotes}
-                      placeholder="Ej. Nos lo han recomendado"
+                      placeholder="Nos lo han recomendado"
                       style={styles.notesInput}
                       textAlignVertical="top"
                       value={groupNotes}
@@ -1143,90 +1156,87 @@ export default function CreateRestaurantScreen() {
             </View>
           ) : (
             <View style={styles.section}>
-              <View style={styles.card}>
+              <View style={styles.sectionCard}>
                 <StepHeader
                   icon="edit"
                   step={1}
-                  subtitle="Solo el nombre es obligatorio."
+                  subtitle="Solo el nombre es obligatorio en este bloque."
                   title="Datos básicos"
                 />
-
-                <View style={styles.formStack}>
-                  <FormField
-                    autoCapitalize="words"
-                    compact
-                    label="Nombre del restaurante"
-                    maxLength={150}
-                    onChangeText={(value) => {
-                      setManualName(value);
-                      setRequestError(null);
-                    }}
-                    placeholder="Ej. Kaizen Sushi"
-                    value={manualName}
-                  />
-
-                  <FormField
-                    autoCapitalize="words"
-                    compact
-                    label="Categoría (opcional)"
-                    maxLength={100}
-                    onChangeText={setManualCategory}
-                    placeholder="Japonesa, cafetería, brunch…"
-                    rightAccessory={
-                      <MaterialIcons
-                        color={colors.muted}
-                        name="restaurant-menu"
-                        size={18}
-                      />
-                    }
-                    value={manualCategory}
-                  />
-                </View>
+                <PhotoPicker
+                  imageUri={selectedImageUri}
+                  onPress={openPhotoOptions}
+                />
+                <FormField
+                  compact
+                  autoCapitalize="words"
+                  label="Nombre del restaurante"
+                  maxLength={150}
+                  onChangeText={(value) => {
+                    setManualName(value);
+                    setRequestError(null);
+                  }}
+                  placeholder="Ej. Kaizen Sushi"
+                  value={manualName}
+                />
+                <FormField
+                  compact
+                  autoCapitalize="words"
+                  label="Categoría (opcional)"
+                  maxLength={100}
+                  onChangeText={setManualCategory}
+                  placeholder="Japonesa, cafetería, brunch…"
+                  value={manualCategory}
+                />
               </View>
 
               <View style={styles.locationCard}>
                 <StepHeader
-                  icon="place"
+                  icon="location-on"
                   step={2}
-                  subtitle="Confirma el punto exacto para mostrarlo en Mapa."
+                  subtitle="Confirma el punto para que aparezca en Mapa."
                   title="Ubicación"
                 />
-
-                <View style={styles.formStack}>
-                  <FormField
-                    autoCapitalize="sentences"
-                    compact
-                    label="Dirección"
-                    maxLength={300}
-                    onChangeText={updateManualAddress}
-                    placeholder="Calle, número, etc."
-                    value={manualAddress}
-                  />
-
-                  <View style={styles.twoColumns}>
-                    <View style={styles.column}>
-                      <FormField
-                        autoCapitalize="words"
-                        compact
-                        label="Ciudad"
-                        maxLength={100}
-                        onChangeText={updateManualCity}
-                        placeholder="Ej. Palma"
-                        value={manualCity}
-                      />
-                    </View>
-
-                    <View style={styles.column}>
-                      <FormField
-                        autoCapitalize="words"
-                        compact
-                        label="País"
-                        maxLength={100}
-                        onChangeText={updateManualCountry}
-                        placeholder="España"
-                        value={manualCountry}
-                      />
-                    </View>
+                <FormField
+                  compact
+                  autoCapitalize="sentences"
+                  label="Dirección"
+                  maxLength={300}
+                  onChangeText={(value) => {
+                    setManualAddress(value);
+                    invalidateManualLocation();
+                  }}
+                  placeholder="Calle, número, etc."
+                  value={manualAddress}
+                />
+                <View style={styles.inlineFields}>
+                  <View style={styles.inlineField}>
+                    <FormField
+                      compact
+                      autoCapitalize="words"
+                      label="Ciudad"
+                      maxLength={100}
+                      onChangeText={(value) => {
+                        setManualCity(value);
+                        invalidateManualLocation();
+                      }}
+                      placeholder="Ej. Palma"
+                      value={manualCity}
+                    />
+                  </View>
+                  <View style={styles.inlineField}>
+                    <FormField
+                      compact
+                      autoCapitalize="words"
+                      label="País"
+                      maxLength={100}
+                      onChangeText={(value) => {
+                        setManualCountry(value);
+                        invalidateManualLocation();
+                      }}
+                      placeholder="España"
+                      value={manualCountry}
+                    />
                   </View>
                 </View>
 
@@ -1255,69 +1265,46 @@ export default function CreateRestaurantScreen() {
                         }}
                       />
                     </MapView>
-
-                    <View style={styles.locationConfirmed}>
+                    <View style={styles.mapConfirmed}>
                       <MaterialIcons
                         color="#557547"
                         name="check-circle"
                         size={18}
                       />
-                      <View style={styles.locationConfirmedCopy}>
-                        <Text style={styles.locationConfirmedTitle}>
-                          Ubicación confirmada
-                        </Text>
-                        <Text
-                          numberOfLines={1}
-                          style={styles.locationConfirmedText}
-                        >
-                          {selectedLocation.label}
-                        </Text>
-                      </View>
-                      <Pressable
-                        accessibilityRole="button"
-                        onPress={() => void openMapPicker()}
-                        style={({ pressed }) => [
-                          styles.adjustButton,
-                          pressed ? styles.secondaryPressed : null,
-                        ]}
-                      >
-                        <Text style={styles.adjustButtonText}>
-                          Ajustar
-                        </Text>
-                      </Pressable>
+                      <Text numberOfLines={2} style={styles.mapConfirmedText}>
+                        Ubicación confirmada · {selectedLocation.label}
+                      </Text>
                     </View>
                   </View>
                 ) : (
-                  <View style={styles.locationPending}>
-                    <MaterialIcons
-                      color="#62794D"
-                      name="info-outline"
-                      size={18}
-                    />
-                    <Text style={styles.locationPendingText}>
-                      Confirma una ubicación para que el restaurante aparezca en Mapa.
+                  <View style={styles.locationEmpty}>
+                    <Text style={styles.locationEmptyTitle}>
+                      Todavía falta confirmar la ubicación
+                    </Text>
+                    <Text style={styles.locationEmptyText}>
+                      Busca la dirección, usa tu posición o coloca el pin.
                     </Text>
                   </View>
                 )}
 
-                <View style={styles.locationActionsRow}>
+                <View style={styles.locationActions}>
                   <LocationAction
                     disabled={locationSearchDisabled}
                     icon="search"
                     loading={isLocationSearching}
-                    onPress={handleLocationSearch}
-                    title="Buscar"
+                    onPress={() => void handleLocationSearch()}
+                    title="Buscar dirección"
                   />
                   <LocationAction
                     icon="my-location"
                     loading={isUsingCurrentLocation}
-                    onPress={useCurrentLocation}
+                    onPress={() => void useCurrentLocation()}
                     title="Mi ubicación"
                   />
                   <LocationAction
                     icon="map"
                     onPress={() => void openMapPicker()}
-                    title="Elegir mapa"
+                    title="Elegir en mapa"
                   />
                 </View>
 
@@ -1339,39 +1326,24 @@ export default function CreateRestaurantScreen() {
                     <Text style={styles.locationResultsTitle}>
                       Elige la ubicación correcta
                     </Text>
-
-                    {locationResults.map((locationResult) => (
+                    {locationResults.map(result => (
                       <Pressable
                         accessibilityRole="button"
-                        key={`${locationResult.latitude}-${locationResult.longitude}`}
-                        onPress={() => {
-                          selectManualLocation(locationResult);
-                        }}
-                        style={({ pressed }) => [
-                          styles.locationResultCard,
-                          pressed ? styles.secondaryPressed : null,
-                        ]}
+                        key={`${result.latitude}-${result.longitude}`}
+                        onPress={() => selectManualLocation(result)}
+                        style={styles.locationResultCard}
                       >
-                        <View style={styles.locationResultIcon}>
-                          <MaterialIcons
-                            color={colors.primary}
-                            name="location-on"
-                            size={18}
-                          />
-                        </View>
-
-                        <View style={styles.locationResultCopy}>
-                          <Text
-                            numberOfLines={2}
-                            style={styles.locationResultLabel}
-                          >
-                            {locationResult.label}
-                          </Text>
-                          <Text style={styles.locationResultMeta}>
-                            Toca para confirmar este punto
-                          </Text>
-                        </View>
-
+                        <MaterialIcons
+                          color={colors.primary}
+                          name="location-on"
+                          size={19}
+                        />
+                        <Text
+                          numberOfLines={2}
+                          style={styles.locationResultLabel}
+                        >
+                          {result.label}
+                        </Text>
                         <MaterialIcons
                           color={colors.muted}
                           name="chevron-right"
@@ -1379,14 +1351,11 @@ export default function CreateRestaurantScreen() {
                         />
                       </Pressable>
                     ))}
-
                     <Pressable
                       accessibilityRole="link"
-                      onPress={() => {
-                        void Linking.openURL(
-                          'https://www.openstreetmap.org/copyright',
-                        );
-                      }}
+                      onPress={() => void Linking.openURL(
+                        'https://www.openstreetmap.org/copyright',
+                      )}
                     >
                       <Text style={styles.attribution}>
                         Datos © colaboradores de OpenStreetMap
@@ -1396,21 +1365,20 @@ export default function CreateRestaurantScreen() {
                 ) : null}
               </View>
 
-              <View style={styles.card}>
+              <View style={styles.notesCard}>
                 <StepHeader
-                  icon="notes"
+                  icon="groups"
                   step={3}
-                  subtitle="Solo se verán dentro de este grupo."
+                  subtitle="Estas notas solo pertenecen a este grupo."
                   title="Notas del grupo"
                 />
-
                 <FormField
                   compact
                   label="Notas opcionales"
                   maxLength={1000}
                   multiline
                   onChangeText={setGroupNotes}
-                  placeholder="Ej. Nos lo han recomendado"
+                  placeholder="Nos lo han recomendado"
                   style={styles.notesInput}
                   textAlignVertical="top"
                   value={groupNotes}
@@ -1423,7 +1391,7 @@ export default function CreateRestaurantScreen() {
             <View style={styles.requestErrorCard}>
               <MaterialIcons
                 color={colors.danger}
-                name="warning-amber"
+                name="warning"
                 size={19}
               />
               <Text style={styles.requestErrorText}>
@@ -1433,14 +1401,8 @@ export default function CreateRestaurantScreen() {
           ) : null}
         </ScrollView>
 
-        {footerVisible ? (
-          <View style={styles.footer}>
-            {creationMode === 'MANUAL' && !selectedLocation ? (
-              <Text style={styles.footerHint}>
-                Confirma la ubicación para activar el guardado.
-              </Text>
-            ) : null}
-
+        {showFooter ? (
+          <View style={styles.stickyFooter}>
             <PrimaryButton
               compact
               disabled={saveDisabled}
