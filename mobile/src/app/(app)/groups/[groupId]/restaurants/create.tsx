@@ -1,15 +1,20 @@
+import { SymbolView } from 'expo-symbols';
 import {
   router,
   useLocalSearchParams,
 } from 'expo-router';
-import { useState } from 'react';
 import {
+  useEffect,
+  useState,
+} from 'react';
+import {
+  ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Linking,
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -19,25 +24,47 @@ import { FormField } from '../../../../../components/FormField';
 import { PrimaryButton } from '../../../../../components/PrimaryButton';
 import { RestaurantSearchResultCard } from '../../../../../components/RestaurantSearchResultCard';
 import { useAuth } from '../../../../../contexts/auth-context';
-import { getErrorMessage } from '../../../../../lib/api';
+import {
+  getErrorMessage,
+  resolveApiUrl,
+} from '../../../../../lib/api';
+import { getGroup } from '../../../../../services/group-service';
 import {
   createGroupRestaurant,
   searchRestaurants,
 } from '../../../../../services/restaurant-service';
+import { addRestaurantStyles as styles } from '../../../../../styles/add-restaurant-screen.styles';
 import { colors } from '../../../../../theme/colors';
-import { RestaurantSearchResult } from '../../../../../types/restaurant';
+import type { RestaurantGroup } from '../../../../../types/group';
+import type { RestaurantSearchResult } from '../../../../../types/restaurant';
 
 type CreationMode = 'SEARCH' | 'MANUAL';
 
 export default function CreateRestaurantScreen() {
-  const { groupId } = useLocalSearchParams<{
+  const {
+    groupId,
+    mode: modeParam,
+  } = useLocalSearchParams<{
     groupId: string;
+    mode?: string;
   }>();
 
   const { accessToken } = useAuth();
 
+  const initialMode: CreationMode =
+    modeParam === 'MANUAL' ? 'MANUAL' : 'SEARCH';
+
   const [creationMode, setCreationMode] =
-    useState<CreationMode>('SEARCH');
+    useState<CreationMode>(initialMode);
+
+  const [group, setGroup] =
+    useState<RestaurantGroup | null>(null);
+  const [isGroupLoading, setIsGroupLoading] =
+    useState(true);
+  const [groupLoadError, setGroupLoadError] =
+    useState<string | null>(null);
+  const [groupImageFailed, setGroupImageFailed] =
+    useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchCity, setSearchCity] = useState('');
@@ -59,11 +86,55 @@ export default function CreateRestaurantScreen() {
     useState('');
 
   const [groupNotes, setGroupNotes] = useState('');
-
   const [requestError, setRequestError] =
     useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] =
     useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSelectedGroup() {
+      if (!accessToken || !groupId) {
+        if (active) {
+          setGroupLoadError(
+            'No se ha podido recuperar el grupo seleccionado.',
+          );
+          setIsGroupLoading(false);
+        }
+        return;
+      }
+
+      try {
+        setIsGroupLoading(true);
+        setGroupLoadError(null);
+
+        const selectedGroup = await getGroup(
+          groupId,
+          accessToken,
+        );
+
+        if (active) {
+          setGroup(selectedGroup);
+          setGroupImageFailed(false);
+        }
+      } catch (error) {
+        if (active) {
+          setGroupLoadError(getErrorMessage(error));
+        }
+      } finally {
+        if (active) {
+          setIsGroupLoading(false);
+        }
+      }
+    }
+
+    void loadSelectedGroup();
+
+    return () => {
+      active = false;
+    };
+  }, [accessToken, groupId]);
 
   function changeCreationMode(mode: CreationMode) {
     setCreationMode(mode);
@@ -74,12 +145,27 @@ export default function CreateRestaurantScreen() {
     setManualName((currentName) =>
       currentName || searchQuery.trim()
     );
-
     setManualCity((currentCity) =>
       currentCity || searchCity.trim()
     );
-
     changeCreationMode('MANUAL');
+  }
+
+  function updateSearchQuery(value: string) {
+    setSearchQuery(value);
+    setSelectedResult(null);
+    setRequestError(null);
+  }
+
+  function updateSearchCity(value: string) {
+    setSearchCity(value);
+    setSelectedResult(null);
+    setRequestError(null);
+  }
+
+  function selectRestaurant(result: RestaurantSearchResult) {
+    setSelectedResult(result);
+    setRequestError(null);
   }
 
   async function handleSearch() {
@@ -200,9 +286,7 @@ export default function CreateRestaurantScreen() {
 
       router.replace({
         pathname: '/groups/[groupId]',
-        params: {
-          groupId,
-        },
+        params: { groupId },
       });
     } catch (error) {
       setRequestError(getErrorMessage(error));
@@ -216,9 +300,18 @@ export default function CreateRestaurantScreen() {
       ? selectedResult === null
       : !manualName.trim();
 
+  const showSaveSection =
+    creationMode === 'MANUAL'
+    || selectedResult !== null;
+
+  const groupImageUrl =
+    group?.imageUrl && !groupImageFailed
+      ? resolveApiUrl(group.imageUrl)
+      : null;
+
   return (
     <SafeAreaView
-      edges={['top', 'right', 'bottom', 'left']}
+      edges={['top', 'right', 'left']}
       style={styles.safeArea}
     >
       <KeyboardAvoidingView
@@ -229,16 +322,29 @@ export default function CreateRestaurantScreen() {
       >
         <ScrollView
           contentContainerStyle={styles.content}
+          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
             <Pressable
+              accessibilityLabel="Volver"
               accessibilityRole="button"
               onPress={() => router.back()}
-              style={styles.backButton}
+              style={({ pressed }) => [
+                styles.headerButton,
+                pressed ? styles.headerButtonPressed : null,
+              ]}
             >
-              <Text style={styles.backText}>‹</Text>
+              <SymbolView
+                name={{
+                  ios: 'chevron.left',
+                  android: 'arrow_back',
+                  web: 'arrow_back',
+                }}
+                size={21}
+                tintColor={colors.text}
+              />
             </Pressable>
 
             <Text style={styles.headerTitle}>
@@ -248,11 +354,80 @@ export default function CreateRestaurantScreen() {
             <View style={styles.headerSpacer} />
           </View>
 
+          <Pressable
+            accessibilityHint="Vuelve a la selección de grupo"
+            accessibilityRole="button"
+            onPress={() => router.back()}
+            style={({ pressed }) => [
+              styles.groupCard,
+              pressed ? styles.groupCardPressed : null,
+            ]}
+          >
+            {groupImageUrl ? (
+              <View style={styles.groupThumbnail}>
+                <Image
+                  onError={() => setGroupImageFailed(true)}
+                  resizeMode="cover"
+                  source={{ uri: groupImageUrl }}
+                  style={styles.groupImage}
+                />
+              </View>
+            ) : (
+              <View style={styles.groupFallback}>
+                <SymbolView
+                  name={{
+                    ios: 'person.2.fill',
+                    android: 'group',
+                    web: 'group',
+                  }}
+                  size={23}
+                  tintColor="#66834A"
+                />
+              </View>
+            )}
+
+            <View style={styles.groupCopy}>
+              <Text style={styles.groupEyebrow}>
+                Se guardará en
+              </Text>
+
+              {isGroupLoading ? (
+                <View style={styles.groupLoading}>
+                  <ActivityIndicator
+                    color={colors.primary}
+                    size="small"
+                  />
+                  <Text style={styles.groupLoadingText}>
+                    Cargando grupo…
+                  </Text>
+                </View>
+              ) : (
+                <Text
+                  numberOfLines={1}
+                  style={styles.groupName}
+                >
+                  {group?.name
+                    ?? groupLoadError
+                    ?? 'Grupo seleccionado'}
+                </Text>
+              )}
+            </View>
+
+            <SymbolView
+              name={{
+                ios: 'chevron.right',
+                android: 'chevron_right',
+                web: 'chevron_right',
+              }}
+              size={20}
+              tintColor={colors.muted}
+            />
+          </Pressable>
+
           <View style={styles.heading}>
             <Text style={styles.title}>
               ¿Qué sitio queréis probar?
             </Text>
-
             <Text style={styles.subtitle}>
               Busca un restaurante real o añádelo
               manualmente si todavía no aparece.
@@ -261,10 +436,11 @@ export default function CreateRestaurantScreen() {
 
           <View style={styles.modeSelector}>
             <Pressable
-              accessibilityRole="button"
-              onPress={() =>
-                changeCreationMode('SEARCH')
-              }
+              accessibilityRole="tab"
+              accessibilityState={{
+                selected: creationMode === 'SEARCH',
+              }}
+              onPress={() => changeCreationMode('SEARCH')}
               style={[
                 styles.modeButton,
                 creationMode === 'SEARCH'
@@ -285,10 +461,11 @@ export default function CreateRestaurantScreen() {
             </Pressable>
 
             <Pressable
-              accessibilityRole="button"
-              onPress={() =>
-                changeCreationMode('MANUAL')
-              }
+              accessibilityRole="tab"
+              accessibilityState={{
+                selected: creationMode === 'MANUAL',
+              }}
+              onPress={() => changeCreationMode('MANUAL')}
               style={[
                 styles.modeButton,
                 creationMode === 'MANUAL'
@@ -311,40 +488,99 @@ export default function CreateRestaurantScreen() {
 
           {creationMode === 'SEARCH' ? (
             <View style={styles.section}>
-              <View style={styles.searchForm}>
-                <FormField
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                  label="Nombre del restaurante"
-                  maxLength={150}
-                  onChangeText={setSearchQuery}
-                  placeholder="Kaizen Sushi"
-                  returnKeyType="search"
-                  value={searchQuery}
-                />
+              <View style={styles.sectionCard}>
+                <View style={styles.sectionHeading}>
+                  <View style={styles.sectionIcon}>
+                    <SymbolView
+                      name={{
+                        ios: 'magnifyingglass',
+                        android: 'search',
+                        web: 'search',
+                      }}
+                      size={21}
+                      tintColor={colors.primary}
+                    />
+                  </View>
+                  <View style={styles.sectionHeadingCopy}>
+                    <Text style={styles.sectionTitle}>
+                      Busca el restaurante
+                    </Text>
+                    <Text style={styles.sectionDescription}>
+                      La ciudad es opcional, pero ayuda a afinar.
+                    </Text>
+                  </View>
+                </View>
 
-                <FormField
-                  autoCapitalize="words"
-                  label="Ciudad"
-                  maxLength={100}
-                  onChangeText={setSearchCity}
-                  placeholder="Palma de Mallorca"
-                  returnKeyType="search"
-                  value={searchCity}
-                />
+                <View style={styles.formStack}>
+                  <FormField
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    label="Nombre del restaurante"
+                    maxLength={150}
+                    onChangeText={updateSearchQuery}
+                    onSubmitEditing={() => void handleSearch()}
+                    placeholder="Kaizen Sushi"
+                    returnKeyType="search"
+                    rightAccessory={
+                      <SymbolView
+                        name={{
+                          ios: 'magnifyingglass',
+                          android: 'search',
+                          web: 'search',
+                        }}
+                        size={20}
+                        tintColor={colors.primary}
+                      />
+                    }
+                    value={searchQuery}
+                  />
 
-                {searchError ? (
-                  <Text style={styles.error}>
-                    {searchError}
-                  </Text>
-                ) : null}
+                  <FormField
+                    autoCapitalize="words"
+                    label="Ciudad"
+                    maxLength={100}
+                    onChangeText={updateSearchCity}
+                    onSubmitEditing={() => void handleSearch()}
+                    placeholder="Palma de Mallorca"
+                    returnKeyType="search"
+                    rightAccessory={
+                      <SymbolView
+                        name={{
+                          ios: 'location.circle',
+                          android: 'my_location',
+                          web: 'my_location',
+                        }}
+                        size={20}
+                        tintColor={colors.primary}
+                      />
+                    }
+                    value={searchCity}
+                  />
 
-                <PrimaryButton
-                  disabled={searchQuery.trim().length < 2}
-                  loading={isSearching}
-                  onPress={handleSearch}
-                  title="Buscar restaurantes"
-                />
+                  {searchError ? (
+                    <View style={styles.inlineError}>
+                      <SymbolView
+                        name={{
+                          ios: 'exclamationmark.circle.fill',
+                          android: 'error',
+                          web: 'error',
+                        }}
+                        size={18}
+                        tintColor={colors.danger}
+                      />
+                      <Text style={styles.inlineErrorText}>
+                        {searchError}
+                      </Text>
+                    </View>
+                  ) : null}
+
+                  <PrimaryButton
+                    disabled={searchQuery.trim().length < 2}
+                    loading={isSearching}
+                    onPress={handleSearch}
+                    title="Buscar restaurantes"
+                  />
+                </View>
               </View>
 
               {hasSearched
@@ -352,17 +588,23 @@ export default function CreateRestaurantScreen() {
               && !searchError
               && searchResults.length === 0 ? (
                 <View style={styles.emptySearch}>
-                  <Text style={styles.emptyEmoji}>
-                    🔎
-                  </Text>
-
+                  <View style={styles.emptySearchIcon}>
+                    <SymbolView
+                      name={{
+                        ios: 'magnifyingglass',
+                        android: 'search_off',
+                        web: 'search_off',
+                      }}
+                      size={24}
+                      tintColor={colors.primary}
+                    />
+                  </View>
                   <Text style={styles.emptyTitle}>
                     No encontramos resultados
                   </Text>
-
                   <Text style={styles.emptyText}>
-                    Prueba con otro nombre o añádelo
-                    manualmente.
+                    Prueba con otro nombre o crea el restaurante
+                    manualmente con los datos que conozcas.
                   </Text>
                 </View>
               ) : null}
@@ -373,30 +615,27 @@ export default function CreateRestaurantScreen() {
                     <Text style={styles.resultsTitle}>
                       Resultados
                     </Text>
-
-                    <Text style={styles.resultsCount}>
-                      {searchResults.length}
-                    </Text>
+                    <View style={styles.resultsCountBadge}>
+                      <Text style={styles.resultsCount}>
+                        {searchResults.length}
+                      </Text>
+                    </View>
                   </View>
 
                   <Text style={styles.resultsHelp}>
-                    Mostramos hasta 10 resultados. Pulsa uno
-                    para seleccionarlo.
+                    Selecciona el sitio correcto para continuar.
                   </Text>
 
                   <View style={styles.resultsList}>
                     {searchResults.map((result) => (
                       <RestaurantSearchResultCard
                         key={`${result.provider}-${result.externalPlaceId}`}
-                        onPress={() =>
-                          setSelectedResult(result)
-                        }
+                        onPress={() => selectRestaurant(result)}
                         result={result}
                         selected={
                           selectedResult?.provider
                             === result.provider
-                          && selectedResult
-                            ?.externalPlaceId
+                          && selectedResult?.externalPlaceId
                             === result.externalPlaceId
                         }
                       />
@@ -419,14 +658,24 @@ export default function CreateRestaurantScreen() {
               ) : null}
 
               <View style={styles.manualShortcut}>
+                <View style={styles.manualShortcutIcon}>
+                  <SymbolView
+                    name={{
+                      ios: 'questionmark.circle',
+                      android: 'help_outline',
+                      web: 'help_outline',
+                    }}
+                    size={22}
+                    tintColor={colors.primary}
+                  />
+                </View>
+
                 <View style={styles.manualShortcutContent}>
                   <Text style={styles.manualShortcutTitle}>
                     ¿No aparece?
                   </Text>
-
                   <Text style={styles.manualShortcutText}>
-                    Puedes guardar el restaurante aunque no
-                    esté disponible en OpenStreetMap.
+                    Añádelo con tus propios datos.
                   </Text>
                 </View>
 
@@ -440,324 +689,167 @@ export default function CreateRestaurantScreen() {
                       : null,
                   ]}
                 >
-                  <Text
-                    style={styles.manualShortcutButtonText}
-                  >
-                    Añádelo manualmente
+                  <Text style={styles.manualShortcutButtonText}>
+                    Añadir manual
                   </Text>
                 </Pressable>
               </View>
             </View>
           ) : (
-            <View style={styles.manualForm}>
-              <FormField
-                autoCapitalize="words"
-                label="Nombre del restaurante"
-                maxLength={150}
-                onChangeText={setManualName}
-                placeholder="Kaizen Sushi"
-                value={manualName}
-              />
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionHeading}>
+                <View style={styles.sectionIcon}>
+                  <SymbolView
+                    name={{
+                      ios: 'square.and.pencil',
+                      android: 'edit',
+                      web: 'edit',
+                    }}
+                    size={21}
+                    tintColor={colors.primary}
+                  />
+                </View>
+                <View style={styles.sectionHeadingCopy}>
+                  <Text style={styles.sectionTitle}>
+                    Datos del restaurante
+                  </Text>
+                  <Text style={styles.sectionDescription}>
+                    Solo el nombre es obligatorio.
+                  </Text>
+                </View>
+              </View>
 
-              <FormField
-                autoCapitalize="sentences"
-                label="Dirección"
-                maxLength={300}
-                onChangeText={setManualAddress}
-                placeholder="Carrer de Exemple, 10"
-                value={manualAddress}
-              />
+              <Text style={styles.manualIntro}>
+                Completa lo que conozcas. Podrás editar estos
+                datos más adelante desde el grupo.
+              </Text>
 
-              <FormField
-                autoCapitalize="words"
-                label="Ciudad"
-                maxLength={100}
-                onChangeText={setManualCity}
-                placeholder="Palma"
-                value={manualCity}
-              />
+              <View style={styles.formStack}>
+                <FormField
+                  autoCapitalize="words"
+                  label="Nombre del restaurante"
+                  maxLength={150}
+                  onChangeText={(value) => {
+                    setManualName(value);
+                    setRequestError(null);
+                  }}
+                  placeholder="Kaizen Sushi"
+                  value={manualName}
+                />
 
-              <FormField
-                autoCapitalize="words"
-                label="País"
-                maxLength={100}
-                onChangeText={setManualCountry}
-                placeholder="España"
-                value={manualCountry}
-              />
+                <FormField
+                  autoCapitalize="sentences"
+                  label="Dirección"
+                  maxLength={300}
+                  onChangeText={setManualAddress}
+                  placeholder="Carrer de Exemple, 10"
+                  value={manualAddress}
+                />
 
-              <FormField
-                autoCapitalize="words"
-                label="Categoría"
-                maxLength={100}
-                onChangeText={setManualCategory}
-                placeholder="Japonés"
-                value={manualCategory}
-              />
+                <FormField
+                  autoCapitalize="words"
+                  label="Ciudad"
+                  maxLength={100}
+                  onChangeText={setManualCity}
+                  placeholder="Palma"
+                  value={manualCity}
+                />
+
+                <FormField
+                  autoCapitalize="words"
+                  label="País"
+                  maxLength={100}
+                  onChangeText={setManualCountry}
+                  placeholder="España"
+                  value={manualCountry}
+                />
+
+                <FormField
+                  autoCapitalize="words"
+                  label="Categoría"
+                  maxLength={100}
+                  onChangeText={setManualCategory}
+                  placeholder="Japonés"
+                  value={manualCategory}
+                />
+              </View>
             </View>
           )}
 
-          <View style={styles.notesSection}>
-            <Text style={styles.notesTitle}>
-              Notas del grupo
-            </Text>
+          {showSaveSection ? (
+            <View style={styles.saveSection}>
+              {creationMode === 'SEARCH' && selectedResult ? (
+                <View style={styles.selectedSummary}>
+                  <SymbolView
+                    name={{
+                      ios: 'checkmark.circle.fill',
+                      android: 'check_circle',
+                      web: 'check_circle',
+                    }}
+                    size={22}
+                    tintColor="#557547"
+                  />
+                  <View style={styles.selectedSummaryCopy}>
+                    <Text style={styles.selectedSummaryEyebrow}>
+                      Restaurante seleccionado
+                    </Text>
+                    <Text
+                      numberOfLines={1}
+                      style={styles.selectedSummaryName}
+                    >
+                      {selectedResult.name}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
 
-            <Text style={styles.notesDescription}>
-              Estas notas solo pertenecen a este grupo.
-            </Text>
+              <View style={styles.notesHeader}>
+                <Text style={styles.notesTitle}>
+                  Notas del grupo
+                </Text>
+                <Text style={styles.notesDescription}>
+                  Estas notas solo pertenecen a este grupo.
+                </Text>
+              </View>
 
-            <FormField
-              label="Notas"
-              maxLength={1000}
-              multiline
-              onChangeText={setGroupNotes}
-              placeholder="Nos lo han recomendado"
-              style={styles.notesInput}
-              textAlignVertical="top"
-              value={groupNotes}
-            />
-          </View>
+              <FormField
+                label="Notas opcionales"
+                maxLength={1000}
+                multiline
+                onChangeText={setGroupNotes}
+                placeholder="Nos lo han recomendado"
+                style={styles.notesInput}
+                textAlignVertical="top"
+                value={groupNotes}
+              />
 
-          {requestError ? (
-            <View style={styles.requestErrorCard}>
-              <Text style={styles.requestErrorText}>
-                {requestError}
-              </Text>
+              {requestError ? (
+                <View style={styles.requestErrorCard}>
+                  <SymbolView
+                    name={{
+                      ios: 'exclamationmark.triangle.fill',
+                      android: 'warning',
+                      web: 'warning',
+                    }}
+                    size={19}
+                    tintColor={colors.danger}
+                  />
+                  <Text style={styles.requestErrorText}>
+                    {requestError}
+                  </Text>
+                </View>
+              ) : null}
+
+              <PrimaryButton
+                disabled={saveDisabled}
+                loading={isSubmitting}
+                onPress={handleSaveRestaurant}
+                title="Guardar restaurante"
+              />
             </View>
           ) : null}
-
-          <PrimaryButton
-            disabled={saveDisabled}
-            loading={isSubmitting}
-            onPress={handleSaveRestaurant}
-            title="Guardar restaurante"
-          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 36,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-  },
-  backText: {
-    color: colors.text,
-    fontSize: 34,
-    lineHeight: 36,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  headerSpacer: {
-    width: 44,
-  },
-  heading: {
-    gap: 8,
-    marginTop: 36,
-    marginBottom: 24,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 29,
-    fontWeight: '800',
-    lineHeight: 35,
-  },
-  subtitle: {
-    color: colors.muted,
-    fontSize: 16,
-    lineHeight: 23,
-  },
-  modeSelector: {
-    flexDirection: 'row',
-    gap: 6,
-    borderRadius: 17,
-    backgroundColor: '#F0E8E3',
-    padding: 5,
-    marginBottom: 24,
-  },
-  modeButton: {
-    flex: 1,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 13,
-  },
-  activeModeButton: {
-    backgroundColor: colors.surface,
-  },
-  modeButtonText: {
-    color: colors.muted,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  activeModeButtonText: {
-    color: colors.primary,
-  },
-  section: {
-    gap: 24,
-  },
-  searchForm: {
-    gap: 18,
-  },
-  manualForm: {
-    gap: 18,
-  },
-  error: {
-    color: colors.danger,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  emptySearch: {
-    alignItems: 'center',
-    gap: 9,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    padding: 24,
-  },
-  emptyEmoji: {
-    fontSize: 30,
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  emptyText: {
-    color: colors.muted,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  resultsSection: {
-    gap: 12,
-  },
-  resultsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  resultsTitle: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  resultsCount: {
-    color: colors.muted,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  resultsHelp: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  resultsList: {
-    gap: 11,
-  },
-  attribution: {
-    color: colors.muted,
-    fontSize: 11,
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-  manualShortcut: {
-    gap: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    padding: 18,
-  },
-  manualShortcutContent: {
-    gap: 5,
-  },
-  manualShortcutTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  manualShortcutText: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  manualShortcutButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-  },
-  manualShortcutButtonPressed: {
-    backgroundColor: '#FFF1EC',
-  },
-  manualShortcutButtonText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  notesSection: {
-    gap: 8,
-    marginTop: 28,
-    marginBottom: 22,
-  },
-  notesTitle: {
-    color: colors.text,
-    fontSize: 19,
-    fontWeight: '800',
-  },
-  notesDescription: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 8,
-  },
-  notesInput: {
-    minHeight: 105,
-    paddingTop: 15,
-  },
-  requestErrorCard: {
-    borderWidth: 1,
-    borderColor: '#F3C5BC',
-    borderRadius: 15,
-    backgroundColor: '#FFF1EE',
-    padding: 14,
-    marginBottom: 18,
-  },
-  requestErrorText: {
-    color: colors.danger,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-});
