@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
@@ -59,12 +60,11 @@ public class RestaurantLocationSearchService {
 
         String searchTerm = String.join(
                 ", ",
-                List.of(
+                Stream.of(
                                 normalizedAddress,
                                 normalizedCity,
                                 normalizedCountry
                         )
-                        .stream()
                         .filter(Objects::nonNull)
                         .toList()
         );
