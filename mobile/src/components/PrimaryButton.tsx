@@ -12,6 +12,7 @@ type PrimaryButtonProps = {
   title: string;
   loading?: boolean;
   disabled?: boolean;
+  compact?: boolean;
   onPress: () => void;
 };
 
@@ -19,6 +20,7 @@ export function PrimaryButton({
   title,
   loading = false,
   disabled = false,
+  compact = false,
   onPress,
 }: PrimaryButtonProps) {
   const isDisabled = disabled || loading;
@@ -30,6 +32,7 @@ export function PrimaryButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
+        compact ? styles.compactButton : null,
         pressed && !isDisabled
           ? styles.buttonPressed
           : null,
@@ -39,7 +42,14 @@ export function PrimaryButton({
       {loading ? (
         <ActivityIndicator color={colors.white} />
       ) : (
-        <Text style={styles.title}>{title}</Text>
+        <Text
+          style={[
+            styles.title,
+            compact ? styles.compactTitle : null,
+          ]}
+        >
+          {title}
+        </Text>
       )}
     </Pressable>
   );
@@ -54,6 +64,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
   },
+  compactButton: {
+    minHeight: 48,
+    borderRadius: 14,
+    paddingHorizontal: 18,
+  },
   buttonPressed: {
     backgroundColor: colors.primaryPressed,
     transform: [{ scale: 0.995 }],
@@ -65,5 +80,8 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontFamily: fonts.bold,
     fontSize: 16,
+  },
+  compactTitle: {
+    fontSize: 14,
   },
 });
