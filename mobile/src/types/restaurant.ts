@@ -17,6 +17,7 @@ export type Restaurant = {
   latitude: number | null;
   longitude: number | null;
   category: string | null;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -76,6 +77,10 @@ export type RestaurantLocationResult = {
   country: string | null;
   latitude: number;
   longitude: number;
+};
+
+export type RestaurantImageUploadFile = {
+  uri: string;
 };
 
 export type UpdateGroupRestaurantStatusPayload = {
