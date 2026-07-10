@@ -69,6 +69,15 @@ export type RestaurantSearchResult = {
   category: string | null;
 };
 
+export type RestaurantLocationResult = {
+  label: string;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  latitude: number;
+  longitude: number;
+};
+
 export type UpdateGroupRestaurantStatusPayload = {
   status: GroupRestaurantStatus;
 };
