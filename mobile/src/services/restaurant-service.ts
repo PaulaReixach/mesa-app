@@ -3,6 +3,7 @@ import {
   CreateGroupRestaurantPayload,
   GroupRestaurant,
   RestaurantSearchResult,
+  UpdateGroupRestaurantFavoritePayload,
   UpdateGroupRestaurantPayload,
   UpdateGroupRestaurantStatusPayload,
 } from '../types/restaurant';
@@ -73,6 +74,22 @@ export function updateGroupRestaurantStatus(
 ): Promise<GroupRestaurant> {
   return apiRequest<GroupRestaurant>(
     `/groups/${groupId}/restaurants/${groupRestaurantId}/status`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export function updateGroupRestaurantFavorite(
+  groupId: string,
+  groupRestaurantId: string,
+  payload: UpdateGroupRestaurantFavoritePayload,
+  accessToken: string,
+): Promise<GroupRestaurant> {
+  return apiRequest<GroupRestaurant>(
+    `/groups/${groupId}/restaurants/${groupRestaurantId}/favorite`,
     {
       method: 'PATCH',
       body: JSON.stringify(payload),

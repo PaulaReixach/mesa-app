@@ -25,6 +25,7 @@ export type GroupRestaurant = {
   id: string;
   groupId: string;
   status: GroupRestaurantStatus;
+  favorite: boolean;
   proposedByUserId: string;
   groupNotes: string | null;
   createdAt: string;
@@ -70,4 +71,8 @@ export type RestaurantSearchResult = {
 
 export type UpdateGroupRestaurantStatusPayload = {
   status: GroupRestaurantStatus;
+};
+
+export type UpdateGroupRestaurantFavoritePayload = {
+  favorite: boolean;
 };

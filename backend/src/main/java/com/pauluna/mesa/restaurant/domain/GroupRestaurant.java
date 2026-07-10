@@ -45,6 +45,9 @@ public class GroupRestaurant {
     @Column(name = "status", nullable = false, length = 30)
     private GroupRestaurantStatus status;
 
+    @Column(name = "favorite", nullable = false)
+    private boolean favorite;
+
     @Column(name = "proposed_by_user_id", nullable = false)
     private UUID proposedByUserId;
 
@@ -99,7 +102,8 @@ public class GroupRestaurant {
     ) {
         this.groupId = groupId;
         this.restaurantId = restaurantId;
-        this.status = status;
+        this.status = validateSelectableStatus(status);
+        this.favorite = false;
         this.proposedByUserId = proposedByUserId;
         this.groupNotes = groupNotes;
         this.statusUpdatedByUserId = null;
@@ -108,10 +112,7 @@ public class GroupRestaurant {
     }
 
     public void changeStatus(GroupRestaurantStatus status) {
-        this.status = Objects.requireNonNull(
-                status,
-                "El estado del restaurante es obligatorio."
-        );
+        this.status = validateSelectableStatus(status);
         this.statusUpdatedByUserId = null;
     }
 
@@ -119,14 +120,15 @@ public class GroupRestaurant {
             GroupRestaurantStatus status,
             UUID updatedByUserId
     ) {
-        this.status = Objects.requireNonNull(
-                status,
-                "El estado del restaurante es obligatorio."
-        );
+        this.status = validateSelectableStatus(status);
         this.statusUpdatedByUserId = Objects.requireNonNull(
                 updatedByUserId,
                 "La persona que actualiza el estado es obligatoria."
         );
+    }
+
+    public void changeFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 
     public void changeRestaurantId(UUID restaurantId) {
@@ -145,6 +147,23 @@ public class GroupRestaurant {
                 proposedByUserId,
                 "El usuario que propone el restaurante es obligatorio."
         );
+    }
+
+    private static GroupRestaurantStatus validateSelectableStatus(
+            GroupRestaurantStatus status
+    ) {
+        GroupRestaurantStatus requiredStatus = Objects.requireNonNull(
+                status,
+                "El estado del restaurante es obligatorio."
+        );
+
+        if (requiredStatus == GroupRestaurantStatus.FAVORITE) {
+            throw new IllegalArgumentException(
+                    "Favorito no es un estado del restaurante."
+            );
+        }
+
+        return requiredStatus;
     }
 
     @PrePersist
@@ -173,6 +192,10 @@ public class GroupRestaurant {
 
     public GroupRestaurantStatus getStatus() {
         return status;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
     }
 
     public UUID getProposedByUserId() {
