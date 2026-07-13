@@ -42,6 +42,17 @@ export class ApiError extends Error {
   }
 }
 
+function isNetworkErrorMessage(message: string): boolean {
+  const normalized = message.toLocaleLowerCase('es');
+
+  return normalized.includes('fetch failed')
+    || normalized.includes('failed to fetch')
+    || normalized.includes('java.net')
+    || normalized.includes('network request failed')
+    || normalized.includes('connection refused')
+    || normalized.includes('connectexception');
+}
+
 async function parseResponse<T>(
   response: Response,
 ): Promise<T> {
@@ -160,8 +171,12 @@ export function getErrorMessage(
         error.validationErrors,
       )[0];
 
-    return firstValidationError
+    const message = firstValidationError
       ?? error.message;
+
+    return isNetworkErrorMessage(message)
+      ? 'No se ha podido conectar con el servidor.'
+      : message;
   }
 
   if (error instanceof TypeError) {
@@ -169,7 +184,9 @@ export function getErrorMessage(
   }
 
   if (error instanceof Error) {
-    return error.message;
+    return isNetworkErrorMessage(error.message)
+      ? 'No se ha podido conectar con el servidor.'
+      : error.message;
   }
 
   return 'Ha ocurrido un error inesperado.';
