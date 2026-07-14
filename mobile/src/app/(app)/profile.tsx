@@ -24,6 +24,8 @@ import { resolveApiUrl } from '../../lib/api';
 import { getCurrentUserProfileStats } from '../../services/profile-service';
 import { colors } from '../../theme/colors';
 import { UserProfileStats } from '../../types/profile';
+import { fonts } from '../../theme/fonts';
+import { radii, shadows } from '../../theme/layout';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -205,15 +207,6 @@ export default function ProfileScreen() {
     router.replace('/login');
   }
 
-  function handleBack() {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    router.replace('/home');
-  }
-
   function handleEditProfile() {
     router.push('/profile-edit');
   }
@@ -236,28 +229,7 @@ export default function ProfileScreen() {
         }
       >
         <View style={styles.header}>
-          <Pressable
-            accessibilityLabel="Volver"
-            accessibilityRole="button"
-            onPress={handleBack}
-            style={({ pressed }) => [
-              styles.iconButton,
-
-              pressed
-                ? styles.iconButtonPressed
-                : null,
-            ]}
-          >
-            <SymbolView
-              name={{
-                ios: 'chevron.left',
-                android: 'arrow_back',
-                web: 'arrow_back',
-              }}
-              size={19}
-              tintColor={colors.text}
-            />
-          </Pressable>
+          <View style={styles.iconButton} />
 
           <Text style={styles.headerTitle}>
             Mi perfil
@@ -503,11 +475,11 @@ const styles = StyleSheet.create({
   },
 
   iconButton: {
-    width: 34,
-    height: 34,
+    width: 42,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 17,
+    borderRadius: 21,
   },
 
   iconButtonPressed: {
@@ -517,12 +489,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
   profileSection: {
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.xl,
+    backgroundColor: colors.surface,
     marginBottom: 24,
+    ...shadows.card,
   },
 
   profileTop: {
@@ -551,7 +529,7 @@ const styles = StyleSheet.create({
   avatarFallbackText: {
     color: colors.white,
     fontSize: 29,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   profileInfo: {
@@ -562,7 +540,7 @@ const styles = StyleSheet.create({
   name: {
     color: colors.text,
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.2,
   },
 
@@ -570,7 +548,7 @@ const styles = StyleSheet.create({
     color:
       profilePalette.subtleText,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   statsRow: {
@@ -589,7 +567,7 @@ const styles = StyleSheet.create({
   statValue: {
     color: colors.text,
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     lineHeight: 32,
     marginBottom: 2,
   },
@@ -597,7 +575,7 @@ const styles = StyleSheet.create({
   statLabel: {
     color: colors.text,
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   statDivider: {
@@ -616,16 +594,21 @@ const styles = StyleSheet.create({
 
   statsErrorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
     textAlign: 'center',
   },
 
   menuSection: {
-    borderTopWidth: 1,
-    borderTopColor:
-      profilePalette.line,
+    overflow: 'hidden',
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: profilePalette.line,
+    borderRadius: radii.xl,
+    backgroundColor: colors.surface,
     marginBottom: 26,
+    ...shadows.card,
   },
 
   menuRow: {
@@ -654,7 +637,7 @@ const styles = StyleSheet.create({
   menuLabel: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: fonts.medium,
   },
 
   logoutButton: {
@@ -678,6 +661,6 @@ const styles = StyleSheet.create({
   logoutText: {
     color: profilePalette.accent,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 });

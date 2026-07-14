@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useNotifications } from '../contexts/notification-context';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export function NotificationBellButton() {
   const { unreadCount } = useNotifications();
@@ -68,6 +69,6 @@ const styles = StyleSheet.create({
   badgeText: {
     color: colors.white,
     fontSize: 8,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 });

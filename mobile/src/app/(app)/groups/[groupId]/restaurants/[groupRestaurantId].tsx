@@ -27,6 +27,7 @@ import { getGroupRestaurant } from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
 import type { RestaurantGroup } from '../../../../../types/group';
 import type { GroupRestaurant } from '../../../../../types/restaurant';
+import { fonts } from '../../../../../theme/fonts';
 
 export default function RestaurantDetailScreen() {
   const { groupId, groupRestaurantId } = useLocalSearchParams<{
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   loading: {
     alignItems: 'center',
@@ -351,14 +352,14 @@ const styles = StyleSheet.create({
   eyebrow: {
     color: colors.primary,
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     letterSpacing: 1,
   },
   name: {
     color: colors.text,
     fontSize: 25,
     lineHeight: 31,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   status: {
     paddingHorizontal: 10,
@@ -367,7 +368,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   section: {
     gap: 10,
@@ -375,7 +376,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   infoCard: {
     overflow: 'hidden',
@@ -397,11 +398,12 @@ const styles = StyleSheet.create({
   infoLabel: {
     color: colors.muted,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
   },
   infoValue: {
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -421,16 +423,17 @@ const styles = StyleSheet.create({
   errorTitle: {
     color: colors.danger,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   errorText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
   retry: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
 });

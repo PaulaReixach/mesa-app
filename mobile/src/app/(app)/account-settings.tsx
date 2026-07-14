@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../contexts/auth-context';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/fonts';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -331,12 +332,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
   description: {
     marginBottom: 30,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 21,
     textAlign: 'center',
@@ -348,7 +350,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
@@ -387,7 +389,7 @@ const styles = StyleSheet.create({
   settingTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   settingTitleDanger: {
     color: colors.danger,
@@ -395,6 +397,7 @@ const styles = StyleSheet.create({
   settingSubtitle: {
     marginTop: 3,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -402,7 +405,7 @@ const styles = StyleSheet.create({
     maxWidth: '43%',
     color: colors.muted,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
     textAlign: 'right',
   },
 });

@@ -21,6 +21,7 @@ import { useAuth } from '../../contexts/auth-context';
 import { getErrorMessage } from '../../lib/api';
 import { changeCurrentUserPassword } from '../../services/account-service';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/fonts';
 
 type PasswordFieldProps = {
   label: string;
@@ -460,7 +461,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
   intro: {
@@ -479,12 +480,13 @@ const styles = StyleSheet.create({
   introTitle: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   introText: {
     maxWidth: 310,
     marginTop: 7,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -498,7 +500,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   inputContainer: {
     minHeight: 54,
@@ -515,6 +517,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 52,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 15,
   },
   eyeButton: {
@@ -534,6 +537,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -556,6 +560,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: colors.white,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 });

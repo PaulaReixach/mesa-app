@@ -41,6 +41,7 @@ import { colors } from '../theme/colors';
 import type { PublicGroupDetail } from '../types/group';
 import type { GroupMember } from '../types/group-member';
 import type { GroupRestaurant } from '../types/restaurant';
+import { fonts } from '../theme/fonts';
 
 type PublicTab = 'restaurants' | 'collaboration' | 'activity';
 
@@ -534,17 +535,18 @@ const styles = StyleSheet.create({
   errorTitle: {
     color: colors.danger,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   errorText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 16,
   },
   retryText: {
     color: colors.primary,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   sheet: {
     minHeight: 540,
@@ -598,12 +600,12 @@ const styles = StyleSheet.create({
   communityTitle: {
     color: colors.text,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   communityAction: {
     color: '#607349',
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   communityRow: {
     flexDirection: 'row',
@@ -635,7 +637,7 @@ const styles = StyleSheet.create({
   communityAvatarText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   communityOwnerBadge: {
     position: 'absolute',
@@ -655,19 +657,19 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: colors.text,
     fontSize: 8,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   communityOwnerRole: {
     color: colors.primary,
     fontSize: 7,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   communityRole: {
     color: '#607349',
     fontSize: 7,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   copyAction: {
@@ -696,10 +698,11 @@ const styles = StyleSheet.create({
   copyTitle: {
     color: colors.text,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   copySubtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 8,
     lineHeight: 12,
   },
@@ -710,6 +713,7 @@ const styles = StyleSheet.create({
   },
   inlineErrorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 9,
     lineHeight: 13,
     textAlign: 'center',

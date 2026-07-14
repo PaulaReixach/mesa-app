@@ -33,6 +33,7 @@ import type {
   GroupInvitation,
   GroupInvitationStatus,
 } from '../../types/group-invitation';
+import { fonts } from '../../theme/fonts';
 
 const statusPresentation: Record<
   GroupInvitationStatus,
@@ -510,7 +511,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   heading: {
     gap: 7,
@@ -518,10 +519,11 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 27,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   subtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
   },
@@ -535,7 +537,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   list: {
     gap: 11,
@@ -568,10 +570,11 @@ const styles = StyleSheet.create({
   groupName: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   inviterText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
   },
   statusBadge: {
@@ -581,7 +584,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   cardMeta: {
     flexDirection: 'row',
@@ -591,10 +594,11 @@ const styles = StyleSheet.create({
   privacyText: {
     color: colors.text,
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   dateText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 10,
   },
   actionRow: {
@@ -614,7 +618,7 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: colors.danger,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   primaryButton: {
     flex: 1,
@@ -627,7 +631,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: colors.white,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   openButton: {
     minHeight: 42,
@@ -641,7 +645,7 @@ const styles = StyleSheet.create({
   openButtonText: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   emptyCard: {
     alignItems: 'center',
@@ -664,10 +668,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   emptyText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
     textAlign: 'center',
@@ -682,13 +687,14 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
   retryText: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   pressed: {
     opacity: 0.72,

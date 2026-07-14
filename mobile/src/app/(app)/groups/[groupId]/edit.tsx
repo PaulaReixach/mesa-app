@@ -43,6 +43,7 @@ import type {
   GroupPrivacy,
   RestaurantGroup,
 } from '../../../../types/group';
+import { fonts } from '../../../../theme/fonts';
 
 const MAXIMUM_GROUP_IMAGE_SIZE =
   5 * 1024 * 1024;
@@ -579,12 +580,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   saveText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   saveTextDisabled: {
     opacity: 0.4,
@@ -617,7 +618,7 @@ const styles = StyleSheet.create({
   imageInitial: {
     color: colors.primary,
     fontSize: 38,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   cameraBadge: {
     position: 'absolute',
@@ -635,7 +636,7 @@ const styles = StyleSheet.create({
   imageHint: {
     color: colors.primary,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   formCard: {
     gap: 17,
@@ -674,10 +675,11 @@ const styles = StyleSheet.create({
   privacyTitle: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   privacyDescription: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 10,
     lineHeight: 15,
   },
@@ -693,11 +695,12 @@ const styles = StyleSheet.create({
   accessTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   accessText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
     textAlign: 'center',
@@ -711,6 +714,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -730,6 +734,6 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: colors.white,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
 });

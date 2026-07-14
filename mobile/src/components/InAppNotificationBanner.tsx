@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNotifications } from '../contexts/notification-context';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 const AUTO_DISMISS_TIME_MS = 4500;
 
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.primary,
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
@@ -288,19 +289,20 @@ const styles = StyleSheet.create({
   timeText: {
     color: colors.muted,
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   title: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     lineHeight: 19,
   },
 
   body: {
     marginTop: 2,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },

@@ -32,6 +32,7 @@ import {
 } from '../../../../../services/group-invitation-service';
 import { colors } from '../../../../../theme/colors';
 import type { GroupInvitation } from '../../../../../types/group-invitation';
+import { fonts } from '../../../../../theme/fonts';
 
 export default function AddGroupMemberScreen() {
   const { groupId } = useLocalSearchParams<{
@@ -373,13 +374,14 @@ const styles = StyleSheet.create({
   },
   backText: {
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 34,
     lineHeight: 36,
   },
   headerTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   headerSpacer: {
     width: 44,
@@ -391,11 +393,12 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 29,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     lineHeight: 35,
   },
   subtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -409,13 +412,14 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
   success: {
     color: '#607349',
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     lineHeight: 19,
   },
   pendingSection: {
@@ -429,7 +433,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 18,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   countBadge: {
     minWidth: 25,
@@ -443,7 +447,7 @@ const styles = StyleSheet.create({
   countText: {
     color: colors.primary,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   loadingCard: {
     flexDirection: 'row',
@@ -458,6 +462,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
   },
   emptyCard: {
@@ -471,10 +476,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   emptyText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -503,7 +509,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: colors.primary,
     fontSize: 16,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   invitationContent: {
     flex: 1,
@@ -512,17 +518,18 @@ const styles = StyleSheet.create({
   invitedName: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   invitedUsername: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
   },
   pendingText: {
     marginTop: 2,
     color: '#9B6717',
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   cancelButton: {
     minWidth: 70,
@@ -535,7 +542,7 @@ const styles = StyleSheet.create({
   cancelText: {
     color: colors.danger,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   pressed: {
     opacity: 0.72,

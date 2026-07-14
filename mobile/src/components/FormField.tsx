@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
+import { radii } from '../theme/layout';
 
 type FormFieldProps = TextInputProps & {
   label: string;
@@ -22,6 +24,8 @@ export function FormField({
   style,
   ...textInputProps
 }: FormFieldProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <View style={styles.container}>
       <Text
@@ -34,12 +38,21 @@ export function FormField({
       <View
         style={[
           styles.inputContainer,
+          isFocused ? styles.inputFocused : null,
           error ? styles.inputError : null,
         ]}
       >
         <TextInput
           {...textInputProps}
           maxFontSizeMultiplier={1.15}
+          onBlur={event => {
+            setIsFocused(false);
+            textInputProps.onBlur?.(event);
+          }}
+          onFocus={event => {
+            setIsFocused(true);
+            textInputProps.onFocus?.(event);
+          }}
           placeholderTextColor={colors.muted}
           style={[
             styles.input,
@@ -76,7 +89,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   inputContainer: {
     minHeight: 52,
@@ -84,8 +97,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 13,
+    borderRadius: radii.md,
     backgroundColor: colors.inputBackground,
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceElevated,
   },
   inputError: {
     borderColor: colors.danger,
@@ -95,6 +112,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
     paddingHorizontal: 15,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 14,
   },
   inputWithAccessory: {
@@ -108,6 +126,7 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },

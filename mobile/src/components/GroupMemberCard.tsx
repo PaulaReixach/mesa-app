@@ -8,6 +8,8 @@ import {
 
 import { colors } from '../theme/colors';
 import { GroupMember } from '../types/group-member';
+import { fonts } from '../theme/fonts';
+import { radii, shadows } from '../theme/layout';
 
 type GroupMemberCardProps = {
   member: GroupMember;
@@ -102,9 +104,10 @@ const styles = StyleSheet.create({
     gap: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 18,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
     padding: 14,
+    ...shadows.card,
   },
   avatar: {
     width: 46,
@@ -112,12 +115,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 15,
-    backgroundColor: '#F7D9CF',
+    backgroundColor: colors.primarySoft,
   },
   avatarText: {
     color: colors.primary,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   content: {
     flex: 1,
@@ -126,10 +129,11 @@ const styles = StyleSheet.create({
   name: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   username: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
   },
   actions: {
@@ -143,12 +147,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   ownerRole: {
-    backgroundColor: '#F7D9CF',
+    backgroundColor: colors.primarySoft,
   },
   roleText: {
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   ownerRoleText: {
     color: colors.primary,
@@ -164,6 +168,6 @@ const styles = StyleSheet.create({
   removeText: {
     color: colors.danger,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 });

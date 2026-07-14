@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export const recommendationStyles = StyleSheet.create({
   card: {
@@ -23,9 +24,9 @@ export const recommendationStyles = StyleSheet.create({
     backgroundColor: '#E6E0CB',
   },
   copy: { flex: 1, minWidth: 0, gap: 1 },
-  eyebrow: { color: colors.primary, fontSize: 7, fontWeight: '900' },
-  title: { color: colors.text, fontSize: 13, fontWeight: '900' },
-  category: { color: colors.text, fontSize: 8, fontWeight: '600' },
+  eyebrow: { color: colors.primary, fontSize: 7, fontFamily: fonts.bold },
+  title: { color: colors.text, fontSize: 13, fontFamily: fonts.bold },
+  category: { color: colors.text, fontSize: 8, fontFamily: fonts.semiBold },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 1 },
   location: { flex: 1, color: colors.muted, fontSize: 6.5 },
   trailing: { alignItems: 'flex-end', gap: 5 },
@@ -35,7 +36,7 @@ export const recommendationStyles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: '#EAF0DE',
   },
-  statusText: { color: '#5D7444', fontSize: 6.5, fontWeight: '800' },
+  statusText: { color: '#5D7444', fontSize: 6.5, fontFamily: fonts.bold },
   scorePill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -45,6 +46,6 @@ export const recommendationStyles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: '#FFF1DB',
   },
-  scoreText: { color: colors.text, fontSize: 9, fontWeight: '900' },
+  scoreText: { color: colors.text, fontSize: 9, fontFamily: fonts.bold },
   pressed: { opacity: 0.74 },
 });

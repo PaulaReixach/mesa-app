@@ -6,6 +6,8 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
+import { radii, shadows } from '../theme/layout';
 
 type PrimaryButtonProps = {
   title: string;
@@ -46,15 +48,17 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 54,
+    minHeight: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
+    borderRadius: radii.round,
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
+    ...shadows.card,
   },
   buttonPressed: {
     backgroundColor: colors.primaryPressed,
+    transform: [{ scale: 0.992 }],
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -62,6 +66,6 @@ const styles = StyleSheet.create({
   title: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 });

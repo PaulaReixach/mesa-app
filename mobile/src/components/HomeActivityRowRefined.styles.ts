@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export const activityStyles = StyleSheet.create({
   row: {
@@ -25,7 +26,7 @@ export const activityStyles = StyleSheet.create({
     backgroundColor: '#F3DED5',
   },
   avatarImage: { width: '100%', height: '100%' },
-  avatarInitial: { color: colors.primary, fontSize: 11, fontWeight: '900' },
+  avatarInitial: { color: colors.primary, fontSize: 11, fontFamily: fonts.bold },
   badge: {
     position: 'absolute',
     right: 0,
@@ -40,9 +41,9 @@ export const activityStyles = StyleSheet.create({
   },
   copy: { flex: 1, minWidth: 0 },
   sentence: { color: colors.muted, fontSize: 8.5, lineHeight: 13 },
-  actor: { color: colors.primary, fontWeight: '900' },
-  strong: { color: colors.text, fontWeight: '800' },
-  group: { color: '#5D7444', fontWeight: '800' },
+  actor: { color: colors.primary, fontFamily: fonts.bold },
+  strong: { color: colors.text, fontFamily: fonts.bold },
+  group: { color: '#5D7444', fontFamily: fonts.bold },
   trailing: { minWidth: 50, alignItems: 'flex-end', gap: 4 },
   time: { color: colors.muted, fontSize: 7 },
   scorePill: {
@@ -54,5 +55,5 @@ export const activityStyles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: '#FFF1DB',
   },
-  scoreText: { color: colors.text, fontSize: 7, fontWeight: '900' },
+  scoreText: { color: colors.text, fontSize: 7, fontFamily: fonts.bold },
 });

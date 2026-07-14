@@ -17,6 +17,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/fonts';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -332,7 +333,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
   appName: {
     color: colors.text,
     fontSize: 28,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     letterSpacing: -0.7,
   },
 
@@ -371,6 +372,7 @@ const styles = StyleSheet.create({
     maxWidth: 310,
     marginTop: 7,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 21,
     textAlign: 'center',
@@ -389,11 +391,12 @@ const styles = StyleSheet.create({
   storyTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   storyText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
   },
@@ -406,7 +409,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
@@ -449,12 +452,13 @@ const styles = StyleSheet.create({
   aboutTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   aboutSubtitle: {
     marginTop: 4,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -462,7 +466,7 @@ const styles = StyleSheet.create({
   aboutValue: {
     color: colors.muted,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   footer: {
@@ -475,7 +479,7 @@ const styles = StyleSheet.create({
   footerTitle: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
 
@@ -483,6 +487,7 @@ const styles = StyleSheet.create({
     maxWidth: 290,
     marginTop: 6,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
     textAlign: 'center',

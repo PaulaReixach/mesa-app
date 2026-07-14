@@ -7,6 +7,8 @@ import {
 
 import { colors } from '../theme/colors';
 import { RestaurantSearchResult } from '../types/restaurant';
+import { fonts } from '../theme/fonts';
+import { radii, shadows } from '../theme/layout';
 
 type RestaurantSearchResultCardProps = {
   result: RestaurantSearchResult;
@@ -100,9 +102,10 @@ const styles = StyleSheet.create({
     gap: 13,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
     padding: 15,
+    ...shadows.card,
   },
   selectedCard: {
     borderWidth: 2,
@@ -110,7 +113,8 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   pressedCard: {
-    opacity: 0.75,
+    opacity: 0.82,
+    transform: [{ scale: 0.995 }],
   },
   icon: {
     width: 50,
@@ -118,7 +122,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 16,
-    backgroundColor: '#F7D9CF',
+    backgroundColor: colors.primarySoft,
   },
   selectedIcon: {
     backgroundColor: colors.primary,
@@ -126,7 +130,7 @@ const styles = StyleSheet.create({
   iconText: {
     color: colors.primary,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   selectedIconText: {
     color: colors.white,
@@ -144,32 +148,34 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.text,
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     lineHeight: 21,
   },
   selectedBadge: {
     borderRadius: 999,
-    backgroundColor: '#F7D9CF',
+    backgroundColor: colors.primarySoft,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   selectedBadgeText: {
     color: colors.primary,
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   category: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   location: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 18,
   },
   country: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
   },
 });

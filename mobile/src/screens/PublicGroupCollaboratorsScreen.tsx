@@ -17,6 +17,7 @@ import { getErrorMessage } from '../lib/api';
 import { getPublicGroupCollaborators } from '../services/public-group-member-service';
 import { colors } from '../theme/colors';
 import type { GroupMember } from '../types/group-member';
+import { fonts } from '../theme/fonts';
 
 export default function PublicGroupCollaboratorsScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
@@ -131,10 +132,11 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 18,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   subtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 10,
   },
   loading: {
@@ -160,6 +162,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 10,
     textAlign: 'center',
   },

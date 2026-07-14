@@ -28,6 +28,7 @@ import {
 } from '../../services/notification-service';
 import { colors } from '../../theme/colors';
 import { NotificationPreferences } from '../../types/notification';
+import { fonts } from '../../theme/fonts';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -607,7 +608,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
@@ -629,13 +630,14 @@ const styles = StyleSheet.create({
   introTitle: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   introDescription: {
     maxWidth: 310,
     marginTop: 6,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -649,7 +651,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
@@ -692,12 +694,13 @@ const styles = StyleSheet.create({
   notificationTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   notificationSubtitle: {
     marginTop: 3,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -715,6 +718,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 13,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
   },
 
@@ -726,13 +730,14 @@ const styles = StyleSheet.create({
   loadErrorTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
 
   loadErrorText: {
     marginTop: 7,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -756,7 +761,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: colors.primary,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   saveStatus: {
@@ -769,6 +774,7 @@ const styles = StyleSheet.create({
 
   saveStatusText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
   },
 
@@ -784,6 +790,7 @@ const styles = StyleSheet.create({
 
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },

@@ -15,33 +15,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../contexts/auth-context';
+import { MesaLogo } from '../../components/MesaLogo';
 import { getErrorMessage } from '../../lib/api';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/fonts';
 
 const registerColors = {
-  primary: '#D85C3F',
-  primaryPressed: '#BE4930',
-  inputBorder: '#E4D9D2',
-  inputBackground: '#FFFCFA',
-  divider: '#E6DCD6',
-  errorBackground: '#FFF1EE',
-  errorBorder: '#F0BDB1',
-};
-
-const fonts = {
-  regular:
-    Platform.select({
-      ios: 'System',
-      android: 'sans-serif',
-      default: 'sans-serif',
-    }) ?? 'sans-serif',
-
-  medium:
-    Platform.select({
-      ios: 'System',
-      android: 'sans-serif-medium',
-      default: 'sans-serif',
-    }) ?? 'sans-serif',
+  primary: colors.primary,
+  primaryPressed: colors.primaryPressed,
+  inputBorder: colors.border,
+  inputBackground: colors.inputBackground,
+  divider: colors.border,
+  errorBackground: colors.dangerSoft,
+  errorBorder: '#E7B7AE',
 };
 
 export default function RegisterScreen() {
@@ -127,6 +113,10 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.container}>
+            <View style={styles.brand}>
+              <MesaLogo compact />
+            </View>
+
             <View style={styles.heading}>
               <Text
                 allowFontScaling={false}
@@ -421,6 +411,9 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignSelf: 'center',
   },
+  brand: {
+    marginBottom: 28,
+  },
   heading: {
     gap: 11,
     marginBottom: 31,
@@ -429,7 +422,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontFamily: fonts.medium,
     fontSize: 30,
-    fontWeight: '700',
     letterSpacing: -0.7,
     lineHeight: 36,
   },
@@ -437,7 +429,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontFamily: fonts.regular,
     fontSize: 16,
-    fontWeight: '400',
     lineHeight: 23,
   },
   form: {
@@ -470,7 +461,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontFamily: fonts.medium,
     fontSize: 12,
-    fontWeight: '600',
     lineHeight: 15,
   },
   input: {
@@ -479,7 +469,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontFamily: fonts.regular,
     fontSize: 15,
-    fontWeight: '400',
   },
   passwordInput: {
     paddingRight: 4,
@@ -530,7 +519,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontFamily: fonts.medium,
     fontSize: 16,
-    fontWeight: '600',
     lineHeight: 21,
   },
   divider: {
@@ -549,12 +537,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontFamily: fonts.regular,
     fontSize: 14,
-    fontWeight: '400',
     lineHeight: 20,
   },
   loginStrong: {
     color: registerColors.primary,
     fontFamily: fonts.medium,
-    fontWeight: '600',
   },
 });

@@ -4,9 +4,9 @@ import { colors } from '../theme/colors';
 
 export const tabNavigationColors = {
   active: colors.primary,
-  inactive: '#8D8681',
-  border: '#E6DAD2',
-  background: '#FCF9F7',
+  inactive: '#817873',
+  border: colors.border,
+  background: colors.surface,
 } as const;
 
 export const appTabsStyles = StyleSheet.create({
@@ -26,7 +26,7 @@ export const appTabsStyles = StyleSheet.create({
     borderColor: tabNavigationColors.background,
     borderRadius: 22,
     backgroundColor: colors.primary,
-    shadowColor: '#7E3B2A',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.14,
     shadowRadius: 4,

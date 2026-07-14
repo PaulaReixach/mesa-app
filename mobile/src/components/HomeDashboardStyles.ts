@@ -1,6 +1,7 @@
 import { Platform, StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export const homeBrandFont = Platform.select({
   ios: 'Georgia-Bold',
@@ -55,8 +56,8 @@ export const homeStyles = StyleSheet.create({
   },
   avatarInitial: {
     color: colors.primary,
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '900',
   },
   hero: {
     gap: 6,
@@ -64,13 +65,14 @@ export const homeStyles = StyleSheet.create({
   },
   title: {
     color: colors.text,
+    fontFamily: fonts.bold,
     fontSize: 29,
-    fontWeight: '900',
     letterSpacing: -0.8,
   },
   subtitle: {
     maxWidth: 320,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -88,6 +90,7 @@ export const homeStyles = StyleSheet.create({
   searchText: {
     flex: 1,
     color: '#9B938E',
+    fontFamily: fonts.regular,
     fontSize: 12,
   },
   quickActions: {
@@ -106,8 +109,8 @@ export const homeStyles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.text,
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '900',
     letterSpacing: -0.2,
   },
   sectionAction: {
@@ -117,8 +120,8 @@ export const homeStyles = StyleSheet.create({
   },
   sectionActionText: {
     color: '#5D7444',
+    fontFamily: fonts.bold,
     fontSize: 10,
-    fontWeight: '900',
   },
   groupGrid: {
     flexDirection: 'row',
@@ -156,11 +159,12 @@ export const homeStyles = StyleSheet.create({
   },
   emptyTitle: {
     color: colors.text,
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '900',
   },
   emptySubtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
     lineHeight: 13,
   },
@@ -176,6 +180,7 @@ export const homeStyles = StyleSheet.create({
   },
   loadingText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
   },
   errorCard: {
@@ -202,19 +207,20 @@ export const homeStyles = StyleSheet.create({
   },
   errorTitle: {
     color: colors.danger,
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '900',
   },
   errorText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
     lineHeight: 13,
   },
   retryText: {
     marginTop: 2,
     color: colors.primary,
+    fontFamily: fonts.bold,
     fontSize: 9,
-    fontWeight: '900',
   },
   pressed: {
     opacity: 0.72,

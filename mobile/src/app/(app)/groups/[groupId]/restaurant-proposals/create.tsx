@@ -24,6 +24,7 @@ import { createRestaurantProposal } from '../../../../../services/restaurant-pro
 import { searchRestaurants } from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
 import type { RestaurantSearchResult } from '../../../../../types/restaurant';
+import { fonts } from '../../../../../theme/fonts';
 
 type CreationMode = 'SEARCH' | 'MANUAL';
 
@@ -422,10 +423,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backText: { color: colors.text, fontSize: 31, fontWeight: '300' },
-  headerTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
+  headerTitle: { color: colors.text, fontSize: 15, fontFamily: fonts.bold },
   headerSpacer: { width: 38 },
   heading: { gap: 7 },
-  title: { color: colors.text, fontSize: 25, fontWeight: '900' },
+  title: { color: colors.text, fontSize: 25, fontFamily: fonts.bold },
   subtitle: { color: colors.muted, fontSize: 12, lineHeight: 18 },
   modeSelector: {
     flexDirection: 'row',
@@ -442,11 +443,11 @@ const styles = StyleSheet.create({
     borderRadius: 13,
   },
   activeModeButton: { backgroundColor: colors.surface },
-  modeText: { color: colors.muted, fontSize: 11, fontWeight: '800' },
+  modeText: { color: colors.muted, fontSize: 11, fontFamily: fonts.bold },
   activeModeText: { color: colors.primary },
   section: { gap: 14 },
   results: { gap: 9 },
-  resultsTitle: { color: colors.text, fontSize: 16, fontWeight: '900' },
+  resultsTitle: { color: colors.text, fontSize: 16, fontFamily: fonts.bold },
   attribution: { color: colors.muted, fontSize: 8, textAlign: 'center' },
   emptyCard: {
     gap: 5,
@@ -456,7 +457,7 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     backgroundColor: colors.surface,
   },
-  emptyTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
+  emptyTitle: { color: colors.text, fontSize: 13, fontFamily: fonts.bold },
   emptyText: { color: colors.muted, fontSize: 10, lineHeight: 15 },
   manualShortcut: {
     gap: 3,
@@ -466,8 +467,8 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     backgroundColor: '#FFF8F3',
   },
-  manualShortcutTitle: { color: colors.text, fontSize: 12, fontWeight: '900' },
-  manualShortcutText: { color: colors.primary, fontSize: 10, fontWeight: '800' },
+  manualShortcutTitle: { color: colors.text, fontSize: 12, fontFamily: fonts.bold },
+  manualShortcutText: { color: colors.primary, fontSize: 10, fontFamily: fonts.bold },
   messageSection: { gap: 5 },
   counter: { color: colors.muted, fontSize: 9, textAlign: 'right' },
   error: { color: colors.danger, fontSize: 11, lineHeight: 16 },

@@ -37,6 +37,7 @@ import { colors } from '../../theme/colors';
 import {
   PrivacyPreferences,
 } from '../../types/privacy';
+import { fonts } from '../../theme/fonts';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -645,7 +646,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
@@ -668,7 +669,7 @@ const styles = StyleSheet.create({
   introTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
 
@@ -676,6 +677,7 @@ const styles = StyleSheet.create({
     maxWidth: 310,
     marginTop: 7,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -689,7 +691,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
@@ -736,12 +738,13 @@ const styles = StyleSheet.create({
   settingTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   settingSubtitle: {
     marginTop: 4,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -759,7 +762,7 @@ const styles = StyleSheet.create({
     marginTop: 13,
     color: colors.muted,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   loadError: {
@@ -771,7 +774,7 @@ const styles = StyleSheet.create({
   loadErrorTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
 
@@ -779,6 +782,7 @@ const styles = StyleSheet.create({
     maxWidth: 290,
     marginTop: 8,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -801,7 +805,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: colors.white,
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   saveStatus: {
@@ -816,7 +820,7 @@ const styles = StyleSheet.create({
   saveStatusText: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   errorBox: {
@@ -830,6 +834,7 @@ const styles = StyleSheet.create({
 
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
     textAlign: 'center',

@@ -33,6 +33,7 @@ import { colors } from '../../theme/colors';
 import {
   SupportRequestCategory,
 } from '../../types/support';
+import { fonts } from '../../theme/fonts';
 
 type CategoryOption = {
   value: SupportRequestCategory;
@@ -431,7 +432,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
@@ -440,6 +441,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 30,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 21,
     textAlign: 'center',
@@ -460,14 +462,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: colors.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   characterCount: {
     marginBottom: 8,
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   categories: {
@@ -499,7 +501,7 @@ const styles = StyleSheet.create({
   categoryText: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   categoryTextSelected: {
@@ -515,6 +517,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: colors.surface,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 14,
   },
 
@@ -538,6 +541,7 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -563,13 +567,14 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: colors.white,
     fontSize: 15,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   helperText: {
     marginTop: 13,
     paddingHorizontal: 20,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 16,
     textAlign: 'center',

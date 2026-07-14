@@ -13,6 +13,8 @@ import { useAuth } from '../contexts/auth-context';
 import { resolveApiUrl } from '../lib/api';
 import { colors } from '../theme/colors';
 import { RestaurantGroup } from '../types/group';
+import { fonts } from '../theme/fonts';
+import { radii, shadows } from '../theme/layout';
 
 type GroupCardProps = {
   group: RestaurantGroup;
@@ -144,8 +146,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
   card: {
     flexDirection: 'row',
@@ -154,7 +157,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardPressed: {
-    opacity: 0.75,
+    opacity: 0.82,
+    transform: [{ scale: 0.995 }],
   },
   icon: {
     width: 52,
@@ -163,7 +167,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     borderRadius: 17,
-    backgroundColor: '#F7D9CF',
+    backgroundColor: colors.primarySoft,
   },
   image: {
     width: '100%',
@@ -172,7 +176,7 @@ const styles = StyleSheet.create({
   iconText: {
     color: colors.primary,
     fontSize: 21,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   content: {
     flex: 1,
@@ -187,31 +191,33 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   badge: {
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: '#E8F1EB',
+    backgroundColor: colors.successSoft,
   },
   badgeText: {
     color: colors.success,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   description: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 19,
   },
   location: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
   arrow: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 28,
     fontWeight: '300',
   },
@@ -223,7 +229,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
-    backgroundColor: '#FFF8F3',
+    backgroundColor: colors.surfaceMuted,
   },
   manageButtonPressed: {
     opacity: 0.72,
@@ -232,11 +238,11 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.primary,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   manageArrow: {
     color: colors.primary,
     fontSize: 19,
-    fontWeight: '400',
+    fontFamily: fonts.regular,
   },
 });

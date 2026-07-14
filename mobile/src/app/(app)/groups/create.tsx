@@ -40,6 +40,7 @@ import { colors } from '../../../theme/colors';
 import {
   GroupPrivacy,
 } from '../../../types/group';
+import { fonts } from '../../../theme/fonts';
 
 const MAXIMUM_GROUP_IMAGE_SIZE =
   5 * 1024 * 1024;
@@ -1029,7 +1030,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
@@ -1086,7 +1087,7 @@ const styles = StyleSheet.create({
     marginTop: 9,
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   form: {
@@ -1100,11 +1101,12 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   fieldHint: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -1125,6 +1127,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 13,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 14,
   },
 
@@ -1162,12 +1165,13 @@ const styles = StyleSheet.create({
   optionTitle: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   optionSubtitle: {
     marginTop: 3,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -1207,7 +1211,7 @@ const styles = StyleSheet.create({
   inviteChipText: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   errorBox: {
@@ -1224,6 +1228,7 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -1248,6 +1253,6 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: colors.white,
     fontSize: 15,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 });

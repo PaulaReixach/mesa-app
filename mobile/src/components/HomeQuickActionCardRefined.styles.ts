@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export const quickActionStyles = StyleSheet.create({
   card: {
@@ -37,8 +38,8 @@ export const quickActionStyles = StyleSheet.create({
     borderRadius: 9,
     backgroundColor: '#F8E3DA',
   },
-  badgeText: { color: colors.primary, fontSize: 8, fontWeight: '900' },
-  title: { color: colors.text, fontSize: 10, fontWeight: '900' },
+  badgeText: { color: colors.primary, fontSize: 8, fontFamily: fonts.bold },
+  title: { color: colors.text, fontSize: 10, fontFamily: fonts.bold },
   subtitle: { color: colors.muted, fontSize: 8, lineHeight: 11 },
   pressed: { opacity: 0.74 },
 });

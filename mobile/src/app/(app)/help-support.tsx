@@ -16,6 +16,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/fonts';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -375,7 +376,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
@@ -398,7 +399,7 @@ const styles = StyleSheet.create({
   introTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
 
@@ -406,6 +407,7 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     marginTop: 7,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -419,7 +421,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
@@ -462,12 +464,13 @@ const styles = StyleSheet.create({
   actionTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   actionSubtitle: {
     marginTop: 4,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -502,7 +505,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     lineHeight: 19,
   },
 
@@ -510,6 +513,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 17,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
   },
@@ -518,6 +522,7 @@ const styles = StyleSheet.create({
     marginTop: -4,
     paddingHorizontal: 24,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
     textAlign: 'center',

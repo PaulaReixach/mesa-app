@@ -27,6 +27,8 @@ import { getErrorMessage } from '../../../lib/api';
 import { getPublicGroups } from '../../../services/group-service';
 import { colors } from '../../../theme/colors';
 import type { PublicGroupSummary } from '../../../types/group';
+import { fonts } from '../../../theme/fonts';
+import { radii, shadows } from '../../../theme/layout';
 
 export default function ExploreGroupsScreen() {
   const { accessToken } = useAuth();
@@ -297,10 +299,11 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 27,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   subtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -311,19 +314,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 22,
     backgroundColor: colors.primary,
+    ...shadows.card,
   },
   tabs: {
     minHeight: 42,
     flexDirection: 'row',
     padding: 4,
-    borderRadius: 16,
-    backgroundColor: '#F1E9E4',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceMuted,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 13,
+    borderRadius: radii.sm,
   },
   tabActive: {
     backgroundColor: colors.primary,
@@ -331,27 +337,28 @@ const styles = StyleSheet.create({
   tabText: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   tabTextActive: {
     color: colors.white,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   searchBar: {
-    minHeight: 48,
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 16,
+    borderRadius: radii.md,
     backgroundColor: colors.inputBackground,
   },
   searchInput: {
     flex: 1,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 13,
   },
   centered: {
@@ -368,12 +375,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   count: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   list: {
     gap: 11,
@@ -383,22 +390,24 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
   messageTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   messageText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
   retryText: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
 });

@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export function HomeInvitationBanner({
   count,
@@ -80,16 +81,17 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   subtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 8,
   },
   action: {
     color: '#5D7444',
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   pressed: {
     opacity: 0.74,

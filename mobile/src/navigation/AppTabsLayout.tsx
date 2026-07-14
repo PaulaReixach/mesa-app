@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { appTabsStyles as styles, tabNavigationColors as navigationColors } from './AppTabsLayout.styles';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 const hiddenScreenOptions = {
   href: null,
@@ -31,7 +32,7 @@ export default function AppTabsLayout() {
         tabBarLabelStyle: {
           marginTop: 0,
           fontSize: 10,
-          fontWeight: '500',
+          fontFamily: fonts.medium,
           lineHeight: 13,
         },
         tabBarStyle: {
@@ -41,7 +42,7 @@ export default function AppTabsLayout() {
           borderTopWidth: 1,
           borderTopColor: navigationColors.border,
           backgroundColor: navigationColors.background,
-          shadowColor: '#2B2421',
+          shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.03,
           shadowRadius: 5,
@@ -132,8 +133,8 @@ export default function AppTabsLayout() {
             <Text
               style={{
                 color: highlightGroups ? navigationColors.active : color,
+                fontFamily: highlightGroups ? fonts.semiBold : fonts.medium,
                 fontSize: 10,
-                fontWeight: highlightGroups ? '600' : '500',
                 lineHeight: 13,
               }}
             >

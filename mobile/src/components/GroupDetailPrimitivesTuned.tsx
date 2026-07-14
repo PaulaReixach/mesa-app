@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export {
   EmptyTab,
@@ -138,12 +139,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
     lineHeight: 15,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   label: {
     color: colors.muted,
     fontSize: 8,
     lineHeight: 10,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 });

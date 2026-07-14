@@ -34,6 +34,7 @@ import {
   uploadCurrentUserAvatar,
 } from '../../services/profile-service';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/fonts';
 
 type EditFieldProps = TextInputProps & {
   label: string;
@@ -724,7 +725,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
@@ -768,7 +769,7 @@ const styles = StyleSheet.create({
   avatarFallbackText: {
     color: colors.white,
     fontSize: 38,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   cameraBadge: {
@@ -788,12 +789,13 @@ const styles = StyleSheet.create({
   avatarTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   avatarDescription: {
     marginTop: 5,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 18,
     textAlign: 'center',
@@ -810,7 +812,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   inputContainer: {
@@ -829,6 +831,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 0,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 15,
   },
 
@@ -846,11 +849,12 @@ const styles = StyleSheet.create({
   atSymbol: {
     color: colors.primary,
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   fieldHint: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -867,6 +871,7 @@ const styles = StyleSheet.create({
 
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -894,6 +899,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: colors.white,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 });

@@ -10,6 +10,8 @@ import {
 import { resolveApiUrl } from '../lib/api';
 import { colors } from '../theme/colors';
 import type { PublicGroupSummary } from '../types/group';
+import { fonts } from '../theme/fonts';
+import { radii, shadows } from '../theme/layout';
 
 type PublicGroupCardProps = {
   group: PublicGroupSummary;
@@ -135,18 +137,20 @@ const styles = StyleSheet.create({
     padding: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
   cardPressed: {
-    opacity: 0.72,
+    opacity: 0.82,
+    transform: [{ scale: 0.995 }],
   },
   imageContainer: {
     width: 78,
     height: 78,
     overflow: 'hidden',
     borderRadius: 18,
-    backgroundColor: '#F3DED5',
+    backgroundColor: colors.primarySoft,
   },
   image: {
     width: '100%',
@@ -160,7 +164,7 @@ const styles = StyleSheet.create({
   imageInitial: {
     color: colors.primary,
     fontSize: 28,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   content: {
     flex: 1,
@@ -176,12 +180,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     lineHeight: 18,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   owner: {
     color: colors.primary,
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   metaRow: {
     flexDirection: 'row',
@@ -196,6 +200,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
   },
   locationRow: {
@@ -205,6 +210,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
   },
   followingBadge: {
@@ -214,11 +220,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: '#E8EEDD',
+    backgroundColor: colors.oliveSoft,
   },
   followingText: {
     color: '#607349',
     fontSize: 8,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
 });

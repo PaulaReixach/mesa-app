@@ -33,6 +33,7 @@ import type {
   RestaurantGroup,
 } from '../../../../../types/group';
 import type { GroupRestaurant } from '../../../../../types/restaurant';
+import { fonts } from '../../../../../theme/fonts';
 
 function SelectableRestaurant({
   item,
@@ -625,7 +626,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   content: {
     flexGrow: 1,
@@ -640,6 +641,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
   },
   introCard: {
@@ -653,16 +655,17 @@ const styles = StyleSheet.create({
   eyebrow: {
     color: colors.primary,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
   },
   introTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   introText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -678,17 +681,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   sectionSubtitle: {
     marginTop: 3,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 10,
   },
   selectAllText: {
     color: colors.primary,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   list: {
     gap: 9,
@@ -723,10 +727,11 @@ const styles = StyleSheet.create({
   restaurantName: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   restaurantMeta: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
   },
   destinationCard: {
@@ -755,7 +760,7 @@ const styles = StyleSheet.create({
   destinationInitialText: {
     color: colors.primary,
     fontSize: 17,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   destinationText: {
     flex: 1,
@@ -764,10 +769,11 @@ const styles = StyleSheet.create({
   destinationName: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   destinationMeta: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
   },
   primaryButton: {
@@ -784,7 +790,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: colors.white,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   secondaryButton: {
     minHeight: 48,
@@ -799,7 +805,7 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   messageCard: {
     gap: 9,
@@ -812,17 +818,18 @@ const styles = StyleSheet.create({
   messageTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   messageText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
   retryText: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   errorCard: {
     padding: 14,
@@ -831,6 +838,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -854,11 +862,12 @@ const styles = StyleSheet.create({
   resultTitle: {
     color: colors.text,
     fontSize: 21,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   resultText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',
@@ -866,7 +875,7 @@ const styles = StyleSheet.create({
   destinationSummary: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   pressed: {

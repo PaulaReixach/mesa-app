@@ -34,6 +34,8 @@ import type {
   PublicGroupSummary,
   RestaurantGroup,
 } from '../../../types/group';
+import { fonts } from '../../../theme/fonts';
+import { radii, shadows } from '../../../theme/layout';
 
 type AddMode = 'SEARCH' | 'MANUAL';
 
@@ -493,7 +495,7 @@ const styles = StyleSheet.create({
   selectionTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   header: {
     flexDirection: 'row',
@@ -507,10 +509,11 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 27,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   subtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -521,19 +524,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 22,
     backgroundColor: colors.primary,
+    ...shadows.card,
   },
   tabs: {
     minHeight: 42,
     flexDirection: 'row',
     padding: 4,
-    borderRadius: 16,
-    backgroundColor: '#F1E9E4',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceMuted,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 13,
+    borderRadius: radii.sm,
   },
   tabActive: {
     backgroundColor: colors.primary,
@@ -541,12 +547,12 @@ const styles = StyleSheet.create({
   tabText: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   tabTextActive: {
     color: colors.white,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   modeBadge: {
     alignSelf: 'flex-start',
@@ -561,7 +567,7 @@ const styles = StyleSheet.create({
   modeText: {
     color: colors.primary,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   centered: {
     alignItems: 'center',
@@ -583,15 +589,16 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   sectionCount: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   sectionDescription: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -604,7 +611,7 @@ const styles = StyleSheet.create({
   followingBadgeText: {
     color: '#607349',
     fontSize: 8,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   collaborationBadge: {
     paddingHorizontal: 7,
@@ -615,7 +622,7 @@ const styles = StyleSheet.create({
   collaborationBadgeText: {
     color: colors.primary,
     fontSize: 8,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   list: {
     gap: 13,
@@ -626,8 +633,9 @@ const styles = StyleSheet.create({
     padding: 28,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 24,
+    borderRadius: radii.xl,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
   emptyIcon: {
     width: 64,
@@ -640,11 +648,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   emptyText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',
@@ -660,7 +669,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: colors.white,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   secondaryButton: {
     minHeight: 46,
@@ -675,29 +684,31 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   messageCard: {
     gap: 8,
     padding: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
   messageTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   messageText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
   retryText: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
 });

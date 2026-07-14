@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export const groupCardStyles = StyleSheet.create({
   card: {
@@ -30,7 +31,7 @@ export const groupCardStyles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.94)',
   },
-  privacyText: { color: '#5C7842', fontSize: 7, fontWeight: '800' },
+  privacyText: { color: '#5C7842', fontSize: 7, fontFamily: fonts.bold },
   bottomContent: {
     position: 'absolute',
     right: 9,
@@ -41,11 +42,11 @@ export const groupCardStyles = StyleSheet.create({
   title: {
     color: colors.white,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     letterSpacing: -0.15,
   },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  locationText: { flex: 1, color: colors.white, fontSize: 8, fontWeight: '600' },
+  locationText: { flex: 1, color: colors.white, fontSize: 8, fontFamily: fonts.semiBold },
   avatarStack: {
     minHeight: 24,
     flexDirection: 'row',
@@ -64,7 +65,7 @@ export const groupCardStyles = StyleSheet.create({
     backgroundColor: '#F4DFD5',
   },
   avatarImage: { width: '100%', height: '100%' },
-  avatarInitial: { color: colors.primary, fontSize: 8, fontWeight: '900' },
+  avatarInitial: { color: colors.primary, fontSize: 8, fontFamily: fonts.bold },
   avatarOverlap: { marginLeft: -6 },
   moreAvatar: {
     width: 23,
@@ -76,7 +77,7 @@ export const groupCardStyles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'rgba(65,55,49,0.72)',
   },
-  moreAvatarText: { color: colors.white, fontSize: 7, fontWeight: '900' },
+  moreAvatarText: { color: colors.white, fontSize: 7, fontFamily: fonts.bold },
   emptyAvatar: {
     width: 24,
     height: 24,

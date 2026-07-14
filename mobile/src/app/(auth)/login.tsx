@@ -16,33 +16,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../contexts/auth-context';
+import { MesaLogo } from '../../components/MesaLogo';
 import { getErrorMessage } from '../../lib/api';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/fonts';
 
 const loginColors = {
-  primary: '#D85C3F',
-  primaryPressed: '#BD4931',
-  inputBorder: '#E4D9D2',
-  inputBackground: '#FFFCFA',
-  divider: '#E6DCD6',
-  errorBackground: '#FFF1EE',
-  errorBorder: '#F0BDB1',
-};
-
-const fonts = {
-  regular:
-    Platform.select({
-      ios: 'System',
-      android: 'sans-serif',
-      default: 'sans-serif',
-    }) ?? 'sans-serif',
-
-  medium:
-    Platform.select({
-      ios: 'System',
-      android: 'sans-serif-medium',
-      default: 'sans-serif',
-    }) ?? 'sans-serif',
+  primary: colors.primary,
+  primaryPressed: colors.primaryPressed,
+  inputBorder: colors.border,
+  inputBackground: colors.inputBackground,
+  divider: colors.border,
+  errorBackground: colors.dangerSoft,
+  errorBorder: '#E7B7AE',
 };
 
 export default function LoginScreen() {
@@ -131,6 +117,10 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.container}>
+            <View style={styles.brand}>
+              <MesaLogo compact />
+            </View>
+
             <View style={styles.heading}>
               <Text
                 allowFontScaling={false}
@@ -383,11 +373,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     alignSelf: 'center',
-    transform: [
-      {
-        translateY: 8,
-      },
-    ],
+  },
+  brand: {
+    marginBottom: 34,
   },
   heading: {
     gap: 10,
@@ -397,7 +385,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontFamily: fonts.medium,
     fontSize: 30,
-    fontWeight: '700',
     letterSpacing: -0.7,
     lineHeight: 33,
   },
@@ -405,7 +392,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontFamily: fonts.regular,
     fontSize: 15,
-    fontWeight: '400',
     lineHeight: 22,
   },
   fields: {
@@ -418,7 +404,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontFamily: fonts.medium,
     fontSize: 14,
-    fontWeight: '600',
     lineHeight: 18,
   },
   inputContainer: {
@@ -439,7 +424,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontFamily: fonts.regular,
     fontSize: 15,
-    fontWeight: '400',
   },
   passwordInput: {
     paddingRight: 0,
@@ -478,14 +462,12 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontFamily: fonts.medium,
     fontSize: 12,
-    fontWeight: '700',
     lineHeight: 14,
   },
   rememberText: {
     color: colors.muted,
     fontFamily: fonts.regular,
     fontSize: 13,
-    fontWeight: '500',
     lineHeight: 18,
   },
   errorContainer: {
@@ -524,7 +506,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontFamily: fonts.medium,
     fontSize: 16,
-    fontWeight: '600',
     lineHeight: 20,
   },
   forgotButton: {
@@ -536,7 +517,6 @@ const styles = StyleSheet.create({
     color: loginColors.primary,
     fontFamily: fonts.medium,
     fontSize: 13,
-    fontWeight: '600',
     lineHeight: 18,
   },
   divider: {
@@ -554,12 +534,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontFamily: fonts.regular,
     fontSize: 13,
-    fontWeight: '400',
     lineHeight: 18,
   },
   registerStrong: {
     color: loginColors.primary,
     fontFamily: fonts.medium,
-    fontWeight: '600',
   },
 });
