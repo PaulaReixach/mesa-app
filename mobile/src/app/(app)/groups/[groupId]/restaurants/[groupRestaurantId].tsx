@@ -7,6 +7,7 @@ import {
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,6 +23,7 @@ import {
 } from '../../../../../components/RestaurantStatusSection';
 import { useAuth } from '../../../../../contexts/auth-context';
 import { getErrorMessage } from '../../../../../lib/api';
+import { getRestaurantFallbackImage } from '../../../../../lib/restaurant-images';
 import { getGroup } from '../../../../../services/group-service';
 import { getGroupRestaurant } from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
@@ -178,46 +180,32 @@ export default function RestaurantDetailScreen() {
         && group ? (
           <>
             <View style={styles.hero}>
-              <View style={styles.artwork}>
-                <View style={styles.artworkIcon}>
-                  <SymbolView
-                    name={{
-                      ios: 'fork.knife',
-                      android: 'restaurant',
-                      web: 'restaurant',
-                    }}
-                    size={38}
-                    tintColor={colors.primary}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.heroBody}>
-                <Text style={styles.eyebrow}>
-                  {restaurant.category?.toUpperCase()
-                    ?? 'RESTAURANTE'}
-                </Text>
-                <Text style={styles.name}>
-                  {restaurant.name}
-                </Text>
-                {canManageRestaurant ? (
-                  <View
-                    style={[
-                      styles.status,
-                      { backgroundColor: status.backgroundColor },
-                    ]}
-                  >
-                    <Text
+              <ImageBackground
+                imageStyle={styles.artworkImage}
+                resizeMode="cover"
+                source={{ uri: getRestaurantFallbackImage(restaurant.name) }}
+                style={styles.artwork}
+              >
+                <View style={styles.artworkOverlay} />
+                <View style={styles.heroBody}>
+                  <Text style={styles.eyebrow}>
+                    {restaurant.category?.toUpperCase() ?? 'RESTAURANTE'}
+                  </Text>
+                  <Text style={styles.name}>{restaurant.name}</Text>
+                  {canManageRestaurant ? (
+                    <View
                       style={[
-                        styles.statusText,
-                        { color: status.textColor },
+                        styles.status,
+                        { backgroundColor: status.backgroundColor },
                       ]}
                     >
-                      {status.label}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
+                      <Text style={[styles.statusText, { color: status.textColor }]}>
+                        {status.label}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </ImageBackground>
             </View>
 
             <View style={styles.section}>
@@ -325,41 +313,39 @@ const styles = StyleSheet.create({
   },
   hero: {
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 24,
+    minHeight: 278,
+    borderRadius: 28,
     backgroundColor: colors.surface,
   },
   artwork: {
-    height: 170,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F1DED5',
+    minHeight: 278,
+    justifyContent: 'flex-end',
   },
-  artworkIcon: {
-    width: 88,
-    height: 88,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 44,
-    backgroundColor: colors.background,
+  artworkImage: {
+    borderRadius: 28,
+  },
+  artworkOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(31, 22, 18, 0.42)',
   },
   heroBody: {
     alignItems: 'flex-start',
     gap: 8,
-    padding: 18,
+    padding: 20,
   },
   eyebrow: {
-    color: colors.primary,
+    color: colors.white,
     fontSize: 9,
     fontFamily: fonts.bold,
     letterSpacing: 1,
   },
   name: {
-    color: colors.text,
-    fontSize: 25,
-    lineHeight: 31,
+    maxWidth: 310,
+    color: colors.white,
+    fontSize: 29,
+    lineHeight: 34,
     fontFamily: fonts.bold,
+    letterSpacing: -0.75,
   },
   status: {
     paddingHorizontal: 10,

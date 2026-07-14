@@ -38,6 +38,7 @@ import {
   PrivacyPreferences,
 } from '../../types/privacy';
 import { fonts } from '../../theme/fonts';
+import { radii, shadows } from '../../theme/layout';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -651,9 +652,13 @@ const styles = StyleSheet.create({
   },
 
   intro: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 34,
-    paddingHorizontal: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#D7DEC5',
+    borderRadius: radii.xl,
+    backgroundColor: colors.oliveSoft,
   },
 
   introIcon: {
@@ -662,15 +667,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    borderRadius: 34,
-    backgroundColor: '#F7E8E2',
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.66)',
   },
 
   introTitle: {
     color: colors.text,
     fontSize: 20,
     fontFamily: fonts.bold,
-    textAlign: 'center',
+    textAlign: 'left',
   },
 
   introDescription: {
@@ -680,7 +685,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
-    textAlign: 'center',
+    textAlign: 'left',
   },
 
   section: {
@@ -697,8 +702,12 @@ const styles = StyleSheet.create({
   },
 
   sectionContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   settingRow: {
@@ -706,6 +715,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,
+    paddingHorizontal: 13,
   },
 
   settingRowBorder: {
@@ -727,7 +737,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 19,
-    backgroundColor: '#F7EEE9',
+    backgroundColor: colors.oliveSoft,
   },
 
   settingText: {

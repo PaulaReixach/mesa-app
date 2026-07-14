@@ -1,7 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import type { Href } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { HomeActivityRow, type HomeActivityEntry } from './HomeActivityRow';
 import { HomeGroupCard } from './HomeGroupCard';
@@ -26,7 +26,7 @@ export function HomeDashboardContentRefined({
   pendingInvitationCount: number;
   recommendation: HomeRecommendation | null;
 }) {
-  const visibleGroups = groups.slice(0, 2);
+  const visibleGroups = groups.slice(0, 4);
 
   function openGroup(group: RestaurantGroup): void {
     if (group.privacy === 'PUBLIC') {
@@ -53,17 +53,24 @@ export function HomeDashboardContentRefined({
     <>
       <View style={[styles.section, refined.section]}>
         <View style={[styles.sectionHeader, refined.sectionHeader]}>
-          <Text style={[styles.sectionTitle, refined.sectionTitle]}>Tus grupos</Text>
+          <View style={styles.sectionHeadingCopy}>
+            <Text style={[styles.sectionTitle, refined.sectionTitle]}>Tus grupos</Text>
+            <Text style={styles.sectionCaption}>Elige una mesa y sigue organizando.</Text>
+          </View>
           <Pressable onPress={() => router.push('/groups')} style={[styles.sectionAction, refined.sectionAction]}>
             <Text style={[styles.sectionActionText, refined.sectionActionText]}>
-              Ver todos ({groups.length})
+              Ver todos
             </Text>
             <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={13} tintColor="#5D7444" />
           </Pressable>
         </View>
 
         {visibleGroups.length > 0 ? (
-          <View style={[styles.groupGrid, refined.groupGrid]}>
+          <ScrollView
+            contentContainerStyle={[styles.groupGrid, refined.groupGrid]}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          >
             {visibleGroups.map(group => (
               <HomeGroupCard
                 group={group}
@@ -72,7 +79,7 @@ export function HomeDashboardContentRefined({
                 onPress={() => openGroup(group)}
               />
             ))}
-          </View>
+          </ScrollView>
         ) : (
           <Pressable
             onPress={() => router.push('/groups/create')}
@@ -96,9 +103,24 @@ export function HomeDashboardContentRefined({
         <HomeInvitationBanner count={pendingInvitationCount} onPress={() => router.push('/group-invitations')} />
       ) : null}
 
+      {recommendation ? (
+        <View style={[styles.section, refined.section]}>
+          <View style={[styles.sectionHeader, refined.sectionHeader]}>
+            <View style={styles.sectionHeadingCopy}>
+              <Text style={[styles.sectionTitle, refined.sectionTitle]}>Una buena opción</Text>
+              <Text style={styles.sectionCaption}>La mejor valorada entre tus grupos.</Text>
+            </View>
+          </View>
+          <HomeRecommendationCard onPress={openRecommendation} recommendation={recommendation} />
+        </View>
+      ) : null}
+
       <View style={[styles.section, refined.section]}>
         <View style={[styles.sectionHeader, refined.sectionHeader]}>
-          <Text style={[styles.sectionTitle, refined.sectionTitle]}>Actividad reciente</Text>
+          <View style={styles.sectionHeadingCopy}>
+            <Text style={[styles.sectionTitle, refined.sectionTitle]}>Actividad reciente</Text>
+            <Text style={styles.sectionCaption}>Lo último que ha pasado en tus mesas.</Text>
+          </View>
           <Pressable onPress={() => router.push('/notifications')} style={[styles.sectionAction, refined.sectionAction]}>
             <Text style={[styles.sectionActionText, refined.sectionActionText]}>Ver toda</Text>
             <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={13} tintColor="#5D7444" />
@@ -124,9 +146,6 @@ export function HomeDashboardContentRefined({
         )}
       </View>
 
-      {recommendation ? (
-        <HomeRecommendationCard onPress={openRecommendation} recommendation={recommendation} />
-      ) : null}
     </>
   );
 }

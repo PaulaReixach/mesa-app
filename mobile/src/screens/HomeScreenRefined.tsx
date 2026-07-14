@@ -142,6 +142,7 @@ export default function HomeScreenRefined() {
 
   const avatarUri = user?.avatarUrl ? resolveApiUrl(user.avatarUrl) : null;
   const userInitial = user?.name?.charAt(0).toUpperCase() ?? '?';
+  const userName = user?.name?.trim().split(/\s+/)[0] || 'de nuevo';
 
   return (
     <SafeAreaView
@@ -162,6 +163,7 @@ export default function HomeScreenRefined() {
         <HomeHeader
           avatarUri={avatarUri}
           pendingInvitationCount={pendingInvitationCount}
+          userName={userName}
           userInitial={userInitial}
         />
 

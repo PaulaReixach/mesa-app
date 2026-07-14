@@ -11,10 +11,12 @@ import { colors } from '../theme/colors';
 export function HomeHeader({
   avatarUri,
   pendingInvitationCount,
+  userName,
   userInitial,
 }: {
   avatarUri: string | null;
   pendingInvitationCount: number;
+  userName: string;
   userInitial: string;
 }) {
   return (
@@ -44,9 +46,10 @@ export function HomeHeader({
       </View>
 
       <View style={[styles.hero, refined.hero]}>
+        <Text style={styles.greeting}>Hola, {userName}</Text>
         <Text style={[styles.title, refined.title]}>¿Qué te apetece hoy?</Text>
         <Text style={[styles.subtitle, refined.subtitle]}>
-          Descubre restaurantes increíbles y organiza planes con tus grupos.
+          Guarda ideas, compara opiniones y convierte el “ya veremos” en un plan.
         </Text>
       </View>
 
@@ -73,7 +76,7 @@ export function HomeHeader({
         <HomeQuickActionCardRefined
           icon={{ ios: 'person.2.fill', android: 'group_add', web: 'group_add' }}
           onPress={() => router.push('/groups/create')}
-          subtitle="Reúne a tus amigos y organizad juntos"
+          subtitle="Organiza una lista con tu gente"
           title="Crear grupo"
         />
         <HomeQuickActionCardRefined
@@ -82,14 +85,8 @@ export function HomeHeader({
           onPress={() => router.push('/group-invitations')}
           subtitle={pendingInvitationCount > 0
             ? `Tienes ${pendingInvitationCount} pendientes`
-            : 'No tienes nada pendiente'}
+            : 'Todo al día por aquí'}
           title="Invitaciones"
-        />
-        <HomeQuickActionCardRefined
-          icon={{ ios: 'safari.fill', android: 'explore', web: 'explore' }}
-          onPress={() => router.push('/map')}
-          subtitle="Restaurantes y planes para inspirarte"
-          title="Descubrir"
           tone="sage"
         />
       </View>

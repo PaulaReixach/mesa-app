@@ -17,6 +17,7 @@ import {
 
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/fonts';
+import { radii, shadows } from '../../theme/layout';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -381,9 +382,14 @@ const styles = StyleSheet.create({
   },
 
   intro: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 34,
-    paddingHorizontal: 16,
+    padding: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#EACCC1',
+    borderRadius: radii.xl,
+    backgroundColor: colors.primarySoft,
   },
 
   introIcon: {
@@ -391,16 +397,16 @@ const styles = StyleSheet.create({
     height: 68,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
-    borderRadius: 34,
-    backgroundColor: '#F7E8E2',
+    marginBottom: 16,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.66)',
   },
 
   introTitle: {
     color: colors.text,
     fontSize: 20,
     fontFamily: fonts.bold,
-    textAlign: 'center',
+    textAlign: 'left',
   },
 
   introDescription: {
@@ -410,7 +416,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
-    textAlign: 'center',
+    textAlign: 'left',
   },
 
   section: {
@@ -427,8 +433,12 @@ const styles = StyleSheet.create({
   },
 
   sectionContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   actionRow: {
@@ -436,6 +446,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,
+    paddingHorizontal: 13,
   },
 
   actionRowBorder: {
@@ -453,7 +464,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 19,
-    backgroundColor: '#F7EEE9',
+    backgroundColor: colors.primarySoft,
   },
 
   actionText: {

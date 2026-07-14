@@ -17,6 +17,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,6 +52,7 @@ export default function GroupsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   const addMode: AddMode | null =
     addModeParam === 'SEARCH' || addModeParam === 'MANUAL'
@@ -150,13 +152,33 @@ export default function GroupsScreen() {
     router.push(`/groups/public/${groupId}` as Href);
   }
 
-  const displayedGroups = selectingGroup
+  const baseDisplayedGroups = selectingGroup
     ? selectableGroups
     : regularGroups;
+  const normalizedQuery = query.trim().toLocaleLowerCase('es');
+  const matchesQuery = useCallback((value: {
+    city: string | null;
+    description: string | null;
+    name: string;
+  }) => {
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    return [value.name, value.description, value.city]
+      .filter(Boolean)
+      .some(field => field?.toLocaleLowerCase('es').includes(normalizedQuery));
+  }, [normalizedQuery]);
+  const displayedGroups = baseDisplayedGroups.filter(matchesQuery);
+  const visibleCollaboratingGroups = collaboratingGroups.filter(matchesQuery);
+  const visibleFollowedGroups = followedGroups.filter(matchesQuery);
   const hasAnyGroup =
     regularGroups.length > 0
     || collaboratingGroups.length > 0
     || followedGroups.length > 0;
+  const hasSearchResults = displayedGroups.length > 0
+    || visibleCollaboratingGroups.length > 0
+    || visibleFollowedGroups.length > 0;
 
   return (
     <SafeAreaView
@@ -201,14 +223,14 @@ export default function GroupsScreen() {
         <View style={styles.header}>
           <View style={styles.headerText}>
             <Text style={styles.title}>
-              {selectingGroup ? '¿Dónde lo guardamos?' : 'Grupos'}
+              {selectingGroup ? '¿Dónde lo guardamos?' : 'Tus grupos'}
             </Text>
             <Text style={styles.subtitle}>
               {selectingGroup
                 ? addMode === 'MANUAL'
                   ? 'Selecciona el grupo donde quieres crear el restaurante.'
                   : 'Selecciona el grupo donde quieres añadir el restaurante.'
-                : 'Guarda, comparte y descubre restaurantes.'}
+                : 'Tus listas, tus personas y todos los sitios que queréis probar.'}
             </Text>
           </View>
 
@@ -222,6 +244,9 @@ export default function GroupsScreen() {
               size={23}
               tintColor={colors.white}
             />
+            {!selectingGroup ? (
+              <Text style={styles.createButtonText}>Nuevo</Text>
+            ) : null}
           </Pressable>
         </View>
 
@@ -266,6 +291,34 @@ export default function GroupsScreen() {
             </Text>
           </View>
         )}
+
+        {!selectingGroup && hasAnyGroup ? (
+          <View style={styles.searchBar}>
+            <SymbolView
+              name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+              size={18}
+              tintColor={colors.muted}
+            />
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={setQuery}
+              placeholder="Buscar por nombre, ciudad..."
+              placeholderTextColor={colors.muted}
+              style={styles.searchInput}
+              value={query}
+            />
+            {query ? (
+              <Pressable accessibilityLabel="Limpiar búsqueda" onPress={() => setQuery('')}>
+                <SymbolView
+                  name={{ ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' }}
+                  size={18}
+                  tintColor={colors.muted}
+                />
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
 
         {loading ? (
           <View style={styles.centered}>
@@ -364,6 +417,20 @@ export default function GroupsScreen() {
           </View>
         ) : null}
 
+        {!loading
+        && !error
+        && !selectingGroup
+        && hasAnyGroup
+        && query.trim()
+        && !hasSearchResults ? (
+          <View style={styles.messageCard}>
+            <Text style={styles.messageTitle}>No encontramos ese grupo</Text>
+            <Text style={styles.messageText}>
+              Prueba con otro nombre o con la ciudad donde lo creaste.
+            </Text>
+          </View>
+        ) : null}
+
         {!loading && !error && displayedGroups.length > 0 ? (
           <View style={styles.section}>
             {!selectingGroup ? (
@@ -392,7 +459,7 @@ export default function GroupsScreen() {
         {!loading
         && !error
         && !selectingGroup
-        && collaboratingGroups.length > 0 ? (
+        && visibleCollaboratingGroups.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleRow}>
@@ -406,7 +473,7 @@ export default function GroupsScreen() {
                 </View>
               </View>
               <Text style={styles.sectionCount}>
-                {collaboratingGroups.length}
+                  {visibleCollaboratingGroups.length}
               </Text>
             </View>
 
@@ -415,7 +482,7 @@ export default function GroupsScreen() {
             </Text>
 
             <View style={styles.list}>
-              {collaboratingGroups.map(group => (
+              {visibleCollaboratingGroups.map(group => (
                 <GroupCard
                   key={group.id}
                   group={group}
@@ -429,7 +496,7 @@ export default function GroupsScreen() {
         {!loading
         && !error
         && !selectingGroup
-        && followedGroups.length > 0 ? (
+        && visibleFollowedGroups.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleRow}>
@@ -443,7 +510,7 @@ export default function GroupsScreen() {
                 </View>
               </View>
               <Text style={styles.sectionCount}>
-                {followedGroups.length}
+                  {visibleFollowedGroups.length}
               </Text>
             </View>
 
@@ -452,7 +519,7 @@ export default function GroupsScreen() {
             </Text>
 
             <View style={styles.list}>
-              {followedGroups.map(group => (
+              {visibleFollowedGroups.map(group => (
                 <PublicGroupCard
                   key={group.id}
                   group={group}
@@ -474,10 +541,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: 20,
+    gap: 22,
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 34,
+    paddingBottom: 118,
   },
   selectionHeader: {
     minHeight: 44,
@@ -499,8 +566,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+    alignItems: 'flex-start',
+    gap: 14,
   },
   headerText: {
     flex: 1,
@@ -508,51 +575,80 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 27,
+    fontSize: 31,
+    lineHeight: 37,
     fontFamily: fonts.bold,
+    letterSpacing: -0.8,
   },
   subtitle: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 18,
   },
   createButton: {
-    width: 44,
-    height: 44,
+    minHeight: 44,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 22,
+    gap: 5,
+    paddingHorizontal: 13,
+    borderRadius: 16,
     backgroundColor: colors.primary,
     ...shadows.card,
   },
+  createButtonText: {
+    color: colors.white,
+    fontFamily: fonts.semiBold,
+    fontSize: 11,
+  },
   tabs: {
-    minHeight: 42,
+    minHeight: 48,
     flexDirection: 'row',
     padding: 4,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
+    borderRadius: radii.lg,
     backgroundColor: colors.surfaceMuted,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.sm,
+    borderRadius: radii.md,
   },
   tabActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surfaceElevated,
+    ...shadows.card,
   },
   tabText: {
     color: colors.muted,
     fontSize: 12,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
   },
   tabTextActive: {
-    color: colors.white,
+    color: colors.primary,
     fontSize: 12,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.semiBold,
+  },
+  searchBar: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
+  },
+  searchInput: {
+    flex: 1,
+    minHeight: 50,
+    color: colors.text,
+    fontFamily: fonts.regular,
+    fontSize: 12,
   },
   modeBadge: {
     alignSelf: 'flex-start',
@@ -574,7 +670,7 @@ const styles = StyleSheet.create({
     paddingVertical: 80,
   },
   section: {
-    gap: 12,
+    gap: 13,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -588,8 +684,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 17,
+    fontSize: 18,
     fontFamily: fonts.bold,
+    letterSpacing: -0.25,
   },
   sectionCount: {
     color: colors.primary,
@@ -599,8 +696,9 @@ const styles = StyleSheet.create({
   sectionDescription: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 11,
-    lineHeight: 16,
+    maxWidth: 320,
+    fontSize: 10,
+    lineHeight: 15,
   },
   followingBadge: {
     paddingHorizontal: 7,
@@ -625,7 +723,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   list: {
-    gap: 13,
+    gap: 12,
   },
   emptyCard: {
     alignItems: 'center',

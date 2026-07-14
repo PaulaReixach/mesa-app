@@ -127,10 +127,10 @@ export default function ExploreGroupsScreen() {
         <View style={styles.header}>
           <View style={styles.headerText}>
             <Text style={styles.title}>
-              Grupos
+              Descubre grupos
             </Text>
             <Text style={styles.subtitle}>
-              Descubre listas creadas por gente de tu zona.
+              Encuentra listas públicas que encajen con tus próximos planes.
             </Text>
           </View>
 
@@ -150,6 +150,7 @@ export default function ExploreGroupsScreen() {
               size={22}
               tintColor={colors.white}
             />
+            <Text style={styles.createButtonText}>Nuevo</Text>
           </Pressable>
         </View>
 
@@ -190,12 +191,24 @@ export default function ExploreGroupsScreen() {
           />
 
           <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
             onChangeText={setQuery}
             placeholder="Buscar grupos, cocinas o zonas..."
             placeholderTextColor={colors.muted}
             style={styles.searchInput}
             value={query}
           />
+
+          {query ? (
+            <Pressable accessibilityLabel="Limpiar búsqueda" onPress={() => setQuery('')}>
+              <SymbolView
+                name={{ ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' }}
+                size={18}
+                tintColor={colors.muted}
+              />
+            </Pressable>
+          ) : null}
         </View>
 
         {loading ? (
@@ -282,15 +295,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: 20,
-    paddingHorizontal: 18,
+    gap: 22,
+    paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 34,
+    paddingBottom: 118,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+    alignItems: 'flex-start',
+    gap: 14,
   },
   headerText: {
     flex: 1,
@@ -298,51 +311,61 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 27,
+    fontSize: 31,
+    lineHeight: 37,
     fontFamily: fonts.bold,
+    letterSpacing: -0.8,
   },
   subtitle: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 18,
   },
   createButton: {
-    width: 44,
-    height: 44,
+    minHeight: 44,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 22,
+    gap: 5,
+    paddingHorizontal: 13,
+    borderRadius: 16,
     backgroundColor: colors.primary,
     ...shadows.card,
   },
+  createButtonText: {
+    color: colors.white,
+    fontFamily: fonts.semiBold,
+    fontSize: 11,
+  },
   tabs: {
-    minHeight: 42,
+    minHeight: 48,
     flexDirection: 'row',
     padding: 4,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
+    borderRadius: radii.lg,
     backgroundColor: colors.surfaceMuted,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.sm,
+    borderRadius: radii.md,
   },
   tabActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surfaceElevated,
+    ...shadows.card,
   },
   tabText: {
     color: colors.muted,
     fontSize: 12,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
   },
   tabTextActive: {
-    color: colors.white,
+    color: colors.primary,
     fontSize: 12,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.semiBold,
   },
   searchBar: {
     minHeight: 52,
@@ -352,8 +375,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
-    backgroundColor: colors.inputBackground,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
   searchInput: {
     flex: 1,
@@ -374,8 +398,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 17,
+    fontSize: 18,
     fontFamily: fonts.bold,
+    letterSpacing: -0.25,
   },
   count: {
     color: colors.primary,

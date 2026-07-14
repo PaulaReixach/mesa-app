@@ -675,6 +675,7 @@ function GroupFilterRow({
 }
 
 export default function MapScreenPolished() {
+  const insets = useSafeAreaInsets();
   const { accessToken } = useAuth();
   const mapRef = useRef<MapView | null>(null);
   const sheetTop = useRef(new Animated.Value(1000)).current;
@@ -1307,23 +1308,15 @@ export default function MapScreenPolished() {
           <View style={styles.headerCopy}>
             <Text
               maxFontSizeMultiplier={1.15}
-              style={[
-                styles.title,
-                {
-                  fontFamily: fonts.semiBold,
-                  fontSize: 24,
-                  letterSpacing: -0.55,
-                  lineHeight: 33,
-                },
-              ]}
+              style={styles.title}
             >
-              Tus restaurantes
+              Mapa
             </Text>
             <Text
               maxFontSizeMultiplier={1.2}
               style={[styles.subtitle, { fontFamily: fonts.regular }]}
             >
-              Explora y filtra tus sitios guardados en el mapa
+              Todos tus restaurantes, situados y listos para elegir.
             </Text>
           </View>
         </View>
@@ -1407,7 +1400,10 @@ export default function MapScreenPolished() {
 
       <View
         onLayout={(event: LayoutChangeEvent) => setMapHeight(event.nativeEvent.layout.height)}
-        style={styles.mapContainer}
+        style={[
+          styles.mapContainer,
+          { marginBottom: Math.max(insets.bottom, 10) + 78 },
+        ]}
       >
         <MapView
           customMapStyle={MAP_STYLE}

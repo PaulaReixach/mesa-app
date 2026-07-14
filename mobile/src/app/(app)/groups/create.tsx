@@ -14,7 +14,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   View,
@@ -41,6 +40,7 @@ import {
   GroupPrivacy,
 } from '../../../types/group';
 import { fonts } from '../../../theme/fonts';
+import { radii, shadows } from '../../../theme/layout';
 
 const MAXIMUM_GROUP_IMAGE_SIZE =
   5 * 1024 * 1024;
@@ -115,8 +115,12 @@ export default function CreateGroupScreen() {
     setRequestError,
   ] = useState<string | null>(null);
 
+  const [step, setStep] = useState(0);
+
   const isPrivate =
     privacy === 'PRIVATE';
+
+  const stepTitles = ['La idea', 'Visibilidad', 'Tu gente'] as const;
 
   const canCreate = useMemo(() => {
     return (
@@ -522,460 +526,358 @@ export default function CreateGroupScreen() {
     }
   }
 
+  const canContinue = step > 0 || name.trim().length > 0;
+
   return (
-    <SafeAreaView
-      edges={[
-        'top',
-        'right',
-        'bottom',
-        'left',
-      ]}
-      style={styles.safeArea}
-    >
+    <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
       <KeyboardAvoidingView
-        behavior={
-          Platform.OS === 'ios'
-            ? 'padding'
-            : undefined
-        }
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
-          contentContainerStyle={
-            styles.content
-          }
+          contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={
-            false
-          }
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
             <Pressable
               accessibilityLabel="Volver"
               accessibilityRole="button"
               disabled={isSubmitting}
-              onPress={() => {
-                router.back();
-              }}
-              style={({ pressed }) => [
-                styles.headerButton,
-
-                pressed
-                  ? styles.headerButtonPressed
-                  : null,
-              ]}
+              onPress={() => step > 0 ? setStep(current => current - 1) : router.back()}
+              style={({ pressed }) => [styles.headerButton, pressed ? styles.headerButtonPressed : null]}
             >
               <SymbolView
-                name={{
-                  ios: 'chevron.left',
-                  android: 'arrow_back',
-                  web: 'arrow_back',
-                }}
+                name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
                 size={20}
                 tintColor={colors.text}
               />
             </Pressable>
-
-            <Text style={styles.headerTitle}>
-              Crear grupo
-            </Text>
-
-            <View
-              style={styles.headerPlaceholder}
-            />
-          </View>
-
-          <View style={styles.imageSection}>
+            <Text style={styles.headerTitle}>Crear grupo</Text>
             <Pressable
-              accessibilityLabel="Añadir foto del grupo"
+              accessibilityLabel="Cerrar"
               accessibilityRole="button"
-              disabled={
-                isPickingImage
-                || isSubmitting
-              }
-              onPress={openImageOptions}
-              style={({ pressed }) => [
-                styles.imageButton,
-
-                pressed
-                  ? styles.imageButtonPressed
-                  : null,
-              ]}
+              onPress={() => router.back()}
+              style={styles.headerButton}
             >
-              {selectedImage ? (
-                <Image
-                  source={{
-                    uri:
-                      selectedImage.uri,
-                  }}
-                  style={styles.groupImage}
-                />
-              ) : (
-                <View
-                  style={
-                    styles.imagePlaceholder
-                  }
-                >
-                  <SymbolView
-                    name={{
-                      ios: 'person.3.fill',
-                      android: 'groups',
-                      web: 'groups',
-                    }}
-                    size={35}
-                    tintColor={
-                      colors.primary
-                    }
-                  />
-                </View>
-              )}
-
-              <View style={styles.cameraButton}>
-                {isPickingImage ? (
-                  <ActivityIndicator
-                    color={colors.primary}
-                    size="small"
-                  />
-                ) : (
-                  <SymbolView
-                    name={{
-                      ios: 'camera.fill',
-                      android: 'photo_camera',
-                      web: 'photo_camera',
-                    }}
-                    size={17}
-                    tintColor={
-                      colors.primary
-                    }
-                  />
-                )}
-              </View>
+              <SymbolView
+                name={{ ios: 'xmark', android: 'close', web: 'close' }}
+                size={18}
+                tintColor={colors.muted}
+              />
             </Pressable>
-
-            <Text style={styles.imageHint}>
-              Foto del grupo
-            </Text>
           </View>
 
-          <View style={styles.form}>
-            <View style={styles.field}>
-              <Text style={styles.label}>
-                Nombre del grupo
-              </Text>
-
-              <View
-                style={styles.inputContainer}
-              >
-                <TextInput
-                  autoCapitalize="sentences"
-                  maxLength={100}
-                  onChangeText={setName}
-                  placeholder="Ej. Foodies Barcelona"
-                  placeholderTextColor={
-                    colors.muted
-                  }
-                  selectionColor={
-                    colors.primary
-                  }
-                  style={styles.input}
-                  value={name}
+          <View style={styles.progressHeader}>
+            <View style={styles.progressCopy}>
+              <Text style={styles.stepLabel}>PASO {step + 1} DE 3</Text>
+              <Text style={styles.stepTitle}>{stepTitles[step]}</Text>
+            </View>
+            <View style={styles.progressTrack}>
+              {[0, 1, 2].map(index => (
+                <View
+                  key={index}
+                  style={[styles.progressSegment, index <= step ? styles.progressSegmentActive : null]}
                 />
+              ))}
+            </View>
+          </View>
+
+          {step === 0 ? (
+            <View style={styles.form}>
+              <View style={styles.imageSection}>
+                <Pressable
+                  accessibilityLabel="Añadir foto del grupo"
+                  accessibilityRole="button"
+                  disabled={isPickingImage || isSubmitting}
+                  onPress={openImageOptions}
+                  style={({ pressed }) => [styles.imageButton, pressed ? styles.imageButtonPressed : null]}
+                >
+                  {selectedImage ? (
+                    <Image source={{ uri: selectedImage.uri }} style={styles.groupImage} />
+                  ) : (
+                    <View style={styles.imagePlaceholder}>
+                      <SymbolView
+                        name={{ ios: 'photo.on.rectangle.angled', android: 'add_photo_alternate', web: 'add_photo_alternate' }}
+                        size={32}
+                        tintColor={colors.primary}
+                      />
+                    </View>
+                  )}
+                  <View style={styles.cameraButton}>
+                    {isPickingImage ? (
+                      <ActivityIndicator color={colors.primary} size="small" />
+                    ) : (
+                      <SymbolView
+                        name={{ ios: 'camera.fill', android: 'photo_camera', web: 'photo_camera' }}
+                        size={17}
+                        tintColor={colors.primary}
+                      />
+                    )}
+                  </View>
+                </Pressable>
+                <View style={styles.imageCopy}>
+                  <Text style={styles.imageTitle}>Ponle una imagen reconocible</Text>
+                  <Text style={styles.imageHint}>Opcional · cuadrada · máximo 5 MB</Text>
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Nombre del grupo</Text>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    autoCapitalize="sentences"
+                    maxLength={100}
+                    onChangeText={setName}
+                    placeholder="Ej. Brunch por Barcelona"
+                    placeholderTextColor={colors.muted}
+                    selectionColor={colors.primary}
+                    style={styles.input}
+                    value={name}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Descripción <Text style={styles.optional}>opcional</Text></Text>
+                <View style={[styles.inputContainer, styles.descriptionContainer]}>
+                  <TextInput
+                    maxLength={500}
+                    multiline
+                    onChangeText={setDescription}
+                    placeholder="Explica qué tipo de sitios vais a guardar"
+                    placeholderTextColor={colors.muted}
+                    selectionColor={colors.primary}
+                    style={[styles.input, styles.descriptionInput]}
+                    textAlignVertical="top"
+                    value={description}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Ciudad <Text style={styles.optional}>opcional</Text></Text>
+                <View style={styles.inputContainer}>
+                  <SymbolView
+                    name={{ ios: 'mappin', android: 'location_on', web: 'location_on' }}
+                    size={18}
+                    tintColor={colors.muted}
+                  />
+                  <TextInput
+                    autoCapitalize="words"
+                    maxLength={100}
+                    onChangeText={setCity}
+                    placeholder="Barcelona, Girona, Tokio..."
+                    placeholderTextColor={colors.muted}
+                    selectionColor={colors.primary}
+                    style={[styles.input, styles.inputWithIcon]}
+                    value={city}
+                  />
+                </View>
               </View>
             </View>
+          ) : null}
 
-            <View style={styles.field}>
-              <Text style={styles.label}>
-                Descripción (opcional)
-              </Text>
-
-              <View
-                style={[
-                  styles.inputContainer,
-                  styles.descriptionContainer,
-                ]}
-              >
-                <TextInput
-                  maxLength={500}
-                  multiline
-                  onChangeText={
-                    setDescription
-                  }
-                  placeholder="¿Qué tipo de sitios os gustan?"
-                  placeholderTextColor={
-                    colors.muted
-                  }
-                  selectionColor={
-                    colors.primary
-                  }
-                  style={[
-                    styles.input,
-                    styles.descriptionInput,
-                  ]}
-                  textAlignVertical="top"
-                  value={description}
-                />
+          {step === 1 ? (
+            <View style={styles.form}>
+              <View style={styles.choiceIntro}>
+                <Text style={styles.choiceTitle}>¿Quién podrá ver este grupo?</Text>
+                <Text style={styles.choiceText}>Podrás cambiarlo más adelante desde los ajustes del grupo.</Text>
               </View>
-            </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>
-                Ciudad
-              </Text>
-
-              <View
-                style={styles.inputContainer}
+              <Pressable
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isPrivate }}
+                onPress={() => setPrivacy('PRIVATE')}
+                style={[styles.privacyCard, isPrivate ? styles.privacyCardActive : null]}
               >
-                <SymbolView
-                  name={{
-                    ios: 'mappin',
-                    android: 'location_on',
-                    web: 'location_on',
-                  }}
-                  size={18}
-                  tintColor={colors.muted}
-                />
-
-                <TextInput
-                  autoCapitalize="words"
-                  maxLength={100}
-                  onChangeText={setCity}
-                  placeholder="Barcelona, España"
-                  placeholderTextColor={
-                    colors.muted
-                  }
-                  selectionColor={
-                    colors.primary
-                  }
-                  style={[
-                    styles.input,
-                    styles.inputWithIcon,
-                  ]}
-                  value={city}
-                />
-              </View>
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>
-                Privacidad
-              </Text>
-
-              <View style={styles.optionRow}>
+                <View style={[styles.privacyIcon, isPrivate ? styles.privacyIconActive : null]}>
+                  <SymbolView
+                    name={{ ios: 'lock.fill', android: 'lock', web: 'lock' }}
+                    size={23}
+                    tintColor={isPrivate ? colors.primary : colors.muted}
+                  />
+                </View>
                 <View style={styles.optionText}>
-                  <Text
-                    style={styles.optionTitle}
-                  >
-                    {isPrivate
-                      ? 'Grupo privado'
-                      : 'Grupo público'}
-                  </Text>
+                  <Text style={styles.optionTitle}>Privado</Text>
+                  <Text style={styles.optionSubtitle}>Solo las personas invitadas pueden verlo y participar.</Text>
+                </View>
+                <View style={[styles.radio, isPrivate ? styles.radioActive : null]}>
+                  {isPrivate ? <View style={styles.radioDot} /> : null}
+                </View>
+              </Pressable>
 
-                  <Text
-                    style={
-                      styles.optionSubtitle
-                    }
+              <Pressable
+                accessibilityRole="radio"
+                accessibilityState={{ selected: !isPrivate }}
+                onPress={() => setPrivacy('PUBLIC')}
+                style={[styles.privacyCard, !isPrivate ? styles.privacyCardActiveOlive : null]}
+              >
+                <View style={[styles.privacyIcon, !isPrivate ? styles.privacyIconActiveOlive : null]}>
+                  <SymbolView
+                    name={{ ios: 'globe.europe.africa.fill', android: 'public', web: 'public' }}
+                    size={23}
+                    tintColor={!isPrivate ? colors.olive : colors.muted}
+                  />
+                </View>
+                <View style={styles.optionText}>
+                  <Text style={styles.optionTitle}>Público</Text>
+                  <Text style={styles.optionSubtitle}>Cualquiera puede descubrirlo, seguirlo y guardar ideas.</Text>
+                </View>
+                <View style={[styles.radio, !isPrivate ? styles.radioActiveOlive : null]}>
+                  {!isPrivate ? <View style={[styles.radioDot, styles.radioDotOlive]} /> : null}
+                </View>
+              </Pressable>
+
+              <View style={styles.choiceSummary}>
+                <SymbolView
+                  name={{ ios: 'info.circle.fill', android: 'info', web: 'info' }}
+                  size={18}
+                  tintColor={isPrivate ? colors.primary : colors.olive}
+                />
+                <Text style={styles.choiceSummaryText}>
+                  {isPrivate
+                    ? 'Ideal para planes entre amigos, pareja o familia.'
+                    : 'Ideal para compartir recomendaciones y crear comunidad.'}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
+          {step === 2 ? (
+            <View style={styles.form}>
+              <View style={styles.choiceIntro}>
+                <Text style={styles.choiceTitle}>¿A quién quieres sentar a la mesa?</Text>
+                <Text style={styles.choiceText}>Es opcional. También podrás invitar personas cuando el grupo ya esté creado.</Text>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Añadir por nombre de usuario</Text>
+                <View style={styles.inputContainer}>
+                  <SymbolView
+                    name={{ ios: 'at', android: 'alternate_email', web: 'alternate_email' }}
+                    size={18}
+                    tintColor={colors.muted}
+                  />
+                  <TextInput
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    maxLength={50}
+                    onChangeText={setInviteUsername}
+                    onSubmitEditing={handleAddInvite}
+                    placeholder="usuario"
+                    placeholderTextColor={colors.muted}
+                    returnKeyType="done"
+                    selectionColor={colors.primary}
+                    style={[styles.input, styles.inviteInput]}
+                    value={inviteUsername}
+                  />
+                  <Pressable
+                    accessibilityLabel="Añadir usuario"
+                    accessibilityRole="button"
+                    onPress={handleAddInvite}
+                    style={({ pressed }) => [styles.addInviteButton, pressed ? styles.addInviteButtonPressed : null]}
                   >
-                    {isPrivate
-                      ? 'Solo podrán verlo sus miembros.'
-                      : 'Será visible públicamente.'}
-                  </Text>
+                    <SymbolView
+                      name={{ ios: 'plus', android: 'add', web: 'add' }}
+                      size={20}
+                      tintColor={colors.white}
+                    />
+                  </Pressable>
                 </View>
 
-                <Switch
-                  accessibilityLabel="Grupo privado"
-                  ios_backgroundColor="#DDD4CE"
-                  onValueChange={value => {
-                    setPrivacy(
-                      value
-                        ? 'PRIVATE'
-                        : 'PUBLIC',
-                    );
-                  }}
-                  thumbColor={
-                    isPrivate
-                      ? colors.white
-                      : '#F9F6F3'
-                  }
-                  trackColor={{
-                    false: '#DDD4CE',
-                    true: colors.primary,
-                  }}
-                  value={isPrivate}
-                />
-              </View>
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>
-                Invitar miembros
-              </Text>
-
-              <View
-                style={styles.inputContainer}
-              >
-                <SymbolView
-                  name={{
-                    ios: 'at',
-                    android:
-                      'alternate_email',
-                    web:
-                      'alternate_email',
-                  }}
-                  size={18}
-                  tintColor={colors.muted}
-                />
-
-                <TextInput
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  maxLength={50}
-                  onChangeText={
-                    setInviteUsername
-                  }
-                  onSubmitEditing={
-                    handleAddInvite
-                  }
-                  placeholder="Añadir personas al grupo"
-                  placeholderTextColor={
-                    colors.muted
-                  }
-                  returnKeyType="done"
-                  selectionColor={
-                    colors.primary
-                  }
-                  style={[
-                    styles.input,
-                    styles.inviteInput,
-                  ]}
-                  value={inviteUsername}
-                />
-
-                <Pressable
-                  accessibilityLabel="Añadir usuario"
-                  accessibilityRole="button"
-                  onPress={handleAddInvite}
-                  style={({ pressed }) => [
-                    styles.addInviteButton,
-
-                    pressed
-                      ? styles.addInviteButtonPressed
-                      : null,
-                  ]}
-                >
-                  <SymbolView
-                    name={{
-                      ios: 'plus',
-                      android: 'add',
-                      web: 'add',
-                    }}
-                    size={20}
-                    tintColor={
-                      colors.primary
-                    }
-                  />
-                </Pressable>
-              </View>
-
-              {invitedUsernames.length > 0 ? (
-                <View style={styles.inviteChips}>
-                  {invitedUsernames.map(
-                    username => (
-                      <View
-                        key={username}
-                        style={styles.inviteChip}
-                      >
-                        <Text
-                          style={
-                            styles.inviteChipText
-                          }
-                        >
-                          @{username}
-                        </Text>
-
+                {invitedUsernames.length > 0 ? (
+                  <View style={styles.inviteChips}>
+                    {invitedUsernames.map(username => (
+                      <View key={username} style={styles.inviteChip}>
+                        <Text style={styles.inviteChipText}>@{username}</Text>
                         <Pressable
                           accessibilityLabel={`Eliminar a @${username}`}
                           accessibilityRole="button"
                           hitSlop={8}
-                          onPress={() => {
-                            removeInvitedUsername(
-                              username,
-                            );
-                          }}
+                          onPress={() => removeInvitedUsername(username)}
                         >
                           <SymbolView
-                            name={{
-                              ios: 'xmark',
-                              android: 'close',
-                              web: 'close',
-                            }}
+                            name={{ ios: 'xmark', android: 'close', web: 'close' }}
                             size={12}
-                            tintColor={
-                              colors.primary
-                            }
+                            tintColor={colors.primary}
                           />
                         </Pressable>
                       </View>
-                    ),
-                  )}
+                    ))}
+                  </View>
+                ) : (
+                  <View style={styles.inviteEmpty}>
+                    <View style={styles.inviteAvatarStack}>
+                      <View style={styles.inviteAvatar}><Text style={styles.inviteAvatarText}>P</Text></View>
+                      <View style={[styles.inviteAvatar, styles.inviteAvatarOverlap]}>
+                        <SymbolView
+                          name={{ ios: 'plus', android: 'add', web: 'add' }}
+                          size={15}
+                          tintColor={colors.muted}
+                        />
+                      </View>
+                    </View>
+                    <Text style={styles.fieldHint}>Tú serás la persona creadora del grupo.</Text>
+                  </View>
+                )}
+              </View>
+
+              {requestError ? (
+                <View style={styles.errorBox}>
+                  <SymbolView
+                    name={{ ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' }}
+                    size={18}
+                    tintColor={colors.danger}
+                  />
+                  <Text style={styles.errorText}>{requestError}</Text>
                 </View>
               ) : null}
-
-              <Text style={styles.fieldHint}>
-                También podrás añadir miembros
-                después desde el grupo.
-              </Text>
             </View>
+          ) : null}
 
-            {requestError ? (
-              <View style={styles.errorBox}>
-                <SymbolView
-                  name={{
-                    ios:
-                      'exclamationmark.triangle.fill',
-                    android: 'warning',
-                    web: 'warning',
-                  }}
-                  size={18}
-                  tintColor={colors.danger}
-                />
-
-                <Text style={styles.errorText}>
-                  {requestError}
-                </Text>
-              </View>
+          <View style={styles.footerActions}>
+            {step > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setStep(current => current - 1)}
+                style={styles.backButton}
+              >
+                <Text style={styles.backButtonText}>Atrás</Text>
+              </Pressable>
             ) : null}
 
             <Pressable
               accessibilityRole="button"
-              disabled={!canCreate}
-              onPress={() => {
-                void handleCreateGroup();
-              }}
+              disabled={step === 2 ? !canCreate : !canContinue}
+              onPress={() => step === 2
+                ? void handleCreateGroup()
+                : setStep(current => Math.min(current + 1, 2))}
               style={({ pressed }) => [
                 styles.createButton,
-
-                !canCreate
+                step === 2 && !canCreate || step < 2 && !canContinue
                   ? styles.createButtonDisabled
                   : null,
-
-                pressed && canCreate
-                  ? styles.createButtonPressed
-                  : null,
+                pressed ? styles.createButtonPressed : null,
               ]}
             >
               {isSubmitting ? (
-                <ActivityIndicator
-                  color={colors.white}
-                  size="small"
-                />
+                <ActivityIndicator color={colors.white} size="small" />
               ) : (
-                <Text
-                  style={
-                    styles.createButtonText
-                  }
-                >
-                  Crear grupo
-                </Text>
+                <>
+                  <Text style={styles.createButtonText}>
+                    {step === 2 ? 'Crear grupo' : 'Continuar'}
+                  </Text>
+                  <SymbolView
+                    name={{
+                      ios: step === 2 ? 'checkmark' : 'arrow.right',
+                      android: step === 2 ? 'check' : 'arrow_forward',
+                      web: step === 2 ? 'check' : 'arrow_forward',
+                    }}
+                    size={18}
+                    tintColor={colors.white}
+                  />
+                </>
               )}
             </Pressable>
           </View>
@@ -997,9 +899,10 @@ const styles = StyleSheet.create({
 
   content: {
     flexGrow: 1,
-    paddingHorizontal: 22,
+    gap: 24,
+    paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 38,
+    paddingBottom: 30,
   },
 
   header: {
@@ -1007,43 +910,85 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
   },
 
   headerButton: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 18,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
   },
 
   headerButtonPressed: {
     backgroundColor: '#F6EFE9',
   },
 
-  headerPlaceholder: {
-    width: 36,
-    height: 36,
-  },
-
   headerTitle: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
+  progressHeader: {
+    gap: 12,
+  },
+
+  progressCopy: {
+    gap: 3,
+  },
+
+  stepLabel: {
+    color: colors.primary,
+    fontSize: 9,
+    fontFamily: fonts.semiBold,
+    letterSpacing: 0.8,
+  },
+
+  stepTitle: {
+    color: colors.text,
+    fontSize: 28,
+    lineHeight: 34,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.7,
+  },
+
+  progressTrack: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+
+  progressSegment: {
+    height: 4,
+    flex: 1,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+  },
+
+  progressSegmentActive: {
+    backgroundColor: colors.primary,
+  },
+
   imageSection: {
+    minHeight: 104,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 26,
+    gap: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   imageButton: {
     position: 'relative',
-    width: 116,
-    height: 116,
-    borderRadius: 58,
+    width: 80,
+    height: 80,
+    borderRadius: 20,
   },
 
   imageButtonPressed: {
@@ -1051,47 +996,58 @@ const styles = StyleSheet.create({
   },
 
   imagePlaceholder: {
-    width: 116,
-    height: 116,
+    width: 80,
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 58,
-    backgroundColor: '#F7E8E2',
+    borderRadius: 20,
+    backgroundColor: colors.primarySoft,
   },
 
   groupImage: {
-    width: 116,
-    height: 116,
-    borderRadius: 58,
+    width: 80,
+    height: 80,
+    borderRadius: 20,
     backgroundColor: '#E9DDD6',
   },
 
   cameraButton: {
     position: 'absolute',
-    right: 1,
-    bottom: 4,
-    width: 34,
-    height: 34,
+    right: -5,
+    bottom: -5,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: colors.background,
-    borderRadius: 17,
+    borderColor: colors.surface,
+    borderRadius: 16,
     backgroundColor: colors.surface,
   },
 
-  imageHint: {
-    marginTop: 9,
-    color: colors.muted,
+  imageCopy: {
+    flex: 1,
+    gap: 4,
+  },
+
+  imageTitle: {
+    color: colors.text,
     fontSize: 12,
     fontFamily: fonts.semiBold,
   },
 
+  imageHint: {
+    color: colors.muted,
+    fontSize: 9,
+    lineHeight: 14,
+    fontFamily: fonts.regular,
+  },
+
   form: {
-    gap: 19,
+    gap: 18,
   },
 
   field: {
@@ -1102,6 +1058,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
     fontFamily: fonts.bold,
+  },
+
+  optional: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 10,
   },
 
   fieldHint: {
@@ -1119,8 +1081,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 15,
+    borderRadius: radii.md,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   input: {
@@ -1176,20 +1139,126 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
 
+  choiceIntro: {
+    gap: 5,
+    marginBottom: 2,
+  },
+
+  choiceTitle: {
+    color: colors.text,
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    letterSpacing: -0.25,
+  },
+
+  choiceText: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    lineHeight: 17,
+  },
+
+  privacyCard: {
+    minHeight: 104,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+  },
+
+  privacyCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+
+  privacyCardActiveOlive: {
+    borderColor: colors.olive,
+    backgroundColor: colors.oliveSoft,
+  },
+
+  privacyIcon: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: colors.surfaceMuted,
+  },
+
+  privacyIconActive: {
+    backgroundColor: 'rgba(255,255,255,0.72)',
+  },
+
+  privacyIconActiveOlive: {
+    backgroundColor: 'rgba(255,255,255,0.68)',
+  },
+
+  radio: {
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
+    borderRadius: 11,
+  },
+
+  radioActive: {
+    borderColor: colors.primary,
+  },
+
+  radioActiveOlive: {
+    borderColor: colors.olive,
+  },
+
+  radioDot: {
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+  },
+
+  radioDotOlive: {
+    backgroundColor: colors.olive,
+  },
+
+  choiceSummary: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    paddingHorizontal: 13,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceMuted,
+  },
+
+  choiceSummaryText: {
+    flex: 1,
+    color: colors.mutedStrong,
+    fontFamily: fonts.regular,
+    fontSize: 10,
+    lineHeight: 15,
+  },
+
   inviteInput: {
     paddingLeft: 2,
   },
 
   addInviteButton: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
+    borderRadius: 17,
+    backgroundColor: colors.primary,
   },
 
   addInviteButtonPressed: {
-    backgroundColor: '#F7E8E2',
+    backgroundColor: colors.primaryPressed,
   },
 
   inviteChips: {
@@ -1214,6 +1283,43 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
 
+  inviteEmpty: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceMuted,
+  },
+
+  inviteAvatarStack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  inviteAvatar: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.surface,
+    borderRadius: 18,
+    backgroundColor: colors.primarySoft,
+  },
+
+  inviteAvatarOverlap: {
+    marginLeft: -8,
+    backgroundColor: colors.surface,
+  },
+
+  inviteAvatarText: {
+    color: colors.primary,
+    fontFamily: fonts.bold,
+    fontSize: 12,
+  },
+
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1233,13 +1339,41 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 
-  createButton: {
+  footerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 'auto',
+    paddingTop: 8,
+  },
+
+  backButton: {
+    minWidth: 92,
     minHeight: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 3,
-    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.round,
+    backgroundColor: colors.surface,
+  },
+
+  backButtonText: {
+    color: colors.mutedStrong,
+    fontFamily: fonts.semiBold,
+    fontSize: 13,
+  },
+
+  createButton: {
+    minHeight: 54,
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: radii.round,
     backgroundColor: colors.primary,
+    ...shadows.card,
   },
 
   createButtonPressed: {

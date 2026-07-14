@@ -4,9 +4,9 @@ import { colors } from '../theme/colors';
 
 export const tabNavigationColors = {
   active: colors.primary,
-  inactive: '#817873',
+  inactive: colors.muted,
   border: colors.border,
-  background: colors.surface,
+  background: colors.surfaceElevated,
 } as const;
 
 export const appTabsStyles = StyleSheet.create({
@@ -14,22 +14,23 @@ export const appTabsStyles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'visible',
   },
-  addTabButtonPressed: { opacity: 0.78 },
+  addTabButtonPressed: { transform: [{ scale: 0.95 }] },
   addCircle: {
-    width: 44,
-    height: 44,
+    width: 54,
+    height: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -5,
-    borderWidth: 3,
+    marginTop: -19,
+    borderWidth: 5,
     borderColor: tabNavigationColors.background,
-    borderRadius: 22,
+    borderRadius: 27,
     backgroundColor: colors.primary,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.14,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 9 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    elevation: 10,
   },
 });

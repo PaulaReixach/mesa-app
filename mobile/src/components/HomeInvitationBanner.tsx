@@ -8,6 +8,7 @@ import {
 
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
+import { radii, shadows } from '../theme/layout';
 
 export function HomeInvitationBanner({
   count,
@@ -54,24 +55,25 @@ export function HomeInvitationBanner({
 
 const styles = StyleSheet.create({
   banner: {
-    minHeight: 64,
+    minHeight: 76,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 13,
-    paddingVertical: 10,
+    gap: 11,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#E3D6CE',
-    borderRadius: 18,
-    backgroundColor: '#FCF9F7',
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
   iconWrap: {
-    width: 41,
-    height: 41,
+    width: 46,
+    height: 46,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 14,
-    backgroundColor: '#F7E7DF',
+    backgroundColor: colors.primarySoft,
   },
   copy: {
     flex: 1,
@@ -80,20 +82,21 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 12,
-    fontFamily: fonts.bold,
+    fontSize: 13,
+    fontFamily: fonts.semiBold,
   },
   subtitle: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 8,
+    fontSize: 9,
   },
   action: {
     color: '#5D7444',
-    fontSize: 10,
-    fontFamily: fonts.bold,
+    fontSize: 9,
+    fontFamily: fonts.semiBold,
   },
   pressed: {
-    opacity: 0.74,
+    opacity: 0.8,
+    transform: [{ scale: 0.99 }],
   },
 });

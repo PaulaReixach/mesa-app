@@ -1,160 +1,100 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
+import type { ComponentProps } from 'react';
 import {
-  Image,
   Pressable,
   ScrollView,
   Text,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { addHubBannerImage } from '../../assets/AddHubBannerImage';
-import { addHubActionStyles as actionStyles } from '../../components/AddHubActionCard.styles';
 import { addHubScreenStyles as styles } from '../../components/AddHubScreen.styles';
 import { colors } from '../../theme/colors';
 
-type ActionIconName = keyof typeof MaterialCommunityIcons.glyphMap;
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
+type ActionTone = 'olive' | 'terracotta';
 
-type ActionCardProps = {
-  compact: boolean;
-  iconBackgroundColor: string;
-  iconColor: string;
-  iconName: ActionIconName;
+type FeaturedActionProps = {
+  icon: SymbolName;
   onPress: () => void;
   subtitle: string;
   title: string;
+  tone: ActionTone;
 };
 
-function ActionCard({
-  compact,
-  iconBackgroundColor,
-  iconColor,
-  iconName,
+function FeaturedAction({
+  icon,
   onPress,
   subtitle,
   title,
-}: ActionCardProps) {
+  tone,
+}: FeaturedActionProps) {
+  const olive = tone === 'olive';
+
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [
-        actionStyles.card,
-        compact ? actionStyles.cardCompact : null,
-        pressed ? actionStyles.cardPressed : null,
+        styles.featuredAction,
+        olive ? styles.featuredActionOlive : styles.featuredActionTerracotta,
+        pressed ? styles.pressed : null,
       ]}
     >
-      <View
-        style={[
-          actionStyles.iconCircle,
-          { backgroundColor: iconBackgroundColor },
-          compact ? actionStyles.iconCircleCompact : null,
-        ]}
-      >
-        <MaterialCommunityIcons
-          color={iconColor}
-          name={iconName}
-          size={compact ? 34 : 30}
+      <View style={[styles.featuredIcon, olive ? styles.featuredIconOlive : null]}>
+        <SymbolView
+          name={icon}
+          size={28}
+          tintColor={olive ? colors.olive : colors.primary}
         />
       </View>
 
-      <View style={actionStyles.copy}>
-        <Text
-          allowFontScaling={false}
-          numberOfLines={1}
-          style={[
-            actionStyles.title,
-            compact ? actionStyles.titleCompact : null,
-          ]}
-        >
-          {title}
-        </Text>
-        <Text
-          allowFontScaling={false}
-          numberOfLines={2}
-          style={[
-            actionStyles.subtitle,
-            compact ? actionStyles.subtitleCompact : null,
-          ]}
-        >
-          {subtitle}
-        </Text>
+      <View style={styles.featuredCopy}>
+        <Text style={styles.featuredTitle}>{title}</Text>
+        <Text style={styles.featuredSubtitle}>{subtitle}</Text>
       </View>
 
+      <View style={[styles.featuredArrow, olive ? styles.featuredArrowOlive : null]}>
+        <SymbolView
+          name={{ ios: 'arrow.up.right', android: 'arrow_outward', web: 'arrow_outward' }}
+          size={17}
+          tintColor={olive ? colors.olive : colors.primary}
+        />
+      </View>
+    </Pressable>
+  );
+}
+
+function SecondaryAction({
+  icon,
+  onPress,
+  subtitle,
+  title,
+}: Omit<FeaturedActionProps, 'tone'>) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.secondaryAction, pressed ? styles.pressed : null]}
+    >
+      <View style={styles.secondaryIcon}>
+        <SymbolView name={icon} size={21} tintColor={colors.primary} />
+      </View>
+      <View style={styles.secondaryCopy}>
+        <Text style={styles.secondaryTitle}>{title}</Text>
+        <Text style={styles.secondarySubtitle}>{subtitle}</Text>
+      </View>
       <SymbolView
-        name={{
-          ios: 'chevron.right',
-          android: 'chevron_right',
-          web: 'chevron_right',
-        }}
-        size={compact ? 18 : 20}
-        tintColor="#77716D"
+        name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+        size={18}
+        tintColor={colors.muted}
       />
     </Pressable>
   );
 }
 
-function TipCard({ compact }: { compact: boolean }) {
-  return (
-    <View
-      style={[
-        styles.tipCard,
-        compact ? styles.tipCardCompact : null,
-      ]}
-    >
-      <View style={styles.tipCopyRow}>
-        <View
-          style={[
-            styles.tipIcon,
-            compact ? styles.tipIconCompact : null,
-          ]}
-        >
-          <MaterialCommunityIcons
-            color="#D9892C"
-            name="lightbulb-on-outline"
-            size={compact ? 22 : 24}
-          />
-        </View>
-
-        <Text
-          allowFontScaling={false}
-          style={[
-            styles.tipText,
-            compact ? styles.tipTextCompact : null,
-          ]}
-        >
-          <Text style={styles.tipStrong}>Consejo: </Text>
-          guarda tus favoritos en grupos temáticos
-        </Text>
-      </View>
-
-      <View
-        pointerEvents="none"
-        style={[
-          styles.illustration,
-          compact ? styles.illustrationCompact : null,
-        ]}
-      >
-        <Image
-          resizeMode="contain"
-          source={addHubBannerImage}
-          style={[
-            styles.illustrationImage,
-            compact ? styles.illustrationImageCompact : null,
-          ]}
-        />
-      </View>
-    </View>
-  );
-}
-
 export default function AddScreen() {
-  const { height } = useWindowDimensions();
-  const compact = height < 820;
-
   function chooseGroup(addMode: 'SEARCH' | 'MANUAL'): void {
     router.push({
       pathname: '/groups',
@@ -163,10 +103,7 @@ export default function AddScreen() {
   }
 
   return (
-    <SafeAreaView
-      edges={['top', 'right', 'left']}
-      style={styles.safeArea}
-    >
+    <SafeAreaView edges={['top', 'right', 'left']} style={styles.safeArea}>
       <ScrollView
         bounces={false}
         contentContainerStyle={styles.content}
@@ -177,76 +114,79 @@ export default function AddScreen() {
             accessibilityLabel="Cerrar"
             accessibilityRole="button"
             onPress={() => router.replace('/home')}
-            style={({ pressed }) => [
-              styles.closeButton,
-              compact ? styles.closeButtonCompact : null,
-              pressed ? styles.pressed : null,
-            ]}
+            style={({ pressed }) => [styles.closeButton, pressed ? styles.pressed : null]}
           >
             <SymbolView
               name={{ ios: 'xmark', android: 'close', web: 'close' }}
-              size={compact ? 20 : 22}
+              size={20}
               tintColor={colors.text}
             />
           </Pressable>
+          <Text style={styles.headerTitle}>Añadir</Text>
+          <View style={styles.closeButton} />
+        </View>
 
-          <Text
-            allowFontScaling={false}
-            style={[
-              styles.title,
-              compact ? styles.titleCompact : null,
-            ]}
-          >
-            ¿Qué quieres hacer?
+        <View style={styles.hero}>
+          <Text style={styles.eyebrow}>Un sitio para cada plan</Text>
+          <Text style={styles.title}>¿Qué quieres guardar?</Text>
+          <Text style={styles.subtitle}>
+            Encuentra un restaurante, crea uno manualmente o empieza una lista nueva.
           </Text>
         </View>
 
-        <View
-          style={[
-            styles.actions,
-            compact ? styles.actionsCompact : null,
-          ]}
-        >
-          <ActionCard
-            compact={compact}
-            iconBackgroundColor="#FFF4EA"
-            iconColor="#B94F38"
-            iconName="magnify"
+        <View style={styles.featuredGrid}>
+          <FeaturedAction
+            icon={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
             onPress={() => chooseGroup('SEARCH')}
-            subtitle="Busca y guárdalo en un grupo"
+            subtitle="Encuéntralo y añádelo a un grupo"
             title="Buscar restaurante"
+            tone="terracotta"
           />
-          <ActionCard
-            compact={compact}
-            iconBackgroundColor="#F2F6EC"
-            iconColor="#5B743A"
-            iconName="pencil-outline"
+          <FeaturedAction
+            icon={{ ios: 'square.and.pencil', android: 'edit', web: 'edit' }}
             onPress={() => chooseGroup('MANUAL')}
-            subtitle="Añade un sitio que no encuentres"
+            subtitle="Para ese sitio que todavía no aparece"
             title="Añadir manualmente"
-          />
-          <ActionCard
-            compact={compact}
-            iconBackgroundColor="#FFF4EA"
-            iconColor="#C85B3D"
-            iconName="account-group"
-            onPress={() => router.push('/groups/create')}
-            subtitle="Privado o público"
-            title="Crear grupo"
-          />
-          <ActionCard
-            compact={compact}
-            iconBackgroundColor="#F2F6EC"
-            iconColor="#5B743A"
-            iconName="email-outline"
-            onPress={() => router.push('/group-invitations')}
-            subtitle="Revisa solicitudes y pendientes"
-            title="Abrir invitaciones"
+            tone="olive"
           />
         </View>
 
-        <View style={styles.tipSlot}>
-          <TipCard compact={compact} />
+        <View style={styles.section}>
+          <View style={styles.sectionHeading}>
+            <Text style={styles.sectionTitle}>Organiza tu espacio</Text>
+            <Text style={styles.sectionCaption}>Grupos e invitaciones</Text>
+          </View>
+
+          <View style={styles.secondaryList}>
+            <SecondaryAction
+              icon={{ ios: 'person.2.fill', android: 'group_add', web: 'group_add' }}
+              onPress={() => router.push('/groups/create')}
+              subtitle="Privado para los tuyos o público para compartir"
+              title="Crear un grupo"
+            />
+            <SecondaryAction
+              icon={{ ios: 'envelope.fill', android: 'mail', web: 'mail' }}
+              onPress={() => router.push('/group-invitations')}
+              subtitle="Revisa invitaciones y solicitudes pendientes"
+              title="Gestionar invitaciones"
+            />
+          </View>
+        </View>
+
+        <View style={styles.tipCard}>
+          <View style={styles.tipIcon}>
+            <SymbolView
+              name={{ ios: 'lightbulb.fill', android: 'lightbulb', web: 'lightbulb' }}
+              size={21}
+              tintColor={colors.amber}
+            />
+          </View>
+          <View style={styles.tipCopy}>
+            <Text style={styles.tipTitle}>Una lista funciona mejor con intención</Text>
+            <Text style={styles.tipText}>
+              Prueba nombres concretos: “Cenas en Girona”, “Japón 2026” o “Brunch pendiente”.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

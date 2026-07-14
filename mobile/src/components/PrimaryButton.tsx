@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.round,
+    borderRadius: radii.lg,
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
     ...shadows.card,

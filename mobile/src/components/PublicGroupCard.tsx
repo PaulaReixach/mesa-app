@@ -130,14 +130,14 @@ export function PublicGroupCard({
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 104,
+    minHeight: 116,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 13,
     padding: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.lg,
+    borderRadius: radii.xl,
     backgroundColor: colors.surface,
     ...shadows.card,
   },
@@ -146,10 +146,10 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.995 }],
   },
   imageContainer: {
-    width: 78,
-    height: 78,
+    width: 88,
+    height: 88,
     overflow: 'hidden',
-    borderRadius: 18,
+    borderRadius: radii.lg,
     backgroundColor: colors.primarySoft,
   },
   image: {
@@ -163,12 +163,12 @@ const styles = StyleSheet.create({
   },
   imageInitial: {
     color: colors.primary,
-    fontSize: 28,
+    fontSize: 30,
     fontFamily: fonts.bold,
   },
   content: {
     flex: 1,
-    gap: 4,
+    gap: 5,
   },
   titleRow: {
     flexDirection: 'row',
@@ -178,14 +178,14 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     color: colors.text,
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 15,
+    lineHeight: 19,
     fontFamily: fonts.bold,
   },
   owner: {
     color: colors.primary,
-    fontSize: 10,
-    fontFamily: fonts.bold,
+    fontSize: 9,
+    fontFamily: fonts.semiBold,
   },
   metaRow: {
     flexDirection: 'row',
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   metaText: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 9,
+    fontSize: 8,
   },
   locationRow: {
     flexDirection: 'row',
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   locationText: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 9,
+    fontSize: 8,
   },
   followingBadge: {
     flexDirection: 'row',

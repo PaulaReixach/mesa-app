@@ -1,6 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import { router, Tabs, usePathname } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { appTabsStyles as styles, tabNavigationColors as navigationColors } from './AppTabsLayout.styles';
@@ -15,8 +15,15 @@ const hiddenScreenOptions = {
 export default function AppTabsLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
-  const bottomPadding = Math.max(insets.bottom, 6);
-  const highlightGroups = pathname === '/add';
+  const bottomOffset = Math.max(insets.bottom, 10);
+  const showPrimaryNavigation = [
+    '/home',
+    '/groups',
+    '/groups/explore',
+    '/add',
+    '/map',
+    '/profile',
+  ].includes(pathname);
 
   return (
     <Tabs
@@ -27,27 +34,45 @@ export default function AppTabsLayout() {
         tabBarInactiveTintColor: navigationColors.inactive,
         tabBarHideOnKeyboard: true,
         tabBarLabelPosition: 'below-icon',
-        tabBarItemStyle: { justifyContent: 'center', paddingTop: 3 },
-        tabBarIconStyle: { width: 24, height: 22, marginBottom: 0 },
-        tabBarLabelStyle: {
-          marginTop: 0,
-          fontSize: 10,
-          fontFamily: fonts.medium,
-          lineHeight: 13,
+        tabBarItemStyle: {
+          minHeight: 54,
+          justifyContent: 'center',
+          marginHorizontal: 2,
+          marginVertical: 6,
+          borderRadius: 18,
         },
-        tabBarStyle: {
-          height: 54 + bottomPadding,
-          paddingTop: 4,
-          paddingBottom: bottomPadding,
+        tabBarIconStyle: { width: 25, height: 24, marginBottom: 1 },
+        tabBarLabelStyle: {
+          marginTop: 1,
+          fontSize: 9,
+          fontFamily: fonts.medium,
+          lineHeight: 11,
+        },
+        tabBarStyle: showPrimaryNavigation ? {
+          position: 'absolute',
+          right: 14,
+          bottom: bottomOffset,
+          left: 14,
+          height: 68,
+          paddingHorizontal: 6,
+          paddingTop: 0,
+          paddingBottom: 0,
           borderTopWidth: 1,
+          borderRightWidth: 1,
+          borderBottomWidth: 1,
+          borderLeftWidth: 1,
           borderTopColor: navigationColors.border,
+          borderRightColor: navigationColors.border,
+          borderBottomColor: navigationColors.border,
+          borderLeftColor: navigationColors.border,
+          borderRadius: 24,
           backgroundColor: navigationColors.background,
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.03,
-          shadowRadius: 5,
-          elevation: 5,
-        },
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: 0.14,
+          shadowRadius: 24,
+          elevation: 14,
+        } : { display: 'none' },
       }}
     >
       <Tabs.Screen
@@ -66,14 +91,25 @@ export default function AppTabsLayout() {
       />
 
       <Tabs.Screen
-        name="map"
+        name="groups"
+        listeners={{
+          tabPress: event => {
+            event.preventDefault();
+            router.replace('/groups');
+          },
+        }}
         options={{
-          title: 'Mapa',
-          tabBarAccessibilityLabel: 'Mapa',
+          title: 'Grupos',
+          tabBarAccessibilityLabel: 'Grupos',
+          popToTopOnBlur: true,
           tabBarIcon: ({ focused, color }) => (
             <SymbolView
-              name={{ ios: focused ? 'map.fill' : 'map', android: 'map', web: 'map' }}
-              size={20}
+              name={{
+                ios: focused ? 'person.2.fill' : 'person.2',
+                android: 'group',
+                web: 'group',
+              }}
+              size={21}
               tintColor={color}
             />
           ),
@@ -108,7 +144,7 @@ export default function AppTabsLayout() {
               <View style={styles.addCircle}>
                 <SymbolView
                   name={{ ios: 'plus', android: 'add', web: 'add' }}
-                  size={25}
+                  size={27}
                   tintColor={colors.white}
                 />
               </View>
@@ -118,38 +154,15 @@ export default function AppTabsLayout() {
       />
 
       <Tabs.Screen
-        name="groups"
-        listeners={{
-          tabPress: event => {
-            event.preventDefault();
-            router.replace('/groups');
-          },
-        }}
+        name="map"
         options={{
-          title: 'Grupos',
-          tabBarAccessibilityLabel: 'Grupos',
-          popToTopOnBlur: true,
-          tabBarLabel: ({ color }) => (
-            <Text
-              style={{
-                color: highlightGroups ? navigationColors.active : color,
-                fontFamily: highlightGroups ? fonts.semiBold : fonts.medium,
-                fontSize: 10,
-                lineHeight: 13,
-              }}
-            >
-              Grupos
-            </Text>
-          ),
+          title: 'Mapa',
+          tabBarAccessibilityLabel: 'Mapa',
           tabBarIcon: ({ focused, color }) => (
             <SymbolView
-              name={{
-                ios: focused || highlightGroups ? 'person.2.fill' : 'person.2',
-                android: 'group',
-                web: 'group',
-              }}
-              size={21}
-              tintColor={highlightGroups ? navigationColors.active : color}
+              name={{ ios: focused ? 'map.fill' : 'map', android: 'map', web: 'map' }}
+              size={20}
+              tintColor={color}
             />
           ),
         }}

@@ -29,6 +29,7 @@ import {
 import { colors } from '../../theme/colors';
 import { NotificationPreferences } from '../../types/notification';
 import { fonts } from '../../theme/fonts';
+import { radii, shadows } from '../../theme/layout';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -613,8 +614,13 @@ const styles = StyleSheet.create({
   },
 
   intro: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 30,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#EACCC1',
+    borderRadius: radii.xl,
+    backgroundColor: colors.primarySoft,
   },
 
   introIcon: {
@@ -623,8 +629,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 13,
-    borderRadius: 31,
-    backgroundColor: '#F8E9E4',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.68)',
   },
 
   introTitle: {
@@ -640,7 +646,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
-    textAlign: 'center',
+    textAlign: 'left',
   },
 
   section: {
@@ -657,8 +663,12 @@ const styles = StyleSheet.create({
   },
 
   sectionContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   notificationRow: {
@@ -666,6 +676,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    paddingHorizontal: 13,
   },
 
   notificationRowBorder: {
@@ -683,7 +694,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 19,
-    backgroundColor: '#F7EEE9',
+    backgroundColor: colors.primarySoft,
   },
 
   notificationText: {

@@ -1,14 +1,7 @@
 import { SymbolView } from 'expo-symbols';
-import {
-  router,
-  useFocusEffect,
-} from 'expo-router';
-import {
-  ComponentProps,
-  useCallback,
-  useMemo,
-  useState,
-} from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import type { ComponentProps, ReactNode } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -23,61 +16,28 @@ import { useAuth } from '../../contexts/auth-context';
 import { resolveApiUrl } from '../../lib/api';
 import { getCurrentUserProfileStats } from '../../services/profile-service';
 import { colors } from '../../theme/colors';
-import { UserProfileStats } from '../../types/profile';
 import { fonts } from '../../theme/fonts';
 import { radii, shadows } from '../../theme/layout';
+import type { UserProfileStats } from '../../types/profile';
 
-type SymbolName =
-  ComponentProps<typeof SymbolView>['name'];
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
 type MenuRowProps = {
+  description: string;
   icon: SymbolName;
-  label: string;
   isLast?: boolean;
-  onPress?: () => void;
-};
-
-type StatProps = {
-  value: number | string;
   label: string;
-  showDivider?: boolean;
+  onPress: () => void;
+  tone?: 'neutral' | 'olive' | 'terracotta';
 };
-
-const profilePalette = {
-  line: '#E9DFD9',
-  subtleText: '#7E746E',
-  accent: '#D85C3F',
-  logoutBorder: '#F0C8BE',
-  logoutBackground: '#FFF9F7',
-};
-
-function StatItem({
-  value,
-  label,
-  showDivider = true,
-}: StatProps) {
-  return (
-    <View style={styles.statItem}>
-      <Text style={styles.statValue}>
-        {value}
-      </Text>
-
-      <Text style={styles.statLabel}>
-        {label}
-      </Text>
-
-      {showDivider ? (
-        <View style={styles.statDivider} />
-      ) : null}
-    </View>
-  );
-}
 
 function MenuRow({
+  description,
   icon,
-  label,
   isLast = false,
+  label,
   onPress,
+  tone = 'neutral',
 }: MenuRowProps) {
   return (
     <Pressable
@@ -85,34 +45,31 @@ function MenuRow({
       onPress={onPress}
       style={({ pressed }) => [
         styles.menuRow,
-
-        !isLast
-          ? styles.menuRowBorder
-          : null,
-
-        pressed
-          ? styles.menuRowPressed
-          : null,
+        !isLast ? styles.menuRowBorder : null,
+        pressed ? styles.pressed : null,
       ]}
     >
-      <View style={styles.menuLeft}>
+      <View
+        style={[
+          styles.menuIcon,
+          tone === 'terracotta' ? styles.menuIconTerracotta : null,
+          tone === 'olive' ? styles.menuIconOlive : null,
+        ]}
+      >
         <SymbolView
           name={icon}
-          size={18}
-          tintColor={colors.text}
+          size={19}
+          tintColor={tone === 'olive' ? colors.olive : colors.primary}
         />
+      </View>
 
-        <Text style={styles.menuLabel}>
-          {label}
-        </Text>
+      <View style={styles.menuCopy}>
+        <Text style={styles.menuLabel}>{label}</Text>
+        <Text numberOfLines={1} style={styles.menuDescription}>{description}</Text>
       </View>
 
       <SymbolView
-        name={{
-          ios: 'chevron.right',
-          android: 'chevron_right',
-          web: 'chevron_right',
-        }}
+        name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
         size={17}
         tintColor={colors.muted}
       />
@@ -120,47 +77,43 @@ function MenuRow({
   );
 }
 
+function MenuSection({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <View style={styles.menuSectionWrap}>
+      <Text style={styles.sectionLabel}>{title}</Text>
+      <View style={styles.menuSection}>{children}</View>
+    </View>
+  );
+}
+
+function StatItem({ label, value }: { label: string; value: number | string }) {
+  return (
+    <View style={styles.statItem}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
 export default function ProfileScreen() {
-  const {
-    user,
-    signOut,
-    accessToken,
-  } = useAuth();
+  const { accessToken, signOut, user } = useAuth();
+  const [stats, setStats] = useState<UserProfileStats | null>(null);
+  const [statsError, setStatsError] = useState(false);
 
-  const [
-    stats,
-    setStats,
-  ] =
-    useState<UserProfileStats | null>(
-      null,
-    );
+  const loadStats = useCallback(async () => {
+    if (!accessToken) {
+      setStats(null);
+      return;
+    }
 
-  const [
-    statsError,
-    setStatsError,
-  ] = useState(false);
-
-  const loadStats =
-    useCallback(async () => {
-      if (!accessToken) {
-        setStats(null);
-        return;
-      }
-
-      try {
-        setStatsError(false);
-
-        const response =
-          await getCurrentUserProfileStats(
-            accessToken,
-          );
-
-        setStats(response);
-      } catch {
-        setStats(null);
-        setStatsError(true);
-      }
-    }, [accessToken]);
+    try {
+      setStatsError(false);
+      setStats(await getCurrentUserProfileStats(accessToken));
+    } catch {
+      setStats(null);
+      setStatsError(true);
+    }
+  }, [accessToken]);
 
   useFocusEffect(
     useCallback(() => {
@@ -168,286 +121,171 @@ export default function ProfileScreen() {
     }, [loadStats]),
   );
 
-  const displayName =
-    useMemo(() => {
-      return user?.name?.trim()
-        || 'Tu perfil';
-    }, [user?.name]);
-
-  const displayUsername =
-    useMemo(() => {
-      if (user?.username?.trim()) {
-        return `@${user.username}`;
-      }
-
-      return '@usuario';
-    }, [user?.username]);
-
-  const userInitial =
-    useMemo(() => {
-      return displayName
-        .charAt(0)
-        .toUpperCase();
-    }, [displayName]);
-
-  const avatarUri =
-    useMemo(() => {
-      if (!user?.avatarUrl) {
-        return null;
-      }
-
-      return resolveApiUrl(
-        user.avatarUrl,
-      );
-    }, [user?.avatarUrl]);
+  const displayName = useMemo(() => user?.name?.trim() || 'Tu perfil', [user?.name]);
+  const displayUsername = useMemo(
+    () => user?.username?.trim() ? `@${user.username}` : '@usuario',
+    [user?.username],
+  );
+  const userInitial = useMemo(() => displayName.charAt(0).toUpperCase(), [displayName]);
+  const avatarUri = useMemo(
+    () => user?.avatarUrl ? resolveApiUrl(user.avatarUrl) : null,
+    [user?.avatarUrl],
+  );
 
   async function handleSignOut() {
     await signOut();
-
     router.replace('/login');
   }
 
-  function handleEditProfile() {
-    router.push('/profile-edit');
-  }
-
   return (
-    <SafeAreaView
-      edges={[
-        'top',
-        'right',
-        'left',
-      ]}
-      style={styles.safeArea}
-    >
+    <SafeAreaView edges={['top', 'right', 'left']} style={styles.safeArea}>
       <ScrollView
-        contentContainerStyle={
-          styles.content
-        }
-        showsVerticalScrollIndicator={
-          false
-        }
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View style={styles.iconButton} />
-
-          <Text style={styles.headerTitle}>
-            Mi perfil
-          </Text>
-
+          <View>
+            <Text style={styles.eyebrow}>Tu espacio</Text>
+            <Text style={styles.headerTitle}>Perfil</Text>
+          </View>
           <Pressable
             accessibilityLabel="Editar perfil"
             accessibilityRole="button"
-            onPress={handleEditProfile}
-            style={({ pressed }) => [
-              styles.iconButton,
-
-              pressed
-                ? styles.iconButtonPressed
-                : null,
-            ]}
+            onPress={() => router.push('/profile-edit')}
+            style={({ pressed }) => [styles.editButton, pressed ? styles.pressed : null]}
           >
             <SymbolView
-              name={{
-                ios: 'square.and.pencil',
-                android: 'edit',
-                web: 'edit',
-              }}
-              size={18}
-              tintColor={colors.text}
+              name={{ ios: 'square.and.pencil', android: 'edit', web: 'edit' }}
+              size={17}
+              tintColor={colors.primary}
             />
+            <Text style={styles.editButtonText}>Editar</Text>
           </Pressable>
         </View>
 
-        <View style={styles.profileSection}>
-          <View style={styles.profileTop}>
+        <View style={styles.profileHero}>
+          <View style={[styles.decorativeCircle, styles.decorativeCircleLarge]} />
+          <View style={[styles.decorativeCircle, styles.decorativeCircleSmall]} />
+
+          <View style={styles.identityRow}>
             {avatarUri ? (
-              <Image
-                source={{
-                  uri: avatarUri,
-                }}
-                style={styles.avatar}
-              />
+              <Image source={{ uri: avatarUri }} style={styles.avatar} />
             ) : (
-              <View
-                style={
-                  styles.avatarFallback
-                }
-              >
-                <Text
-                  style={
-                    styles.avatarFallbackText
-                  }
-                >
-                  {userInitial}
-                </Text>
+              <View style={styles.avatarFallback}>
+                <Text style={styles.avatarFallbackText}>{userInitial}</Text>
               </View>
             )}
 
             <View style={styles.profileInfo}>
-              <Text
-                numberOfLines={1}
-                style={styles.name}
-              >
-                {displayName}
-              </Text>
-
-              <Text
-                numberOfLines={1}
-                style={styles.username}
-              >
-                {displayUsername}
-              </Text>
+              <Text numberOfLines={1} style={styles.name}>{displayName}</Text>
+              <Text numberOfLines={1} style={styles.username}>{displayUsername}</Text>
+              <View style={styles.memberBadge}>
+                <SymbolView
+                  name={{ ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' }}
+                  size={13}
+                  tintColor={colors.olive}
+                />
+                <Text style={styles.memberBadgeText}>Miembro de Mesa</Text>
+              </View>
             </View>
           </View>
 
           <View style={styles.statsRow}>
-            <StatItem
-              label="Restaurantes"
-              value={
-                stats?.restaurantsCount
-                ?? '—'
-              }
-            />
-
-            <StatItem
-              label="Grupos"
-              value={
-                stats?.groupsCount
-                ?? '—'
-              }
-            />
-
-            <StatItem
-              label="Valoraciones"
-              showDivider={false}
-              value={
-                stats?.ratingsCount
-                ?? '—'
-              }
-            />
+            <StatItem label="Restaurantes" value={stats?.restaurantsCount ?? '—'} />
+            <View style={styles.statDivider} />
+            <StatItem label="Grupos" value={stats?.groupsCount ?? '—'} />
+            <View style={styles.statDivider} />
+            <StatItem label="Valoraciones" value={stats?.ratingsCount ?? '—'} />
           </View>
 
           {statsError ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                void loadStats();
-              }}
-              style={styles.statsError}
-            >
-              <Text
-                style={
-                  styles.statsErrorText
-                }
-              >
-                No se han podido actualizar
-                las estadísticas. Pulsa para
-                reintentar.
-              </Text>
+            <Pressable accessibilityRole="button" onPress={() => void loadStats()}>
+              <Text style={styles.statsErrorText}>No se han podido actualizar. Pulsa para reintentar.</Text>
             </Pressable>
           ) : null}
         </View>
 
-        <View style={styles.menuSection}>
-          <MenuRow
-            icon={{
-              ios: 'square.and.pencil',
-              android: 'edit',
-              web: 'edit',
-            }}
-            label="Editar perfil"
-            onPress={handleEditProfile}
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/group-invitations')}
+          style={({ pressed }) => [styles.invitationShortcut, pressed ? styles.pressed : null]}
+        >
+          <View style={styles.invitationIcon}>
+            <SymbolView
+              name={{ ios: 'envelope.open.fill', android: 'mark_email_read', web: 'mark_email_read' }}
+              size={20}
+              tintColor={colors.primary}
+            />
+          </View>
+          <View style={styles.invitationCopy}>
+            <Text style={styles.invitationTitle}>Invitaciones y solicitudes</Text>
+            <Text style={styles.invitationText}>Todo lo pendiente, en un mismo lugar</Text>
+          </View>
+          <SymbolView
+            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+            size={18}
+            tintColor={colors.primary}
           />
+        </Pressable>
 
+        <MenuSection title="CUENTA">
           <MenuRow
-            icon={{
-              ios: 'gearshape',
-              android: 'settings',
-              web: 'settings',
-            }}
+            description="Nombre, usuario y foto"
+            icon={{ ios: 'person.crop.circle', android: 'account_circle', web: 'account_circle' }}
+            label="Datos personales"
+            onPress={() => router.push('/profile-edit')}
+            tone="terracotta"
+          />
+          <MenuRow
+            description="Correo, contraseña y seguridad"
+            icon={{ ios: 'gearshape.fill', android: 'settings', web: 'settings' }}
             label="Ajustes de cuenta"
-            onPress={() => {
-              router.push(
-                '/account-settings',
-              );
-            }}
+            onPress={() => router.push('/account-settings')}
           />
-
           <MenuRow
-            icon={{
-              ios: 'bell',
-              android: 'notifications',
-              web: 'notifications',
-            }}
-            label="Notificaciones"
-            onPress={() => {
-              router.push(
-                '/notification-settings',
-              );
-            }}
-          />
-
-          <MenuRow
-            icon={{
-              ios: 'lock',
-              android: 'lock',
-              web: 'lock',
-            }}
+            description="Controla quién puede encontrarte"
+            icon={{ ios: 'lock.shield.fill', android: 'shield', web: 'shield' }}
+            isLast
             label="Privacidad"
-            onPress={() => {
-              router.push(
-                '/privacy-settings',
-              );
-            }}
+            onPress={() => router.push('/privacy-settings')}
+            tone="olive"
           />
+        </MenuSection>
 
+        <MenuSection title="PREFERENCIAS Y AYUDA">
           <MenuRow
-            icon={{
-              ios: 'questionmark.circle',
-              android: 'help',
-              web: 'help',
-            }}
+            description="Elige qué avisos quieres recibir"
+            icon={{ ios: 'bell.badge.fill', android: 'notifications', web: 'notifications' }}
+            label="Notificaciones"
+            onPress={() => router.push('/notification-settings')}
+          />
+          <MenuRow
+            description="Preguntas frecuentes y contacto"
+            icon={{ ios: 'questionmark.circle.fill', android: 'help', web: 'help' }}
             label="Ayuda y soporte"
-            onPress={() => {
-              router.push(
-                '/help-support',
-              );
-            }}
+            onPress={() => router.push('/help-support')}
+            tone="olive"
           />
-
           <MenuRow
-            icon={{
-              ios: 'info.circle',
-              android: 'info',
-              web: 'info',
-            }}
+            description="Versión, proyecto y condiciones"
+            icon={{ ios: 'info.circle.fill', android: 'info', web: 'info' }}
             isLast
             label="Acerca de Mesa"
-            onPress={() => {
-              router.push(
-                '/about-mesa',
-              );
-            }}
+            onPress={() => router.push('/about-mesa')}
           />
-        </View>
+        </MenuSection>
 
         <Pressable
           accessibilityRole="button"
-          onPress={() => {
-            void handleSignOut();
-          }}
-          style={({ pressed }) => [
-            styles.logoutButton,
-
-            pressed
-              ? styles.logoutButtonPressed
-              : null,
-          ]}
+          onPress={() => void handleSignOut()}
+          style={({ pressed }) => [styles.logoutButton, pressed ? styles.pressed : null]}
         >
-          <Text style={styles.logoutText}>
-            Cerrar sesión
-          </Text>
+          <SymbolView
+            name={{ ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' }}
+            size={18}
+            tintColor={colors.danger}
+          />
+          <Text style={styles.logoutText}>Cerrar sesión</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -459,208 +297,280 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-
   content: {
-    paddingHorizontal: 22,
-    paddingTop: 8,
-    paddingBottom: 34,
+    gap: 22,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 118,
   },
-
   header: {
-    minHeight: 44,
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 28,
   },
-
-  iconButton: {
-    width: 42,
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 21,
+  eyebrow: {
+    color: colors.primary,
+    fontFamily: fonts.semiBold,
+    fontSize: 10,
   },
-
-  iconButtonPressed: {
-    backgroundColor: '#F6EFE9',
-  },
-
   headerTitle: {
     color: colors.text,
-    fontSize: 20,
     fontFamily: fonts.bold,
-    letterSpacing: -0.3,
+    fontSize: 30,
+    lineHeight: 35,
+    letterSpacing: -0.8,
   },
-
-  profileSection: {
-    padding: 18,
+  editButton: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 13,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.xl,
+    borderRadius: 16,
     backgroundColor: colors.surface,
-    marginBottom: 24,
-    ...shadows.card,
   },
-
-  profileTop: {
+  editButtonText: {
+    color: colors.primary,
+    fontFamily: fonts.semiBold,
+    fontSize: 11,
+  },
+  profileHero: {
+    position: 'relative',
+    overflow: 'hidden',
+    gap: 19,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#EACCC1',
+    borderRadius: radii.xl,
+    backgroundColor: colors.primarySoft,
+  },
+  decorativeCircle: {
+    position: 'absolute',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.58)',
+    borderRadius: 999,
+  },
+  decorativeCircleLarge: {
+    top: -74,
+    right: -44,
+    width: 190,
+    height: 190,
+  },
+  decorativeCircleSmall: {
+    top: -28,
+    right: 20,
+    width: 92,
+    height: 92,
+  },
+  identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    marginBottom: 22,
   },
-
   avatar: {
-    width: 74,
-    height: 74,
-    borderRadius: 37,
-    backgroundColor: '#E8DDD6',
+    width: 78,
+    height: 78,
+    borderWidth: 3,
+    borderColor: colors.surfaceElevated,
+    borderRadius: 39,
+    backgroundColor: colors.surfaceMuted,
   },
-
   avatarFallback: {
-    width: 74,
-    height: 74,
+    width: 78,
+    height: 78,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 37,
+    borderWidth: 3,
+    borderColor: colors.surfaceElevated,
+    borderRadius: 39,
     backgroundColor: colors.primary,
   },
-
   avatarFallbackText: {
     color: colors.white,
-    fontSize: 29,
     fontFamily: fonts.bold,
+    fontSize: 28,
   },
-
   profileInfo: {
+    minWidth: 0,
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
-
   name: {
     color: colors.text,
-    fontSize: 18,
     fontFamily: fonts.bold,
-    letterSpacing: -0.2,
+    fontSize: 19,
+    letterSpacing: -0.35,
   },
-
   username: {
-    color:
-      profilePalette.subtleText,
-    fontSize: 14,
-    fontFamily: fonts.semiBold,
+    color: colors.mutedStrong,
+    fontFamily: fonts.regular,
+    fontSize: 11,
   },
-
-  statsRow: {
+  memberBadge: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
-    alignItems: 'stretch',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.68)',
   },
-
+  memberBadgeText: {
+    color: colors.olive,
+    fontFamily: fonts.semiBold,
+    fontSize: 8,
+  },
+  statsRow: {
+    minHeight: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    borderRadius: radii.md,
+    backgroundColor: 'rgba(255,255,255,0.66)',
+  },
   statItem: {
+    minWidth: 0,
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 2,
+    gap: 2,
   },
-
   statValue: {
     color: colors.text,
-    fontSize: 28,
     fontFamily: fonts.bold,
-    lineHeight: 32,
-    marginBottom: 2,
+    fontSize: 17,
   },
-
   statLabel: {
-    color: colors.text,
-    fontSize: 11,
-    fontFamily: fonts.semiBold,
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 8,
   },
-
   statDivider: {
-    position: 'absolute',
-    right: 0,
-    top: 4,
-    bottom: 4,
-    width: 1,
-    backgroundColor:
-      profilePalette.line,
+    width: StyleSheet.hairlineWidth,
+    height: 30,
+    backgroundColor: colors.borderStrong,
   },
-
-  statsError: {
-    marginTop: 14,
-  },
-
   statsErrorText: {
     color: colors.danger,
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    lineHeight: 17,
+    fontFamily: fonts.medium,
+    fontSize: 9,
     textAlign: 'center',
   },
-
-  menuSection: {
-    overflow: 'hidden',
-    paddingHorizontal: 16,
+  invitationShortcut: {
+    minHeight: 74,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    padding: 13,
     borderWidth: 1,
-    borderColor: profilePalette.line,
-    borderRadius: radii.xl,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
-    marginBottom: 26,
     ...shadows.card,
   },
-
-  menuRow: {
-    minHeight: 58,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  menuRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor:
-      profilePalette.line,
-  },
-
-  menuRowPressed: {
-    backgroundColor: '#FBF6F2',
-  },
-
-  menuLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-
-  menuLabel: {
-    color: colors.text,
-    fontSize: 16,
-    fontFamily: fonts.medium,
-  },
-
-  logoutButton: {
-    minHeight: 52,
+  invitationIcon: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
-    marginBottom: 12,
-    borderWidth: 1.5,
-    borderColor:
-      profilePalette.logoutBorder,
-    borderRadius: 26,
-    backgroundColor:
-      profilePalette.logoutBackground,
+    borderRadius: 15,
+    backgroundColor: colors.primarySoft,
   },
-
-  logoutButtonPressed: {
-    backgroundColor: '#FFF3F0',
+  invitationCopy: {
+    flex: 1,
+    gap: 3,
   },
-
+  invitationTitle: {
+    color: colors.text,
+    fontFamily: fonts.semiBold,
+    fontSize: 12,
+  },
+  invitationText: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 9,
+  },
+  menuSectionWrap: {
+    gap: 8,
+  },
+  sectionLabel: {
+    marginLeft: 3,
+    color: colors.muted,
+    fontFamily: fonts.semiBold,
+    fontSize: 9,
+    letterSpacing: 0.8,
+  },
+  menuSection: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
+  },
+  menuRow: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  menuRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  menuIcon: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    backgroundColor: colors.surfaceMuted,
+  },
+  menuIconTerracotta: {
+    backgroundColor: colors.primarySoft,
+  },
+  menuIconOlive: {
+    backgroundColor: colors.oliveSoft,
+  },
+  menuCopy: {
+    minWidth: 0,
+    flex: 1,
+    gap: 3,
+  },
+  menuLabel: {
+    color: colors.text,
+    fontFamily: fonts.semiBold,
+    fontSize: 12,
+  },
+  menuDescription: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 9,
+  },
+  logoutButton: {
+    minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#F0C8BE',
+    borderRadius: radii.round,
+    backgroundColor: colors.dangerSoft,
+  },
   logoutText: {
-    color: profilePalette.accent,
-    fontSize: 16,
-    fontFamily: fonts.bold,
+    color: colors.danger,
+    fontFamily: fonts.semiBold,
+    fontSize: 12,
+  },
+  pressed: {
+    opacity: 0.78,
+    transform: [{ scale: 0.992 }],
   },
 });

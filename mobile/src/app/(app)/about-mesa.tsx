@@ -18,6 +18,7 @@ import {
 
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/fonts';
+import { radii, shadows } from '../../theme/layout';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -340,7 +341,11 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: 'center',
     marginBottom: 30,
-    paddingHorizontal: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: '#EACCC1',
+    borderRadius: radii.xl,
+    backgroundColor: colors.primarySoft,
   },
 
   logo: {
@@ -384,8 +389,9 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 22,
+    borderRadius: radii.xl,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   storyTitle: {
@@ -415,8 +421,12 @@ const styles = StyleSheet.create({
   },
 
   sectionContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   aboutRow: {
@@ -424,6 +434,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,
+    paddingHorizontal: 13,
   },
 
   aboutRowBorder: {
@@ -441,7 +452,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 19,
-    backgroundColor: '#F7EEE9',
+    backgroundColor: colors.primarySoft,
   },
 
   aboutText: {

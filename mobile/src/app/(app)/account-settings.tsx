@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/auth-context';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/fonts';
+import { radii, shadows } from '../../theme/layout';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -306,7 +307,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 22,
     paddingTop: 8,
-    paddingBottom: 34,
+    paddingBottom: 42,
   },
   header: {
     minHeight: 44,
@@ -336,12 +337,17 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   description: {
-    marginBottom: 30,
-    color: colors.muted,
+    marginBottom: 28,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.primarySoft,
+    color: colors.mutedStrong,
     fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 21,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   section: {
     marginBottom: 28,
@@ -355,14 +361,19 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   sectionContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
   settingRow: {
     minHeight: 67,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 13,
+    gap: 12,
+    paddingHorizontal: 13,
   },
   settingRowBorder: {
     borderBottomWidth: 1,
@@ -377,7 +388,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 18,
-    backgroundColor: '#F7EEE9',
+    backgroundColor: colors.primarySoft,
   },
   settingIconDanger: {
     backgroundColor: '#FFF0ED',
