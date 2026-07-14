@@ -2,52 +2,74 @@ import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
-import { radii, shadows } from '../theme/layout';
 
 export const recommendationStyles = StyleSheet.create({
   card: {
-    minHeight: 112,
+    minHeight: 84,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 11,
-    padding: 10,
+    gap: 13,
+    padding: 8,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    backgroundColor: colors.surface,
-    ...shadows.card,
+    borderColor: '#E2D7D1',
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
   },
-  artwork: { width: 92, height: 92, overflow: 'hidden', borderRadius: radii.md },
-  image: { width: '100%', height: '100%' },
-  fallback: {
+  artwork: {
+    width: 91,
+    height: 68,
+    overflow: 'hidden',
+    borderRadius: 12,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  copy: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E6E0CB',
+    minWidth: 0,
+    gap: 2,
   },
-  copy: { flex: 1, minWidth: 0, gap: 3 },
-  eyebrow: { color: colors.primary, fontSize: 8, fontFamily: fonts.semiBold },
-  title: { color: colors.text, fontSize: 15, fontFamily: fonts.bold },
-  category: { color: colors.text, fontSize: 10, fontFamily: fonts.medium },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 1 },
-  location: { flex: 1, color: colors.muted, fontSize: 8, fontFamily: fonts.regular },
-  trailing: { alignItems: 'flex-end', gap: 5 },
+  eyebrow: {
+    color: '#D34A2B',
+    fontFamily: fonts.medium,
+    fontSize: 9,
+    lineHeight: 12,
+  },
+  title: {
+    color: colors.text,
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  location: {
+    color: colors.text,
+    fontFamily: fonts.medium,
+    fontSize: 10,
+    lineHeight: 13,
+  },
+  description: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 9,
+    lineHeight: 12,
+  },
+  trailing: {
+    alignItems: 'flex-end',
+  },
   statusPill: {
-    paddingHorizontal: 7,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#EAF0DE',
+    backgroundColor: '#E8EEDC',
   },
-  statusText: { color: '#5D7444', fontSize: 7, fontFamily: fonts.semiBold },
-  scorePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 5,
-    borderRadius: 999,
-    backgroundColor: '#FFF1DB',
+  statusText: {
+    color: '#5E714A',
+    fontFamily: fonts.medium,
+    fontSize: 8,
   },
-  scoreText: { color: colors.text, fontSize: 10, fontFamily: fonts.bold },
-  pressed: { opacity: 0.8, transform: [{ scale: 0.99 }] },
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.992 }],
+  },
 });

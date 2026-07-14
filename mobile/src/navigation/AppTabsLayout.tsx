@@ -15,7 +15,7 @@ const hiddenScreenOptions = {
 export default function AppTabsLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
-  const bottomOffset = Math.max(insets.bottom, 10);
+  const bottomInset = Math.max(insets.bottom, 12);
   const showPrimaryNavigation = [
     '/home',
     '/groups',
@@ -35,43 +35,34 @@ export default function AppTabsLayout() {
         tabBarHideOnKeyboard: true,
         tabBarLabelPosition: 'below-icon',
         tabBarItemStyle: {
-          minHeight: 54,
+          height: 52,
           justifyContent: 'center',
-          marginHorizontal: 2,
-          marginVertical: 6,
-          borderRadius: 18,
+          paddingTop: 5,
         },
-        tabBarIconStyle: { width: 25, height: 24, marginBottom: 1 },
+        tabBarIconStyle: { width: 27, height: 25, marginBottom: 1 },
         tabBarLabelStyle: {
-          marginTop: 1,
-          fontSize: 9,
+          marginTop: 0,
+          fontSize: 11,
           fontFamily: fonts.medium,
-          lineHeight: 11,
+          lineHeight: 14,
         },
         tabBarStyle: showPrimaryNavigation ? {
           position: 'absolute',
-          right: 14,
-          bottom: bottomOffset,
-          left: 14,
-          height: 68,
-          paddingHorizontal: 6,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          height: 52 + bottomInset,
+          paddingHorizontal: 10,
           paddingTop: 0,
-          paddingBottom: 0,
+          paddingBottom: bottomInset,
           borderTopWidth: 1,
-          borderRightWidth: 1,
-          borderBottomWidth: 1,
-          borderLeftWidth: 1,
           borderTopColor: navigationColors.border,
-          borderRightColor: navigationColors.border,
-          borderBottomColor: navigationColors.border,
-          borderLeftColor: navigationColors.border,
-          borderRadius: 24,
           backgroundColor: navigationColors.background,
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 12 },
-          shadowOpacity: 0.14,
-          shadowRadius: 24,
-          elevation: 14,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.06,
+          shadowRadius: 12,
+          elevation: 12,
         } : { display: 'none' },
       }}
     >
@@ -83,7 +74,7 @@ export default function AppTabsLayout() {
           tabBarIcon: ({ focused, color }) => (
             <SymbolView
               name={{ ios: focused ? 'house.fill' : 'house', android: 'home', web: 'home' }}
-              size={20}
+              size={22}
               tintColor={color}
             />
           ),
@@ -109,7 +100,7 @@ export default function AppTabsLayout() {
                 android: 'group',
                 web: 'group',
               }}
-              size={21}
+              size={23}
               tintColor={color}
             />
           ),
@@ -144,7 +135,7 @@ export default function AppTabsLayout() {
               <View style={styles.addCircle}>
                 <SymbolView
                   name={{ ios: 'plus', android: 'add', web: 'add' }}
-                  size={27}
+                  size={30}
                   tintColor={colors.white}
                 />
               </View>
@@ -161,7 +152,7 @@ export default function AppTabsLayout() {
           tabBarIcon: ({ focused, color }) => (
             <SymbolView
               name={{ ios: focused ? 'map.fill' : 'map', android: 'map', web: 'map' }}
-              size={20}
+              size={22}
               tintColor={color}
             />
           ),
@@ -176,7 +167,7 @@ export default function AppTabsLayout() {
           tabBarIcon: ({ focused, color }) => (
             <SymbolView
               name={{ ios: focused ? 'person.fill' : 'person', android: 'person', web: 'person' }}
-              size={20}
+              size={22}
               tintColor={color}
             />
           ),

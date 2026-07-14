@@ -1,23 +1,46 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import type { Href } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { HomeActivityRow, type HomeActivityEntry } from './HomeActivityRow';
 import { HomeGroupCard } from './HomeGroupCard';
-import { HomeInvitationBanner } from './HomeInvitationBanner';
 import { HomeRecommendationCard, type HomeRecommendation } from './HomeRecommendationCard';
 import { homeStyles as styles } from './HomeDashboardStyles';
-import { refinedHomeStyles as refined } from './HomeRefinedStyles';
 import { colors } from '../theme/colors';
 import type { RestaurantGroup } from '../types/group';
 import type { GroupMember } from '../types/group-member';
+
+function SectionAction({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.sectionAction,
+        pressed ? styles.pressed : null,
+      ]}
+    >
+      <Text style={styles.sectionActionText}>{label}</Text>
+      <SymbolView
+        name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+        size={16}
+        tintColor={colors.olive}
+      />
+    </Pressable>
+  );
+}
 
 export function HomeDashboardContentRefined({
   activity,
   groups,
   membersByGroup,
-  pendingInvitationCount,
   recommendation,
 }: {
   activity: HomeActivityEntry[];
@@ -26,7 +49,7 @@ export function HomeDashboardContentRefined({
   pendingInvitationCount: number;
   recommendation: HomeRecommendation | null;
 }) {
-  const visibleGroups = groups.slice(0, 4);
+  const featuredGroup = groups[0] ?? null;
 
   function openGroup(group: RestaurantGroup): void {
     if (group.privacy === 'PUBLIC') {
@@ -50,102 +73,91 @@ export function HomeDashboardContentRefined({
   }
 
   return (
-    <>
-      <View style={[styles.section, refined.section]}>
-        <View style={[styles.sectionHeader, refined.sectionHeader]}>
-          <View style={styles.sectionHeadingCopy}>
-            <Text style={[styles.sectionTitle, refined.sectionTitle]}>Tus grupos</Text>
-            <Text style={styles.sectionCaption}>Elige una mesa y sigue organizando.</Text>
-          </View>
-          <Pressable onPress={() => router.push('/groups')} style={[styles.sectionAction, refined.sectionAction]}>
-            <Text style={[styles.sectionActionText, refined.sectionActionText]}>
-              Ver todos
-            </Text>
-            <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={13} tintColor="#5D7444" />
-          </Pressable>
+    <View style={styles.dashboard}>
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Tus grupos</Text>
+          <SectionAction label="Ver todos" onPress={() => router.push('/groups')} />
         </View>
 
-        {visibleGroups.length > 0 ? (
-          <ScrollView
-            contentContainerStyle={[styles.groupGrid, refined.groupGrid]}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          >
-            {visibleGroups.map(group => (
-              <HomeGroupCard
-                group={group}
-                key={group.id}
-                members={membersByGroup[group.id] ?? []}
-                onPress={() => openGroup(group)}
-              />
-            ))}
-          </ScrollView>
+        {featuredGroup ? (
+          <HomeGroupCard
+            group={featuredGroup}
+            members={membersByGroup[featuredGroup.id] ?? []}
+            onPress={() => openGroup(featuredGroup)}
+          />
         ) : (
           <Pressable
             onPress={() => router.push('/groups/create')}
-            style={({ pressed }) => [styles.emptyCard, refined.emptyCard, pressed ? styles.pressed : null]}
+            style={({ pressed }) => [
+              styles.emptyCard,
+              pressed ? styles.pressed : null,
+            ]}
           >
-            <View style={[styles.emptyIcon, refined.emptyIcon]}>
-              <SymbolView name={{ ios: 'person.2.badge.plus', android: 'group_add', web: 'group_add' }} size={21} tintColor={colors.primary} />
+            <View style={styles.emptyIcon}>
+              <SymbolView
+                name={{ ios: 'person.2.badge.plus', android: 'group_add', web: 'group_add' }}
+                size={23}
+                tintColor={colors.primary}
+              />
             </View>
             <View style={styles.emptyCopy}>
-              <Text style={[styles.emptyTitle, refined.emptyTitle]}>Crea tu primer grupo</Text>
-              <Text style={[styles.emptySubtitle, refined.emptySubtitle]}>
+              <Text style={styles.emptyTitle}>Crea tu primer grupo</Text>
+              <Text style={styles.emptySubtitle}>
                 Guarda restaurantes y organiza planes con tu gente.
               </Text>
             </View>
-            <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={17} tintColor={colors.muted} />
+            <SymbolView
+              name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+              size={18}
+              tintColor={colors.muted}
+            />
           </Pressable>
         )}
       </View>
 
-      {pendingInvitationCount > 0 ? (
-        <HomeInvitationBanner count={pendingInvitationCount} onPress={() => router.push('/group-invitations')} />
-      ) : null}
-
       {recommendation ? (
-        <View style={[styles.section, refined.section]}>
-          <View style={[styles.sectionHeader, refined.sectionHeader]}>
-            <View style={styles.sectionHeadingCopy}>
-              <Text style={[styles.sectionTitle, refined.sectionTitle]}>Una buena opción</Text>
-              <Text style={styles.sectionCaption}>La mejor valorada entre tus grupos.</Text>
-            </View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Una buena opción</Text>
           </View>
-          <HomeRecommendationCard onPress={openRecommendation} recommendation={recommendation} />
+          <HomeRecommendationCard
+            onPress={openRecommendation}
+            recommendation={recommendation}
+          />
         </View>
       ) : null}
 
-      <View style={[styles.section, refined.section]}>
-        <View style={[styles.sectionHeader, refined.sectionHeader]}>
-          <View style={styles.sectionHeadingCopy}>
-            <Text style={[styles.sectionTitle, refined.sectionTitle]}>Actividad reciente</Text>
-            <Text style={styles.sectionCaption}>Lo último que ha pasado en tus mesas.</Text>
-          </View>
-          <Pressable onPress={() => router.push('/notifications')} style={[styles.sectionAction, refined.sectionAction]}>
-            <Text style={[styles.sectionActionText, refined.sectionActionText]}>Ver toda</Text>
-            <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={13} tintColor="#5D7444" />
-          </Pressable>
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Actividad reciente</Text>
+          <SectionAction label="Ver toda" onPress={() => router.push('/notifications')} />
         </View>
 
         {activity.length > 0 ? (
-          <View style={[styles.activityList, refined.activityList]}>
-            {activity.map(entry => <HomeActivityRow entry={entry} key={entry.activity.id} />)}
+          <View style={styles.activityList}>
+            {activity.slice(0, 2).map(entry => (
+              <HomeActivityRow entry={entry} key={entry.activity.id} />
+            ))}
           </View>
         ) : (
-          <View style={[styles.emptyCard, refined.emptyCard]}>
-            <View style={[styles.emptyIcon, refined.emptyIcon]}>
-              <SymbolView name={{ ios: 'waveform.path.ecg', android: 'monitor_heart', web: 'monitor_heart' }} size={20} tintColor={colors.primary} />
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIcon}>
+              <SymbolView
+                name={{ ios: 'waveform.path.ecg', android: 'monitor_heart', web: 'monitor_heart' }}
+                size={21}
+                tintColor={colors.primary}
+              />
             </View>
             <View style={styles.emptyCopy}>
-              <Text style={[styles.emptyTitle, refined.emptyTitle]}>Todo tranquilo por aquí</Text>
-              <Text style={[styles.emptySubtitle, refined.emptySubtitle]}>
+              <Text style={styles.emptyTitle}>Todo tranquilo por aquí</Text>
+              <Text style={styles.emptySubtitle}>
                 La actividad de tus grupos aparecerá en este espacio.
               </Text>
             </View>
           </View>
         )}
       </View>
-
-    </>
+    </View>
   );
 }

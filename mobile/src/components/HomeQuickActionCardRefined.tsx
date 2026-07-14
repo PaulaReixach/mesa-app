@@ -35,7 +35,7 @@ export function HomeQuickActionCardRefined({
       <View style={[styles.iconWrap, sage ? styles.iconWrapSage : null]}>
         <SymbolView
           name={icon}
-          size={19}
+          size={29}
           tintColor={sage ? '#5B7740' : colors.primary}
         />
       </View>
@@ -46,8 +46,10 @@ export function HomeQuickActionCardRefined({
         </View>
       ) : null}
 
-      <Text numberOfLines={1} style={styles.title}>{title}</Text>
-      <Text numberOfLines={3} style={styles.subtitle}>{subtitle}</Text>
+      <View style={styles.copy}>
+        <Text numberOfLines={1} style={styles.title}>{title}</Text>
+        <Text numberOfLines={1} style={styles.subtitle}>{subtitle}</Text>
+      </View>
     </Pressable>
   );
 }
