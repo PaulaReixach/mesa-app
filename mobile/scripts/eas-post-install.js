@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { spawnSync } = require('child_process');
 
 if (process.env.EAS_BUILD_PLATFORM !== 'android') {
   console.log('Skipping the Android Gradle wrapper check.');
@@ -10,6 +9,7 @@ if (process.env.EAS_BUILD_PLATFORM !== 'android') {
 }
 
 const projectRoot = path.resolve(__dirname, '..');
+const wrapperBackup = path.join(__dirname, 'gradle-wrapper.jar.base64');
 const wrapperJar = path.join(
   projectRoot,
   'android',
@@ -23,39 +23,19 @@ if (fs.existsSync(wrapperJar)) {
   process.exit(0);
 }
 
-console.log('Gradle wrapper JAR is missing; regenerating the Android project.');
+console.log('Gradle wrapper JAR is missing; restoring the bundled copy.');
 
-const expoCli = require.resolve('expo/bin/cli');
-const result = spawnSync(
-  process.execPath,
-  [
-    expoCli,
-    'prebuild',
-    '--platform',
-    'android',
-    '--clean',
-    '--no-install',
-  ],
-  {
-    cwd: projectRoot,
-    env: {
-      ...process.env,
-      EXPO_NO_GIT_STATUS: '1',
-    },
-    stdio: 'inherit',
-  }
-);
+const encodedWrapper = fs
+  .readFileSync(wrapperBackup, 'utf8')
+  .replace(/\s/g, '');
 
-if (result.error) {
-  throw result.error;
-}
-
-if (result.status !== 0) {
-  process.exit(result.status ?? 1);
-}
+fs.mkdirSync(path.dirname(wrapperJar), {
+  recursive: true,
+});
+fs.writeFileSync(wrapperJar, Buffer.from(encodedWrapper, 'base64'));
 
 if (!fs.existsSync(wrapperJar)) {
-  throw new Error(`Expo Prebuild did not create ${wrapperJar}`);
+  throw new Error(`Could not restore ${wrapperJar}`);
 }
 
-console.log('Gradle wrapper JAR regenerated successfully.');
+console.log('Gradle wrapper JAR restored successfully.');
