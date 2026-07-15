@@ -254,6 +254,7 @@ export default function GroupsScreen() {
 
             <Pressable
               accessibilityRole="button"
+              hitSlop={5}
               onPress={() => router.push('/groups/create')}
               style={({ pressed }) => [
                 styles.createButton,
@@ -702,15 +703,15 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   createButton: {
-    width: 128,
-    height: 44,
+    width: 114,
+    height: 40,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255, 255, 255, 0.24)',
-    borderRadius: 12,
+    borderRadius: 10,
   },
   createButtonCompact: {
-    width: 44,
+    width: 40,
   },
   createButtonLowered: {
     marginTop: 10,
@@ -724,21 +725,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 7,
-    paddingHorizontal: 8,
+    gap: 6,
+    paddingHorizontal: 7,
   },
   createButtonIcon: {
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14,
+    borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.14)',
   },
   createButtonText: {
     color: colors.white,
     fontFamily: fonts.semiBold,
-    fontSize: 12,
+    fontSize: 11,
   },
   heroIllustration: {
     position: 'absolute',
