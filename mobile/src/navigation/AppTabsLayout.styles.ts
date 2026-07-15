@@ -14,6 +14,16 @@ export const appTabsStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  primaryTabIcon: {
+    width: 62,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+  },
+  primaryTabIconActive: {
+    backgroundColor: '#F9E4DC',
+  },
   addTabButton: {
     flex: 1,
     height: 60,

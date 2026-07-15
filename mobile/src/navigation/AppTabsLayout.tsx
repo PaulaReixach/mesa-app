@@ -4,7 +4,7 @@ import { router, Tabs, usePathname } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { useRef } from 'react';
 import { Animated, Pressable, View } from 'react-native';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { ColorValue, StyleProp, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { appTabsStyles as styles, tabNavigationColors as navigationColors } from './AppTabsLayout.styles';
@@ -21,6 +21,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 type PrimaryTabButtonProps = Omit<ComponentProps<typeof Pressable>, 'style'> & {
   style?: StyleProp<ViewStyle>;
 };
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
 function PrimaryTabButton({
   onPressIn,
@@ -69,6 +70,29 @@ function PrimaryTabButton({
         },
       ]}
     />
+  );
+}
+
+function PrimaryTabIcon({
+  color,
+  focused,
+  name,
+  size,
+}: {
+  color: ColorValue;
+  focused: boolean;
+  name: SymbolName;
+  size: number;
+}) {
+  return (
+    <View
+      style={[
+        styles.primaryTabIcon,
+        focused ? styles.primaryTabIconActive : null,
+      ]}
+    >
+      <SymbolView name={name} size={size} tintColor={color} />
+    </View>
   );
 }
 
@@ -122,9 +146,9 @@ export default function AppTabsLayout() {
           paddingTop: 4,
         },
         tabBarIconStyle: {
-          width: 28,
-          height: 27,
-          marginBottom: 2,
+          width: 64,
+          height: 32,
+          marginBottom: 0,
         },
         tabBarLabelStyle: {
           marginTop: 0,
@@ -160,10 +184,11 @@ export default function AppTabsLayout() {
           title: 'Inicio',
           tabBarAccessibilityLabel: 'Inicio',
           tabBarIcon: ({ focused, color }) => (
-            <SymbolView
+            <PrimaryTabIcon
+              color={color}
+              focused={focused}
               name={{ ios: focused ? 'house.fill' : 'house', android: 'home', web: 'home' }}
               size={23}
-              tintColor={color}
             />
           ),
         }}
@@ -182,14 +207,15 @@ export default function AppTabsLayout() {
           tabBarAccessibilityLabel: 'Grupos',
           popToTopOnBlur: true,
           tabBarIcon: ({ focused, color }) => (
-            <SymbolView
+            <PrimaryTabIcon
+              color={color}
+              focused={focused}
               name={{
                 ios: focused ? 'person.2.fill' : 'person.2',
                 android: 'group',
                 web: 'group',
               }}
               size={24}
-              tintColor={color}
             />
           ),
         }}
@@ -253,10 +279,11 @@ export default function AppTabsLayout() {
           title: 'Mapa',
           tabBarAccessibilityLabel: 'Mapa',
           tabBarIcon: ({ focused, color }) => (
-            <SymbolView
+            <PrimaryTabIcon
+              color={color}
+              focused={focused}
               name={{ ios: focused ? 'map.fill' : 'map', android: 'map', web: 'map' }}
               size={23}
-              tintColor={color}
             />
           ),
         }}
@@ -268,10 +295,11 @@ export default function AppTabsLayout() {
           title: 'Perfil',
           tabBarAccessibilityLabel: 'Perfil',
           tabBarIcon: ({ focused, color }) => (
-            <SymbolView
+            <PrimaryTabIcon
+              color={color}
+              focused={focused}
               name={{ ios: focused ? 'person.fill' : 'person', android: 'person', web: 'person' }}
               size={23}
-              tintColor={color}
             />
           ),
         }}
