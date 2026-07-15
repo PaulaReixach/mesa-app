@@ -1,7 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { router, Tabs, usePathname } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import type { ComponentProps } from 'react';
+import { useRef } from 'react';
+import { Animated, Pressable, View } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { appTabsStyles as styles, tabNavigationColors as navigationColors } from './AppTabsLayout.styles';
@@ -12,6 +15,62 @@ const hiddenScreenOptions = {
   href: null,
   tabBarStyle: { display: 'none' as const },
 };
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+type PrimaryTabButtonProps = Omit<ComponentProps<typeof Pressable>, 'style'> & {
+  style?: StyleProp<ViewStyle>;
+};
+
+function PrimaryTabButton({
+  onPressIn,
+  onPressOut,
+  style,
+  ...props
+}: PrimaryTabButtonProps) {
+  const pressProgress = useRef(new Animated.Value(0)).current;
+
+  const animatePress = (toValue: number, duration: number) => {
+    pressProgress.stopAnimation();
+    Animated.timing(pressProgress, {
+      toValue,
+      duration,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <AnimatedPressable
+      {...props}
+      onPressIn={event => {
+        animatePress(1, 90);
+        onPressIn?.(event);
+      }}
+      onPressOut={event => {
+        animatePress(0, 150);
+        onPressOut?.(event);
+      }}
+      style={[
+        style,
+        styles.primaryTabButton,
+        {
+          opacity: pressProgress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 0.72],
+          }),
+          transform: [
+            {
+              scale: pressProgress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, 0.975],
+              }),
+            },
+          ],
+        },
+      ]}
+    />
+  );
+}
 
 export default function AppTabsLayout() {
   const insets = useSafeAreaInsets();
@@ -36,6 +95,27 @@ export default function AppTabsLayout() {
         tabBarHideOnKeyboard: true,
         tabBarAllowFontScaling: false,
         tabBarLabelPosition: 'below-icon',
+        tabBarButton: ({
+          accessibilityLabel,
+          accessibilityState,
+          children,
+          onLongPress,
+          onPress,
+          style,
+          testID,
+        }) => (
+          <PrimaryTabButton
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole="button"
+            accessibilityState={accessibilityState}
+            onLongPress={onLongPress}
+            onPress={onPress}
+            style={style}
+            testID={testID}
+          >
+            {children}
+          </PrimaryTabButton>
+        ),
         tabBarItemStyle: {
           height: 60,
           justifyContent: 'center',

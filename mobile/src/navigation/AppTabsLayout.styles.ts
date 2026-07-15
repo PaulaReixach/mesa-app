@@ -10,6 +10,10 @@ export const tabNavigationColors = {
 } as const;
 
 export const appTabsStyles = StyleSheet.create({
+  primaryTabButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   addTabButton: {
     flex: 1,
     height: 60,
