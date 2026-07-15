@@ -8,7 +8,7 @@ export const quickActionStyles = StyleSheet.create({
     position: 'relative',
     flex: 1,
     minWidth: 0,
-    height: 60,
+    height: 58,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,

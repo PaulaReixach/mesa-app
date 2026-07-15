@@ -6,7 +6,7 @@ import { fonts } from '../theme/fonts';
 export const groupCardStyles = StyleSheet.create({
   card: {
     width: '100%',
-    height: 130,
+    height: 124,
     overflow: 'hidden',
     borderRadius: 21,
     backgroundColor: '#D7CEC8',

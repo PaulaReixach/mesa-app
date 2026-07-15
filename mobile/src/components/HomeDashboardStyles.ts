@@ -68,7 +68,7 @@ export const homeStyles = StyleSheet.create({
   },
   heroCopy: {
     zIndex: 2,
-    marginTop: 25,
+    marginTop: 16,
   },
   greeting: {
     color: '#F8DCCC',
@@ -94,17 +94,17 @@ export const homeStyles = StyleSheet.create({
   illustration: {
     position: 'absolute',
     right: -51,
-    bottom: -13,
+    bottom: -40,
     width: 176,
     height: 180,
   },
   headerControls: {
     zIndex: 4,
-    marginTop: -31,
+    marginTop: -28,
     paddingHorizontal: 20,
   },
   searchBar: {
-    height: 51,
+    height: 46,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,
@@ -127,16 +127,16 @@ export const homeStyles = StyleSheet.create({
   quickActions: {
     flexDirection: 'row',
     gap: 13,
-    marginTop: 16,
+    marginTop: 14,
     paddingHorizontal: 3,
   },
   dashboard: {
     gap: 14,
     paddingHorizontal: 22,
-    paddingTop: 18,
+    paddingTop: 12,
   },
   section: {
-    gap: 6,
+    gap: 5,
   },
   sectionHeader: {
     minHeight: 24,

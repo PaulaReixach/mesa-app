@@ -33,19 +33,19 @@ function ActivityText({ entry }: { entry: HomeActivityEntry }) {
 
   switch (activity.type) {
     case 'MEMBER_INVITED':
-      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>invitó a <Text style={styles.strong}>{subject}</Text> a <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>invitó a <Text style={styles.strong}>{subject}</Text> a <Text style={styles.group}>{groupName}</Text></Text>;
     case 'RESTAURANT_ADDED':
-      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>añadió <Text style={styles.strong}>“{restaurant}”</Text> a <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>añadió <Text style={styles.strong}>“{restaurant}”</Text> a <Text style={styles.group}>{groupName}</Text></Text>;
     case 'RESTAURANT_RATED':
-      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>valoró <Text style={styles.strong}>“{restaurant}”</Text> con <Text style={styles.strong}>{activity.score?.toFixed(1).replace('.', ',') ?? '—'}</Text></Text>;
+      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>valoró <Text style={styles.strong}>“{restaurant}”</Text> con <Text style={styles.strong}>{activity.score?.toFixed(1).replace('.', ',') ?? '—'}</Text></Text>;
     case 'RESTAURANT_STATUS_CHANGED':
-      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>actualizó <Text style={styles.strong}>“{restaurant}”</Text></Text>;
+      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>actualizó <Text style={styles.strong}>“{restaurant}”</Text></Text>;
     case 'MEMBER_JOINED':
-      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>se unió a <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>se unió a <Text style={styles.group}>{groupName}</Text></Text>;
     case 'MEMBER_LEFT':
-      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>salió de <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>salió de <Text style={styles.group}>{groupName}</Text></Text>;
     case 'GROUP_CREATED':
-      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>creó <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>creó <Text style={styles.group}>{groupName}</Text></Text>;
   }
 }
 
@@ -61,7 +61,9 @@ export function HomeActivityRowRefined({ entry }: { entry: HomeActivityEntry }) 
         {avatar ? (
           <Image source={{ uri: avatar }} style={styles.avatarImage} />
         ) : (
-          <Text style={styles.avatarInitial}>{displayName.charAt(0).toUpperCase()}</Text>
+          <Text allowFontScaling={false} style={styles.avatarInitial}>
+            {displayName.charAt(0).toUpperCase()}
+          </Text>
         )}
       </View>
 
@@ -69,7 +71,9 @@ export function HomeActivityRowRefined({ entry }: { entry: HomeActivityEntry }) 
         <ActivityText entry={entry} />
       </View>
 
-      <Text style={styles.time}>{timeLabel(activity.createdAt)}</Text>
+      <Text allowFontScaling={false} style={styles.time}>
+        {timeLabel(activity.createdAt)}
+      </Text>
     </View>
   );
 }

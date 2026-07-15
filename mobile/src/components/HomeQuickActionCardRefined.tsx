@@ -42,13 +42,19 @@ export function HomeQuickActionCardRefined({
 
       {badge != null && badge > 0 ? (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
+          <Text allowFontScaling={false} style={styles.badgeText}>
+            {badge > 9 ? '9+' : badge}
+          </Text>
         </View>
       ) : null}
 
       <View style={styles.copy}>
-        <Text numberOfLines={1} style={styles.title}>{title}</Text>
-        <Text numberOfLines={1} style={styles.subtitle}>{subtitle}</Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
+          {title}
+        </Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.subtitle}>
+          {subtitle}
+        </Text>
       </View>
     </Pressable>
   );

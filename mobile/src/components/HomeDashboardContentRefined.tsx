@@ -27,7 +27,7 @@ function SectionAction({
         pressed ? styles.pressed : null,
       ]}
     >
-      <Text style={styles.sectionActionText}>{label}</Text>
+      <Text allowFontScaling={false} style={styles.sectionActionText}>{label}</Text>
       <SymbolView
         name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
         size={16}
@@ -76,7 +76,7 @@ export function HomeDashboardContentRefined({
     <View style={styles.dashboard}>
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Tus grupos</Text>
+          <Text allowFontScaling={false} style={styles.sectionTitle}>Tus grupos</Text>
           <SectionAction label="Ver todos" onPress={() => router.push('/groups')} />
         </View>
 
@@ -102,8 +102,8 @@ export function HomeDashboardContentRefined({
               />
             </View>
             <View style={styles.emptyCopy}>
-              <Text style={styles.emptyTitle}>Crea tu primer grupo</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text allowFontScaling={false} style={styles.emptyTitle}>Crea tu primer grupo</Text>
+              <Text allowFontScaling={false} style={styles.emptySubtitle}>
                 Guarda restaurantes y organiza planes con tu gente.
               </Text>
             </View>
@@ -119,7 +119,7 @@ export function HomeDashboardContentRefined({
       {recommendation ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Una buena opción</Text>
+            <Text allowFontScaling={false} style={styles.sectionTitle}>Una buena opción</Text>
           </View>
           <HomeRecommendationCard
             onPress={openRecommendation}
@@ -130,7 +130,7 @@ export function HomeDashboardContentRefined({
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Actividad reciente</Text>
+          <Text allowFontScaling={false} style={styles.sectionTitle}>Actividad reciente</Text>
           <SectionAction label="Ver toda" onPress={() => router.push('/notifications')} />
         </View>
 
@@ -150,8 +150,8 @@ export function HomeDashboardContentRefined({
               />
             </View>
             <View style={styles.emptyCopy}>
-              <Text style={styles.emptyTitle}>Todo tranquilo por aquí</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text allowFontScaling={false} style={styles.emptyTitle}>Todo tranquilo por aquí</Text>
+              <Text allowFontScaling={false} style={styles.emptySubtitle}>
                 La actividad de tus grupos aparecerá en este espacio.
               </Text>
             </View>

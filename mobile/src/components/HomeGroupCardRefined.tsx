@@ -51,20 +51,22 @@ export function HomeGroupCardRefined({
             size={12}
             tintColor="#617C4A"
           />
-          <Text style={styles.privacyText}>
+          <Text allowFontScaling={false} style={styles.privacyText}>
             {group.privacy === 'PRIVATE' ? 'Privado' : 'Público'}
           </Text>
         </View>
 
         <View style={styles.bottomContent}>
-          <Text numberOfLines={1} style={styles.title}>{group.name}</Text>
+          <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
+            {group.name}
+          </Text>
           <View style={styles.locationRow}>
             <SymbolView
               name={{ ios: 'mappin.and.ellipse', android: 'location_on', web: 'location_on' }}
               size={16}
               tintColor={colors.white}
             />
-            <Text numberOfLines={1} style={styles.locationText}>
+            <Text allowFontScaling={false} numberOfLines={1} style={styles.locationText}>
               {group.city ?? 'Sin ciudad'}
             </Text>
           </View>

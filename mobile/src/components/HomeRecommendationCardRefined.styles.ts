@@ -5,7 +5,7 @@ import { fonts } from '../theme/fonts';
 
 export const recommendationStyles = StyleSheet.create({
   card: {
-    minHeight: 84,
+    height: 84,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,

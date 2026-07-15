@@ -5,23 +5,23 @@ import { fonts } from '../theme/fonts';
 
 export const activityStyles = StyleSheet.create({
   row: {
-    minHeight: 44,
+    minHeight: 40,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,
     paddingHorizontal: 13,
-    paddingVertical: 5,
+    paddingVertical: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E5DAD4',
     backgroundColor: '#FFFFFF',
   },
   avatar: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 16,
+    borderRadius: 14,
     backgroundColor: '#F5DDD5',
   },
   avatarImage: {

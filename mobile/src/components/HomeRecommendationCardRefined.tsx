@@ -34,17 +34,23 @@ export function HomeRecommendationCardRefined({
       </View>
 
       <View style={styles.copy}>
-        <Text style={styles.eyebrow}>Recomendación para ti</Text>
-        <Text numberOfLines={1} style={styles.title}>{restaurant.name}</Text>
-        <Text numberOfLines={1} style={styles.location}>{location}</Text>
-        <Text numberOfLines={1} style={styles.description}>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.eyebrow}>
+          Recomendación para ti
+        </Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
+          {restaurant.name}
+        </Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.location}>
+          {location}
+        </Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.description}>
           La mejor valorada en {group.name}
         </Text>
       </View>
 
       <View style={styles.trailing}>
         <View style={styles.statusPill}>
-          <Text style={styles.statusText}>Para descubrir</Text>
+          <Text allowFontScaling={false} style={styles.statusText}>Para descubrir</Text>
         </View>
       </View>
 

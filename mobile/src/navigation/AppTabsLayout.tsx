@@ -33,6 +33,7 @@ export default function AppTabsLayout() {
         tabBarActiveTintColor: navigationColors.active,
         tabBarInactiveTintColor: navigationColors.inactive,
         tabBarHideOnKeyboard: true,
+        tabBarAllowFontScaling: false,
         tabBarLabelPosition: 'below-icon',
         tabBarItemStyle: {
           height: 52,

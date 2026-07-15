@@ -76,13 +76,13 @@ export function HomeHeader({
         style={[
           styles.heroBackground,
           {
-            height: topInset + 214,
-            paddingTop: topInset + 18,
+            height: topInset + 187,
+            paddingTop: topInset,
           },
         ]}
       >
         <View style={styles.topBar}>
-          <Text style={styles.brand}>Mesa</Text>
+          <Text allowFontScaling={false} style={styles.brand}>Mesa</Text>
 
           <View style={styles.topActions}>
             <NotificationBellButton variant="hero" />
@@ -98,16 +98,18 @@ export function HomeHeader({
               {avatarUri ? (
                 <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
               ) : (
-                <Text style={styles.avatarInitial}>{userInitial}</Text>
+                <Text allowFontScaling={false} style={styles.avatarInitial}>
+                  {userInitial}
+                </Text>
               )}
             </Pressable>
           </View>
         </View>
 
         <View style={styles.heroCopy}>
-          <Text style={styles.greeting}>Hola, {userName}</Text>
-          <Text style={styles.title}>¿Qué te apetece hoy?</Text>
-          <Text style={styles.subtitle}>
+          <Text allowFontScaling={false} style={styles.greeting}>Hola, {userName}</Text>
+          <Text allowFontScaling={false} style={styles.title}>¿Qué te apetece hoy?</Text>
+          <Text allowFontScaling={false} style={styles.subtitle}>
             Encuentra, comparte y decide con los tuyos.
           </Text>
         </View>
@@ -130,14 +132,14 @@ export function HomeHeader({
             size={Platform.OS === 'android' ? 24 : 22}
             tintColor="#706965"
           />
-          <Text numberOfLines={1} style={styles.searchText}>
+          <Text allowFontScaling={false} numberOfLines={1} style={styles.searchText}>
             Busca restaurantes, cocinas o lugares
           </Text>
         </Pressable>
 
         <View style={styles.quickActions}>
           <HomeQuickActionCardRefined
-            icon={{ ios: 'person.badge.plus', android: 'group_add', web: 'group_add' }}
+            icon={{ ios: 'person.badge.plus', android: 'person_add', web: 'person_add' }}
             onPress={() => router.push('/groups/create')}
             subtitle="Organiza un plan"
             title="Crear grupo"
