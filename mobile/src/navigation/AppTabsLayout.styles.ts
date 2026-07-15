@@ -17,10 +17,7 @@ export const appTabsStyles = StyleSheet.create({
     justifyContent: 'flex-start',
     overflow: 'visible',
   },
-  addTabButtonPressed: {
-    transform: [{ scale: 0.95 }],
-  },
-  addCircleShadow: {
+  addCircleFrame: {
     width: 58,
     height: 58,
     alignItems: 'center',
@@ -29,11 +26,12 @@ export const appTabsStyles = StyleSheet.create({
     padding: 4,
     borderRadius: 29,
     backgroundColor: '#FFFDFC',
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.19,
-    shadowRadius: 14,
-    elevation: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#F0E4DE',
+  },
+  addCircleFramePressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.985 }],
   },
   addCircle: {
     width: 50,

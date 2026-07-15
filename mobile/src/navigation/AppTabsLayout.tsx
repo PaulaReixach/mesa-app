@@ -135,25 +135,33 @@ export default function AppTabsLayout() {
               onLongPress={onLongPress}
               onPress={onPress}
               testID={testID}
-              style={({ pressed }) => [
-                styles.addTabButton,
-                pressed ? styles.addTabButtonPressed : null,
-              ]}
+              style={styles.addTabButton}
             >
-              <View style={styles.addCircleShadow}>
-                <LinearGradient
-                  colors={['#B93620', '#DD4D2C', '#C43E24']}
-                  end={{ x: 1, y: 1 }}
-                  start={{ x: 0, y: 0 }}
-                  style={styles.addCircle}
+              {({ pressed }) => (
+                <View
+                  style={[
+                    styles.addCircleFrame,
+                    pressed ? styles.addCircleFramePressed : null,
+                  ]}
                 >
-                  <SymbolView
-                    name={{ ios: 'plus', android: 'add', web: 'add' }}
-                    size={31}
-                    tintColor={colors.white}
-                  />
-                </LinearGradient>
-              </View>
+                  <LinearGradient
+                    colors={
+                      pressed
+                        ? ['#A9321F', '#C74329', '#B73822']
+                        : ['#B93620', '#DD4D2C', '#C43E24']
+                    }
+                    end={{ x: 1, y: 1 }}
+                    start={{ x: 0, y: 0 }}
+                    style={styles.addCircle}
+                  >
+                    <SymbolView
+                      name={{ ios: 'plus', android: 'add', web: 'add' }}
+                      size={31}
+                      tintColor={colors.white}
+                    />
+                  </LinearGradient>
+                </View>
+              )}
             </Pressable>
           ),
         }}
