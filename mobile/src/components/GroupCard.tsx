@@ -94,7 +94,7 @@ export function GroupCard({
                   android: collaborating ? 'group' : group.privacy === 'PRIVATE' ? 'lock' : 'public',
                   web: collaborating ? 'group' : group.privacy === 'PRIVATE' ? 'lock' : 'public',
                 }}
-                size={13}
+                size={12}
                 tintColor={
                   collaborating
                     ? '#9A6A2C'
@@ -134,7 +134,7 @@ export function GroupCard({
           <View style={styles.locationRow}>
             <SymbolView
               name={{ ios: 'mappin', android: 'location_on', web: 'location_on' }}
-              size={15}
+              size={13}
               tintColor={colors.muted}
             />
             <Text numberOfLines={1} style={styles.location}>
@@ -145,7 +145,7 @@ export function GroupCard({
 
         <SymbolView
           name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-          size={18}
+          size={17}
           tintColor={colors.muted}
         />
       </Pressable>
@@ -165,7 +165,7 @@ export function GroupCard({
               android: 'manage_accounts',
               web: 'manage_accounts',
             }}
-            size={16}
+            size={14}
             tintColor={colors.primary}
           />
           <Text style={styles.manageButtonText}>
@@ -180,8 +180,6 @@ export function GroupCard({
 
 const styles = StyleSheet.create({
   wrapper: {
-    width: '92%',
-    alignSelf: 'center',
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.borderStrong,
@@ -189,22 +187,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   card: {
-    minHeight: 118,
+    minHeight: 106,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 11,
-    padding: 9,
+    gap: 10,
+    padding: 8,
   },
   cardPressed: {
     opacity: 0.72,
   },
   icon: {
-    width: 82,
-    height: 98,
+    width: 74,
+    height: 88,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 8,
+    borderRadius: 7,
     backgroundColor: colors.primarySoft,
   },
   image: {
@@ -213,39 +211,39 @@ const styles = StyleSheet.create({
   },
   iconText: {
     color: colors.primary,
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: fonts.bold,
   },
   content: {
     flex: 1,
     alignSelf: 'stretch',
     justifyContent: 'center',
-    gap: 5,
-    paddingVertical: 2,
+    gap: 4,
+    paddingVertical: 1,
   },
   badgeRow: {
-    minHeight: 27,
+    minHeight: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
   title: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: fonts.bold,
   },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
     borderRadius: 999,
     backgroundColor: colors.primarySoft,
   },
   badgeText: {
     color: colors.primaryPressed,
-    fontSize: 9,
+    fontSize: 8,
     fontFamily: fonts.medium,
   },
   publicBadge: {
@@ -263,8 +261,8 @@ const styles = StyleSheet.create({
   description: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: 9,
+    lineHeight: 13,
   },
   locationRow: {
     flexDirection: 'row',
@@ -275,14 +273,14 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 10,
+    fontSize: 9,
   },
   manageButton: {
-    minHeight: 38,
+    minHeight: 34,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
+    gap: 7,
+    paddingHorizontal: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
     backgroundColor: colors.surfaceMuted,
@@ -293,12 +291,12 @@ const styles = StyleSheet.create({
   manageButtonText: {
     flex: 1,
     color: colors.primary,
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: fonts.bold,
   },
   manageArrow: {
     color: colors.primary,
-    fontSize: 19,
+    fontSize: 17,
     fontFamily: fonts.regular,
   },
 });

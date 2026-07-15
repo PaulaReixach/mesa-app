@@ -258,6 +258,7 @@ export default function GroupsScreen() {
               style={({ pressed }) => [
                 styles.createButton,
                 selectingGroup ? styles.createButtonCompact : null,
+                !selectingGroup ? styles.createButtonLowered : null,
                 pressed ? styles.createButtonPressed : null,
               ]}
             >
@@ -711,6 +712,9 @@ const styles = StyleSheet.create({
   createButtonCompact: {
     width: 44,
   },
+  createButtonLowered: {
+    marginTop: 10,
+  },
   createButtonPressed: {
     opacity: 0.88,
     transform: [{ scale: 0.99 }],
@@ -739,7 +743,7 @@ const styles = StyleSheet.create({
   heroIllustration: {
     position: 'absolute',
     right: -25,
-    bottom: -20,
+    bottom: -28,
     width: 164,
     height: 115,
   },
