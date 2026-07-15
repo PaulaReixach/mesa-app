@@ -2,7 +2,6 @@ import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
-import { shadows } from '../theme/layout';
 
 export const addHubScreenStyles = StyleSheet.create({
   screen: {
@@ -102,11 +101,10 @@ export const addHubScreenStyles = StyleSheet.create({
     marginTop: 11,
     paddingLeft: 18,
     paddingRight: 14,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#DED2CA',
     borderRadius: 13,
-    backgroundColor: 'rgba(255, 255, 255, 0.86)',
-    ...shadows.card,
+    backgroundColor: '#FFFDFC',
   },
   searchPlaceholder: {
     flex: 1,
@@ -141,28 +139,28 @@ export const addHubScreenStyles = StyleSheet.create({
   groupedCard: {
     marginTop: 12,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#E0D5CE',
     borderRadius: 13,
-    backgroundColor: 'rgba(255, 255, 255, 0.82)',
-    ...shadows.card,
+    backgroundColor: '#FFFDFC',
   },
   singleCard: {
     height: 84,
     marginTop: 12,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#E0D5CE',
     borderRadius: 13,
-    backgroundColor: 'rgba(255, 255, 255, 0.82)',
-    ...shadows.card,
+    backgroundColor: '#FFFDFC',
   },
   actionRow: {
+    width: '100%',
     minHeight: 84,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 18,
     paddingHorizontal: 14,
+    backgroundColor: '#FFFDFC',
   },
   actionIcon: {
     width: 56,
