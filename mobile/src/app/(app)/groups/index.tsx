@@ -262,16 +262,18 @@ export default function GroupsScreen() {
               ]}
             >
               <LinearGradient
-                colors={['#BF402A', '#D0523A']}
+                colors={['#B93825', '#D65339', '#C8442D']}
                 end={{ x: 1, y: 1 }}
                 start={{ x: 0, y: 0 }}
                 style={styles.createButtonFill}
               >
-                <SymbolView
-                  name={{ ios: 'plus', android: 'add', web: 'add' }}
-                  size={23}
-                  tintColor={colors.white}
-                />
+                <View style={styles.createButtonIcon}>
+                  <SymbolView
+                    name={{ ios: 'plus', android: 'add', web: 'add' }}
+                    size={18}
+                    tintColor={colors.white}
+                  />
+                </View>
                 {!selectingGroup ? (
                   <Text style={styles.createButtonText}>Nuevo grupo</Text>
                 ) : null}
@@ -699,10 +701,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   createButton: {
-    width: 120,
-    height: 42,
+    width: 128,
+    height: 44,
     overflow: 'hidden',
-    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.24)',
+    borderRadius: 12,
   },
   createButtonCompact: {
     width: 44,
@@ -717,7 +721,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 7,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
+  },
+  createButtonIcon: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
   },
   createButtonText: {
     color: colors.white,
@@ -727,7 +739,7 @@ const styles = StyleSheet.create({
   heroIllustration: {
     position: 'absolute',
     right: -25,
-    bottom: -9,
+    bottom: -20,
     width: 164,
     height: 115,
   },

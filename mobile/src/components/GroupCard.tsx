@@ -180,6 +180,8 @@ export function GroupCard({
 
 const styles = StyleSheet.create({
   wrapper: {
+    width: '92%',
+    alignSelf: 'center',
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.borderStrong,
@@ -187,18 +189,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   card: {
-    minHeight: 128,
+    minHeight: 118,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    padding: 10,
+    gap: 11,
+    padding: 9,
   },
   cardPressed: {
     opacity: 0.72,
   },
   icon: {
-    width: 90,
-    height: 108,
+    width: 82,
+    height: 98,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -276,7 +278,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   manageButton: {
-    minHeight: 43,
+    minHeight: 38,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
