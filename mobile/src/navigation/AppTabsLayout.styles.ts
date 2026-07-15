@@ -1,62 +1,46 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
-import { fonts } from '../theme/fonts';
 
 export const tabNavigationColors = {
-  active: colors.primary,
-  inactive: colors.muted,
+  active: '#C84A30',
+  inactive: '#6F6864',
   border: colors.border,
-  background: colors.surfaceElevated,
+  background: '#FFFDFC',
 } as const;
 
 export const appTabsStyles = StyleSheet.create({
-  tabIconContainer: {
-    width: 50,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 17,
-  },
-  tabIconContainerActive: {
-    backgroundColor: '#F8E5DE',
-  },
-  tabLabel: {
-    color: tabNavigationColors.inactive,
-    fontFamily: fonts.medium,
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: -0.15,
-  },
-  tabLabelActive: {
-    color: tabNavigationColors.active,
-    fontFamily: fonts.semiBold,
-  },
   addTabButton: {
     flex: 1,
-    height: 58,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'flex-start',
     overflow: 'visible',
   },
-  addTabButtonPressed: { transform: [{ scale: 0.95 }] },
-  addSquareShadow: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: '#C94327',
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.2,
-    shadowRadius: 13,
-    elevation: 9,
+  addTabButtonPressed: {
+    transform: [{ scale: 0.95 }],
   },
-  addSquare: {
-    width: 44,
-    height: 44,
+  addCircleShadow: {
+    width: 58,
+    height: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -6,
+    padding: 4,
+    borderRadius: 29,
+    backgroundColor: '#FFFDFC',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.19,
+    shadowRadius: 14,
+    elevation: 10,
+  },
+  addCircle: {
+    width: 50,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 14,
+    borderRadius: 25,
   },
 });

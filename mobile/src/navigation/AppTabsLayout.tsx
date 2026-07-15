@@ -1,66 +1,17 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { router, Tabs, usePathname } from 'expo-router';
-import type { ComponentProps } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { appTabsStyles as styles, tabNavigationColors as navigationColors } from './AppTabsLayout.styles';
 import { colors } from '../theme/colors';
-
-type SymbolName = ComponentProps<typeof SymbolView>['name'];
+import { fonts } from '../theme/fonts';
 
 const hiddenScreenOptions = {
   href: null,
   tabBarStyle: { display: 'none' as const },
 };
-
-function PrimaryTabIcon({
-  focused,
-  name,
-  size,
-}: {
-  focused: boolean;
-  name: SymbolName;
-  size: number;
-}) {
-  return (
-    <View
-      style={[
-        styles.tabIconContainer,
-        focused ? styles.tabIconContainerActive : null,
-      ]}
-    >
-      <SymbolView
-        name={name}
-        size={size}
-        tintColor={focused
-          ? navigationColors.active
-          : navigationColors.inactive}
-      />
-    </View>
-  );
-}
-
-function PrimaryTabLabel({
-  focused,
-  label,
-}: {
-  focused: boolean;
-  label: string;
-}) {
-  return (
-    <Text
-      allowFontScaling={false}
-      style={[
-        styles.tabLabel,
-        focused ? styles.tabLabelActive : null,
-      ]}
-    >
-      {label}
-    </Text>
-  );
-}
 
 export default function AppTabsLayout() {
   const insets = useSafeAreaInsets();
@@ -86,29 +37,40 @@ export default function AppTabsLayout() {
         tabBarAllowFontScaling: false,
         tabBarLabelPosition: 'below-icon',
         tabBarItemStyle: {
-          height: 58,
-          justifyContent: 'flex-start',
-          paddingTop: 0,
+          height: 60,
+          justifyContent: 'center',
+          paddingTop: 4,
         },
-        tabBarIconStyle: { width: 52, height: 44, marginBottom: 0 },
+        tabBarIconStyle: {
+          width: 28,
+          height: 27,
+          marginBottom: 2,
+        },
+        tabBarLabelStyle: {
+          marginTop: 0,
+          fontSize: 11,
+          fontFamily: fonts.medium,
+          lineHeight: 14,
+        },
         tabBarStyle: showPrimaryNavigation ? {
           position: 'absolute',
           right: 0,
           bottom: 0,
           left: 0,
-          height: 64 + bottomInset,
-          paddingHorizontal: 6,
+          height: 66 + bottomInset,
+          paddingHorizontal: 8,
           paddingTop: 6,
           paddingBottom: bottomInset,
+          overflow: 'visible',
           borderTopWidth: 0,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
           backgroundColor: navigationColors.background,
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: -7 },
-          shadowOpacity: 0.11,
-          shadowRadius: 20,
-          elevation: 18,
+          shadowOffset: { width: 0, height: -5 },
+          shadowOpacity: 0.09,
+          shadowRadius: 18,
+          elevation: 14,
         } : { display: 'none' },
       }}
     >
@@ -117,15 +79,12 @@ export default function AppTabsLayout() {
         options={{
           title: 'Inicio',
           tabBarAccessibilityLabel: 'Inicio',
-          tabBarIcon: ({ focused }) => (
-            <PrimaryTabIcon
-              focused={focused}
-              name={{ ios: 'house', android: 'home', web: 'home' }}
+          tabBarIcon: ({ focused, color }) => (
+            <SymbolView
+              name={{ ios: focused ? 'house.fill' : 'house', android: 'home', web: 'home' }}
               size={23}
+              tintColor={color}
             />
-          ),
-          tabBarLabel: ({ focused }) => (
-            <PrimaryTabLabel focused={focused} label="Inicio" />
           ),
         }}
       />
@@ -142,19 +101,16 @@ export default function AppTabsLayout() {
           title: 'Grupos',
           tabBarAccessibilityLabel: 'Grupos',
           popToTopOnBlur: true,
-          tabBarIcon: ({ focused }) => (
-            <PrimaryTabIcon
-              focused={focused}
+          tabBarIcon: ({ focused, color }) => (
+            <SymbolView
               name={{
-                ios: 'person.2',
+                ios: focused ? 'person.2.fill' : 'person.2',
                 android: 'group',
                 web: 'group',
               }}
               size={24}
+              tintColor={color}
             />
-          ),
-          tabBarLabel: ({ focused }) => (
-            <PrimaryTabLabel focused={focused} label="Grupos" />
           ),
         }}
       />
@@ -184,16 +140,16 @@ export default function AppTabsLayout() {
                 pressed ? styles.addTabButtonPressed : null,
               ]}
             >
-              <View style={styles.addSquareShadow}>
+              <View style={styles.addCircleShadow}>
                 <LinearGradient
                   colors={['#B93620', '#DD4D2C', '#C43E24']}
                   end={{ x: 1, y: 1 }}
                   start={{ x: 0, y: 0 }}
-                  style={styles.addSquare}
+                  style={styles.addCircle}
                 >
                   <SymbolView
                     name={{ ios: 'plus', android: 'add', web: 'add' }}
-                    size={29}
+                    size={31}
                     tintColor={colors.white}
                   />
                 </LinearGradient>
@@ -208,15 +164,12 @@ export default function AppTabsLayout() {
         options={{
           title: 'Mapa',
           tabBarAccessibilityLabel: 'Mapa',
-          tabBarIcon: ({ focused }) => (
-            <PrimaryTabIcon
-              focused={focused}
-              name={{ ios: 'map', android: 'map', web: 'map' }}
-              size={24}
+          tabBarIcon: ({ focused, color }) => (
+            <SymbolView
+              name={{ ios: focused ? 'map.fill' : 'map', android: 'map', web: 'map' }}
+              size={23}
+              tintColor={color}
             />
-          ),
-          tabBarLabel: ({ focused }) => (
-            <PrimaryTabLabel focused={focused} label="Mapa" />
           ),
         }}
       />
@@ -226,15 +179,12 @@ export default function AppTabsLayout() {
         options={{
           title: 'Perfil',
           tabBarAccessibilityLabel: 'Perfil',
-          tabBarIcon: ({ focused }) => (
-            <PrimaryTabIcon
-              focused={focused}
-              name={{ ios: 'person', android: 'person', web: 'person' }}
+          tabBarIcon: ({ focused, color }) => (
+            <SymbolView
+              name={{ ios: focused ? 'person.fill' : 'person', android: 'person', web: 'person' }}
               size={23}
+              tintColor={color}
             />
-          ),
-          tabBarLabel: ({ focused }) => (
-            <PrimaryTabLabel focused={focused} label="Perfil" />
           ),
         }}
       />
