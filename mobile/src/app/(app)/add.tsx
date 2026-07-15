@@ -16,9 +16,9 @@ import { addHubScreenStyles as styles } from '../../components/AddHubScreen.styl
 import { colors } from '../../theme/colors';
 
 type SymbolName = ComponentProps<typeof SymbolView>['name'];
-type ActionTone = 'olive' | 'terracotta';
+type ActionTone = 'neutral' | 'olive' | 'terracotta';
 
-type FeaturedActionProps = {
+type ActionRowProps = {
   icon: SymbolName;
   onPress: () => void;
   subtitle: string;
@@ -26,148 +26,57 @@ type FeaturedActionProps = {
   tone: ActionTone;
 };
 
-function FeaturedAction({
+function ActionRow({
   icon,
   onPress,
   subtitle,
   title,
   tone,
-}: FeaturedActionProps) {
-  const isTerracotta = tone === 'terracotta';
-
+}: ActionRowProps) {
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [
-        styles.featuredAction,
-        pressed ? styles.pressed : null,
-      ]}
-    >
-      <LinearGradient
-        colors={isTerracotta
-          ? ['#BE3A22', '#D34A29', '#C23B24']
-          : ['#F4F3E9', '#F7F7EE', '#E9ECD9']}
-        end={{ x: 1, y: 1 }}
-        start={{ x: 0, y: 0 }}
-        style={[
-          styles.featuredActionSurface,
-          isTerracotta
-            ? styles.featuredActionTerracotta
-            : styles.featuredActionOlive,
-        ]}
-      >
-        {isTerracotta ? (
-          <View pointerEvents="none" style={styles.featuredDecoration}>
-            <View style={styles.featuredArcOuter} />
-            <View style={styles.featuredArcInner} />
-          </View>
-        ) : null}
-
-        <View
-          style={[
-            styles.featuredIcon,
-            isTerracotta
-              ? styles.featuredIconTerracotta
-              : styles.featuredIconOlive,
-          ]}
-        >
-          <SymbolView
-            name={icon}
-            size={32}
-            tintColor={isTerracotta ? '#B83E27' : colors.olive}
-          />
-        </View>
-
-        <View style={styles.featuredCopy}>
-          <Text
-            adjustsFontSizeToFit
-            allowFontScaling={false}
-            minimumFontScale={0.82}
-            numberOfLines={1}
-            style={[
-              styles.featuredTitle,
-              isTerracotta ? styles.featuredTitleLight : null,
-            ]}
-          >
-            {title}
-          </Text>
-          <Text
-            allowFontScaling={false}
-            numberOfLines={2}
-            style={[
-              styles.featuredSubtitle,
-              isTerracotta ? styles.featuredSubtitleLight : null,
-            ]}
-          >
-            {subtitle}
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.featuredArrow,
-            isTerracotta
-              ? styles.featuredArrowTerracotta
-              : styles.featuredArrowOlive,
-          ]}
-        >
-          <SymbolView
-            name={{ ios: 'arrow.right', android: 'arrow_forward', web: 'arrow_forward' }}
-            size={22}
-            tintColor={isTerracotta ? '#C34429' : colors.olive}
-          />
-        </View>
-      </LinearGradient>
-    </Pressable>
-  );
-}
-
-function SecondaryAction({
-  icon,
-  onPress,
-  subtitle,
-  title,
-  tone,
-}: FeaturedActionProps) {
-  const isOlive = tone === 'olive';
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.secondaryAction,
+        styles.actionRow,
         pressed ? styles.pressed : null,
       ]}
     >
       <View
         style={[
-          styles.secondaryIcon,
-          isOlive ? styles.secondaryIconOlive : styles.secondaryIconTerracotta,
+          styles.actionIcon,
+          tone === 'olive' ? styles.actionIconOlive : null,
+          tone === 'terracotta' ? styles.actionIconTerracotta : null,
+          tone === 'neutral' ? styles.actionIconNeutral : null,
         ]}
       >
         <SymbolView
           name={icon}
-          size={26}
-          tintColor={isOlive ? colors.olive : '#C54B31'}
+          size={27}
+          tintColor={tone === 'olive'
+            ? colors.olive
+            : tone === 'terracotta'
+              ? '#C44A30'
+              : colors.mutedStrong}
         />
       </View>
 
-      <View style={styles.secondaryCopy}>
+      <View style={styles.actionCopy}>
         <Text
           adjustsFontSizeToFit
           allowFontScaling={false}
-          minimumFontScale={0.86}
+          minimumFontScale={0.88}
           numberOfLines={1}
-          style={styles.secondaryTitle}
+          style={styles.actionTitle}
         >
           {title}
         </Text>
         <Text
+          adjustsFontSizeToFit
           allowFontScaling={false}
+          minimumFontScale={0.78}
           numberOfLines={1}
-          style={styles.secondarySubtitle}
+          style={styles.actionSubtitle}
         >
           {subtitle}
         </Text>
@@ -175,7 +84,7 @@ function SecondaryAction({
 
       <SymbolView
         name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-        size={19}
+        size={20}
         tintColor={colors.mutedStrong}
       />
     </Pressable>
@@ -185,12 +94,12 @@ function SecondaryAction({
 function AddHeader({ topInset }: { topInset: number }) {
   return (
     <LinearGradient
-      colors={['#BC3B24', '#D1492B', '#C43C25']}
+      colors={['#BB3A23', '#D1492B', '#C43C25']}
       end={{ x: 0.95, y: 1 }}
       start={{ x: 0.05, y: 0 }}
-      style={[styles.header, { height: topInset + 206 }]}
+      style={[styles.header, { height: topInset + 96 }]}
     >
-      <View style={[styles.headerTopRow, { marginTop: topInset + 20 }]}>
+      <View style={[styles.headerTopRow, { marginTop: topInset + 24 }]}>
         <Pressable
           accessibilityLabel="Cerrar"
           accessibilityRole="button"
@@ -203,7 +112,7 @@ function AddHeader({ topInset }: { topInset: number }) {
         >
           <SymbolView
             name={{ ios: 'xmark', android: 'close', web: 'close' }}
-            size={27}
+            size={28}
             tintColor={colors.white}
           />
         </Pressable>
@@ -215,32 +124,10 @@ function AddHeader({ topInset }: { topInset: number }) {
         <View style={styles.headerSpacer} />
       </View>
 
-      <View style={styles.heroCopy}>
-        <Text allowFontScaling={false} style={styles.eyebrow}>
-          UN SITIO PARA CADA PLAN
-        </Text>
-        <Text
-          adjustsFontSizeToFit
-          allowFontScaling={false}
-          minimumFontScale={0.82}
-          numberOfLines={1}
-          style={styles.title}
-        >
-          ¿Qué quieres guardar?
-        </Text>
-        <Text
-          allowFontScaling={false}
-          numberOfLines={1}
-          style={styles.subtitle}
-        >
-          Encuentra un restaurante o crea uno nuevo.
-        </Text>
-      </View>
-
       <Text
         allowFontScaling={false}
         pointerEvents="none"
-        style={[styles.heroPlus, { top: topInset + 45 }]}
+        style={[styles.heroPlus, { top: topInset + 17 }]}
       >
         +
       </Text>
@@ -276,73 +163,108 @@ export default function AddScreen() {
         <AddHeader topInset={insets.top} />
 
         <View style={styles.body}>
-          <View style={styles.featuredList}>
-            <FeaturedAction
-              icon={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-              onPress={() => chooseGroup('SEARCH')}
-              subtitle="Encuéntralo y guárdalo en uno de tus grupos"
-              title="Buscar restaurante"
-              tone="terracotta"
-            />
-            <FeaturedAction
-              icon={{ ios: 'pencil', android: 'edit', web: 'edit' }}
-              onPress={() => chooseGroup('MANUAL')}
-              subtitle="Para ese sitio que todavía no aparece"
-              title="Añadir manualmente"
-              tone="olive"
-            />
+          <View style={styles.intro}>
+            <Text
+              adjustsFontSizeToFit
+              allowFontScaling={false}
+              minimumFontScale={0.86}
+              numberOfLines={1}
+              style={styles.title}
+            >
+              ¿Qué quieres guardar?
+            </Text>
+            <Text
+              adjustsFontSizeToFit
+              allowFontScaling={false}
+              minimumFontScale={0.88}
+              numberOfLines={1}
+              style={styles.subtitle}
+            >
+              Encuentra un restaurante o crea uno nuevo.
+            </Text>
           </View>
 
-          <View style={styles.section}>
-            <View style={styles.sectionHeading}>
-              <Text allowFontScaling={false} style={styles.sectionTitle}>
-                Organiza tu espacio
-              </Text>
-              <Text allowFontScaling={false} style={styles.sectionCaption}>
-                Grupos e invitaciones
-              </Text>
-            </View>
+          <View style={styles.searchSection}>
+            <Text allowFontScaling={false} style={styles.sectionLabel}>
+              BUSCAR RESTAURANTE
+            </Text>
 
-            <View style={styles.secondaryList}>
-              <SecondaryAction
+            <Pressable
+              accessibilityLabel="Buscar restaurante"
+              accessibilityRole="button"
+              onPress={() => chooseGroup('SEARCH')}
+              style={({ pressed }) => [
+                styles.searchCard,
+                pressed ? styles.pressed : null,
+              ]}
+            >
+              <SymbolView
+                name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+                size={30}
+                tintColor="#BD422C"
+              />
+              <Text
+                adjustsFontSizeToFit
+                allowFontScaling={false}
+                minimumFontScale={0.82}
+                numberOfLines={1}
+                style={styles.searchPlaceholder}
+              >
+                Nombre, cocina o ubicación
+              </Text>
+              <View style={styles.searchArrow}>
+                <SymbolView
+                  name={{ ios: 'arrow.right', android: 'arrow_forward', web: 'arrow_forward' }}
+                  size={24}
+                  tintColor={colors.white}
+                />
+              </View>
+            </Pressable>
+
+            <Text allowFontScaling={false} style={styles.searchHelper}>
+              Lo añadiremos al grupo que elijas.
+            </Text>
+          </View>
+
+          <View style={styles.otherSection}>
+            <Text allowFontScaling={false} style={styles.sectionLabel}>
+              OTRAS FORMAS DE AÑADIR
+            </Text>
+
+            <View style={styles.groupedCard}>
+              <ActionRow
+                icon={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                onPress={() => chooseGroup('MANUAL')}
+                subtitle="Para sitios que aún no aparecen"
+                title="Añadir manualmente"
+                tone="olive"
+              />
+              <View style={styles.divider} />
+              <ActionRow
                 icon={{ ios: 'person.2.fill', android: 'group_add', web: 'group_add' }}
                 onPress={() => router.push('/groups/create')}
                 subtitle="Organiza una lista con los tuyos"
                 title="Crear un grupo"
                 tone="terracotta"
               />
-              <SecondaryAction
-                icon={{ ios: 'envelope.fill', android: 'mail', web: 'mail' }}
-                onPress={() => router.push('/group-invitations')}
-                subtitle="Revisa invitaciones y solicitudes"
-                title="Gestionar invitaciones"
-                tone="olive"
-              />
             </View>
           </View>
 
-          <LinearGradient
-            colors={['#FFF5E5', '#FCE8CB', '#FFF2DE']}
-            end={{ x: 1, y: 0.8 }}
-            start={{ x: 0, y: 0 }}
-            style={styles.tipCard}
-          >
-            <View style={styles.tipIcon}>
-              <SymbolView
-                name={{ ios: 'lightbulb', android: 'lightbulb', web: 'lightbulb' }}
-                size={25}
-                tintColor={colors.amber}
+          <View style={styles.spaceSection}>
+            <Text allowFontScaling={false} style={styles.sectionLabel}>
+              TU ESPACIO
+            </Text>
+
+            <View style={styles.singleCard}>
+              <ActionRow
+                icon={{ ios: 'envelope', android: 'mail', web: 'mail' }}
+                onPress={() => router.push('/group-invitations')}
+                subtitle="Revisa invitaciones y solicitudes"
+                title="Gestionar invitaciones"
+                tone="neutral"
               />
             </View>
-            <View style={styles.tipCopy}>
-              <Text allowFontScaling={false} style={styles.tipTitle}>
-                Ponle intención a tus listas
-              </Text>
-              <Text allowFontScaling={false} style={styles.tipText}>
-                “Cenas en Girona”, “Japón 2026” o “Brunch pendiente”.
-              </Text>
-            </View>
-          </LinearGradient>
+          </View>
         </View>
       </ScrollView>
     </View>
