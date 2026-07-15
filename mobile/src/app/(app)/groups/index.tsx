@@ -909,7 +909,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   list: {
-    gap: 12,
+    gap: 10,
   },
   emptyCard: {
     alignItems: 'center',

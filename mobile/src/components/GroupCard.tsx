@@ -145,7 +145,7 @@ export function GroupCard({
 
         <SymbolView
           name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-          size={20}
+          size={18}
           tintColor={colors.muted}
         />
       </Pressable>
@@ -187,22 +187,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   card: {
-    minHeight: 148,
+    minHeight: 128,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    padding: 11,
+    gap: 12,
+    padding: 10,
   },
   cardPressed: {
     opacity: 0.72,
   },
   icon: {
-    width: 106,
-    height: 124,
+    width: 90,
+    height: 108,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 9,
+    borderRadius: 8,
     backgroundColor: colors.primarySoft,
   },
   image: {
@@ -218,32 +218,32 @@ const styles = StyleSheet.create({
     flex: 1,
     alignSelf: 'stretch',
     justifyContent: 'center',
-    gap: 7,
-    paddingVertical: 4,
+    gap: 5,
+    paddingVertical: 2,
   },
   badgeRow: {
-    minHeight: 29,
+    minHeight: 27,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
   title: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: fonts.bold,
   },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 9,
-    paddingVertical: 7,
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderRadius: 999,
     backgroundColor: colors.primarySoft,
   },
   badgeText: {
     color: colors.primaryPressed,
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: fonts.medium,
   },
   publicBadge: {
@@ -261,8 +261,8 @@ const styles = StyleSheet.create({
   description: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 10,
+    lineHeight: 15,
   },
   locationRow: {
     flexDirection: 'row',
