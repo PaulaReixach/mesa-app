@@ -7,6 +7,7 @@ import type {
 } from 'react';
 import {
   KeyboardAvoidingView,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -139,20 +140,20 @@ export function AuthScreen({
                 ) : null}
 
                 <View style={styles.brand}>
-                  <View style={styles.brandMark}>
-                    <Text
-                      allowFontScaling={false}
-                      style={styles.brandMarkText}
-                    >
-                      M
-                    </Text>
+                  <View style={styles.brandLogoFrame}>
+                    <Image
+                      accessible={false}
+                      resizeMode="contain"
+                      source={require('../../assets/images/mesa-logo.png')}
+                      style={styles.brandLogo}
+                    />
                   </View>
 
                   <Text
                     allowFontScaling={false}
                     style={styles.brandName}
                   >
-                    Mesa
+                    MESA
                   </Text>
                 </View>
               </View>
@@ -347,25 +348,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  brandMark: {
-    width: 38,
-    height: 38,
+  brandLogoFrame: {
+    width: 42,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.sm,
+    borderRadius: radii.round,
     backgroundColor: colors.onPrimary,
+    padding: 1,
   },
-  brandMarkText: {
-    marginTop: -1,
-    color: colors.brandEnd,
-    fontFamily: fonts.bold,
-    fontSize: 20,
+  brandLogo: {
+    width: 40,
+    height: 40,
   },
   brandName: {
     color: colors.onPrimary,
     fontFamily: fonts.bold,
-    fontSize: 22,
-    letterSpacing: -0.55,
+    fontSize: 21,
+    letterSpacing: 0.8,
   },
   heroCopy: {
     flexDirection: 'row',
