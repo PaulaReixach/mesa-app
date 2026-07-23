@@ -46,12 +46,6 @@ const backIcon: SymbolName = {
   web: 'arrow_back',
 };
 
-const restaurantIcon: SymbolName = {
-  ios: 'fork.knife',
-  android: 'restaurant',
-  web: 'restaurant',
-};
-
 export function AuthScreen({
   title,
   subtitle,
@@ -69,8 +63,8 @@ export function AuthScreen({
   const contentWidth = Math.min(windowWidth, MAX_CONTENT_WIDTH);
   const heroHeight = (
     compactHero
-      ? 158
-      : 184
+      ? 108
+      : 190
   ) + insets.top;
   const cardMinHeight = Math.max(
     windowHeight - heroHeight + 22,
@@ -116,9 +110,6 @@ export function AuthScreen({
                 },
               ]}
             >
-              <View style={styles.decorativeCircleLarge} />
-              <View style={styles.decorativeCircleSmall} />
-
               <View style={styles.topBar}>
                 {onBack ? (
                   <Pressable
@@ -139,44 +130,56 @@ export function AuthScreen({
                   </Pressable>
                 ) : null}
 
-                <View style={styles.brand}>
-                  <View style={styles.brandLogoFrame}>
+                <View
+                  style={[
+                    styles.brand,
+                    compactHero
+                      ? styles.brandCompact
+                      : styles.brandCentered,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.brandLogoFrame,
+                      compactHero
+                        ? styles.brandLogoFrameCompact
+                        : styles.brandLogoFrameCentered,
+                    ]}
+                  >
                     <Image
                       accessible={false}
                       resizeMode="contain"
                       source={require('../../assets/images/mesa-logo.png')}
-                      style={styles.brandLogo}
+                      style={[
+                        styles.brandLogo,
+                        compactHero
+                          ? styles.brandLogoCompact
+                          : styles.brandLogoCentered,
+                      ]}
                     />
                   </View>
 
+                  {!compactHero ? (
+                    <Text
+                      allowFontScaling={false}
+                      style={styles.brandName}
+                    >
+                      MESA
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+
+              {!compactHero ? (
+                <View style={styles.heroCopy}>
                   <Text
-                    allowFontScaling={false}
-                    style={styles.brandName}
+                    maxFontSizeMultiplier={1.1}
+                    style={styles.heroMessage}
                   >
-                    MESA
+                    {heroMessage}
                   </Text>
                 </View>
-              </View>
-
-              <View style={styles.heroCopy}>
-                <Text
-                  maxFontSizeMultiplier={1.1}
-                  style={[
-                    styles.heroMessage,
-                    compactHero ? styles.heroMessageCompact : null,
-                  ]}
-                >
-                  {heroMessage}
-                </Text>
-
-                <View style={styles.heroIcon}>
-                  <SymbolView
-                    name={restaurantIcon}
-                    size={compactHero ? 25 : 28}
-                    tintColor={colors.onPrimary}
-                  />
-                </View>
-              </View>
+              ) : null}
             </LinearGradient>
 
             <View
@@ -300,35 +303,19 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     paddingHorizontal: spacing.xl,
-    paddingBottom: 34,
-  },
-  decorativeCircleLarge: {
-    position: 'absolute',
-    top: -72,
-    right: -46,
-    width: 174,
-    height: 174,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 249, 244, 0.13)',
-    borderRadius: radii.round,
-  },
-  decorativeCircleSmall: {
-    position: 'absolute',
-    right: 62,
-    bottom: -30,
-    width: 92,
-    height: 92,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 249, 244, 0.11)',
-    borderRadius: radii.round,
+    paddingBottom: spacing.xxl,
   },
   topBar: {
-    minHeight: touchTargets.minimum,
+    position: 'relative',
+    minHeight: 58,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'center',
   },
   backButton: {
+    position: 'absolute',
+    left: 0,
+    zIndex: 1,
     width: touchTargets.minimum,
     height: touchTargets.minimum,
     alignItems: 'center',
@@ -346,56 +333,59 @@ const styles = StyleSheet.create({
   brand: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
+  },
+  brandCentered: {
+    gap: spacing.sm,
+  },
+  brandCompact: {
+    width: touchTargets.comfortable,
+    height: touchTargets.comfortable,
   },
   brandLogoFrame: {
-    width: 42,
-    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.round,
     backgroundColor: colors.onPrimary,
     padding: 1,
   },
+  brandLogoFrameCentered: {
+    width: 56,
+    height: 56,
+  },
+  brandLogoFrameCompact: {
+    width: 44,
+    height: 44,
+  },
   brandLogo: {
-    width: 40,
-    height: 40,
+    borderRadius: radii.round,
+  },
+  brandLogoCentered: {
+    width: 54,
+    height: 54,
+  },
+  brandLogoCompact: {
+    width: 42,
+    height: 42,
   },
   brandName: {
     color: colors.onPrimary,
     fontFamily: fonts.bold,
-    fontSize: 21,
-    letterSpacing: 0.8,
+    fontSize: 24,
+    letterSpacing: 1,
   },
   heroCopy: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: spacing.lg,
-    marginTop: 21,
+    alignItems: 'center',
+    marginTop: spacing.md,
   },
   heroMessage: {
-    maxWidth: 275,
-    flexShrink: 1,
+    maxWidth: 330,
     color: colors.onPrimary,
     fontFamily: fonts.bold,
-    fontSize: 22,
-    lineHeight: 28,
-    letterSpacing: -0.55,
-  },
-  heroMessageCompact: {
-    fontSize: 19,
-    lineHeight: 25,
-  },
-  heroIcon: {
-    width: 52,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 249, 244, 0.22)',
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(255, 249, 244, 0.11)',
+    fontSize: 21,
+    lineHeight: 27,
+    letterSpacing: -0.45,
+    textAlign: 'center',
   },
   card: {
     zIndex: 2,

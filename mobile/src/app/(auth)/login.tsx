@@ -7,7 +7,6 @@ import {
 import {
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
@@ -22,7 +21,6 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import { useAuth } from '../../contexts/auth-context';
 import { getErrorMessage } from '../../lib/api';
 import { colors } from '../../theme/colors';
-import { fonts } from '../../theme/fonts';
 import {
   radii,
   spacing,
@@ -44,7 +42,6 @@ export default function LoginScreen() {
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberSession, setRememberSession] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState<TouchedFields>(
     initialTouchedFields,
@@ -86,13 +83,10 @@ export default function LoginScreen() {
     try {
       setIsSubmitting(true);
 
-      await signIn(
-        {
-          identifier: identifier.trim(),
-          password,
-        },
-        rememberSession,
-      );
+      await signIn({
+        identifier: identifier.trim(),
+        password,
+      });
 
       router.replace('/home');
     } catch (error) {
@@ -198,45 +192,6 @@ export default function LoginScreen() {
         />
       </View>
 
-      <Pressable
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: rememberSession }}
-        disabled={isSubmitting}
-        onPress={() => setRememberSession(current => !current)}
-        style={({ pressed }) => [
-          styles.rememberRow,
-          pressed ? styles.pressed : null,
-        ]}
-      >
-        <View
-          style={[
-            styles.checkbox,
-            rememberSession ? styles.checkboxSelected : null,
-          ]}
-        >
-          {rememberSession ? (
-            <SymbolView
-              name={{
-                ios: 'checkmark',
-                android: 'check',
-                web: 'check',
-              }}
-              size={15}
-              tintColor={colors.white}
-            />
-          ) : null}
-        </View>
-
-        <View style={styles.rememberCopy}>
-          <Text style={styles.rememberTitle}>
-            Recordar mi sesión
-          </Text>
-          <Text style={styles.rememberDescription}>
-            No tendrás que volver a entrar en este dispositivo.
-          </Text>
-        </View>
-      </Pressable>
-
       {requestError ? (
         <AuthErrorBanner message={requestError} />
       ) : null}
@@ -246,7 +201,7 @@ export default function LoginScreen() {
         loading={isSubmitting}
         loadingTitle="Entrando..."
         onPress={() => void handleLogin()}
-        title="Entrar en Mesa"
+        title="Iniciar sesión"
       />
 
       <AuthSwitchPrompt
@@ -271,41 +226,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.66,
-  },
-  rememberRow: {
-    minHeight: 58,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: 2,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.borderStrong,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceElevated,
-  },
-  checkboxSelected: {
-    borderColor: colors.olive,
-    backgroundColor: colors.olive,
-  },
-  rememberCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  rememberTitle: {
-    color: colors.text,
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-  },
-  rememberDescription: {
-    color: colors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 14,
   },
 });
