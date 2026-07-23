@@ -1,12 +1,13 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { shadows } from '../theme/layout';
 
 export const tabNavigationColors = {
-  active: '#C84A30',
-  inactive: '#6F6864',
+  active: colors.primary,
+  inactive: colors.mutedStrong,
   border: colors.border,
-  background: '#FFFDFC',
+  background: colors.surfaceElevated,
 } as const;
 
 export const appTabsStyles = StyleSheet.create({
@@ -22,7 +23,7 @@ export const appTabsStyles = StyleSheet.create({
     borderRadius: 16,
   },
   primaryTabIconActive: {
-    backgroundColor: '#F9E4DC',
+    backgroundColor: colors.primarySoft,
   },
   addTabButton: {
     flex: 1,
@@ -39,9 +40,10 @@ export const appTabsStyles = StyleSheet.create({
     marginTop: -6,
     padding: 4,
     borderRadius: 29,
-    backgroundColor: '#FFFDFC',
+    backgroundColor: colors.surfaceElevated,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#F0E4DE',
+    borderColor: colors.border,
+    ...shadows.floating,
   },
   addCircleFramePressed: {
     opacity: 0.94,
@@ -54,5 +56,9 @@ export const appTabsStyles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     borderRadius: 25,
+    backgroundColor: colors.primary,
+  },
+  addCirclePressed: {
+    backgroundColor: colors.primaryPressed,
   },
 });

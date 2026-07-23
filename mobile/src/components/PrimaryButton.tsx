@@ -3,6 +3,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  View,
 } from 'react-native';
 
 import { colors } from '../theme/colors';
@@ -12,6 +13,7 @@ import { radii, shadows } from '../theme/layout';
 type PrimaryButtonProps = {
   title: string;
   loading?: boolean;
+  loadingTitle?: string;
   disabled?: boolean;
   onPress: () => void;
 };
@@ -19,6 +21,7 @@ type PrimaryButtonProps = {
 export function PrimaryButton({
   title,
   loading = false,
+  loadingTitle = 'Cargando...',
   disabled = false,
   onPress,
 }: PrimaryButtonProps) {
@@ -27,6 +30,10 @@ export function PrimaryButton({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{
+        busy: loading,
+        disabled: isDisabled,
+      }}
       disabled={isDisabled}
       onPress={onPress}
       style={({ pressed }) => [
@@ -38,7 +45,10 @@ export function PrimaryButton({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.white} />
+        <View style={styles.content}>
+          <ActivityIndicator color={colors.white} size="small" />
+          <Text style={styles.title}>{loadingTitle}</Text>
+        </View>
       ) : (
         <Text style={styles.title}>{title}</Text>
       )}
@@ -48,10 +58,10 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 56,
+    minHeight: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.lg,
+    borderRadius: radii.md,
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
     ...shadows.card,
@@ -67,5 +77,10 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontFamily: fonts.bold,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
 });

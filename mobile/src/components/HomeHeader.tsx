@@ -3,6 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import { Image, Platform, Pressable, Text, View } from 'react-native';
 
+import { colors } from '../theme/colors';
 import { homeStyles as styles } from './HomeDashboardStyles';
 import { HomeQuickActionCardRefined } from './HomeQuickActionCardRefined';
 import { NotificationBellButton } from './NotificationBellButton';
@@ -34,7 +35,7 @@ export function HomeHeader({
   return (
     <View style={styles.header}>
       <LinearGradient
-        colors={['#C74A2D', '#B83B25']}
+        colors={[colors.brandStart, colors.brandEnd]}
         end={{ x: 0.95, y: 1 }}
         start={{ x: 0.05, y: 0 }}
         style={[
