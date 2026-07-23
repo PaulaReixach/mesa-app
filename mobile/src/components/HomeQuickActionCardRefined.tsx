@@ -35,19 +35,27 @@ export function HomeQuickActionCardRefined({
       <View style={[styles.iconWrap, sage ? styles.iconWrapSage : null]}>
         <SymbolView
           name={icon}
-          size={19}
+          size={29}
           tintColor={sage ? '#5B7740' : colors.primary}
         />
       </View>
 
       {badge != null && badge > 0 ? (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
+          <Text allowFontScaling={false} style={styles.badgeText}>
+            {badge > 9 ? '9+' : badge}
+          </Text>
         </View>
       ) : null}
 
-      <Text numberOfLines={1} style={styles.title}>{title}</Text>
-      <Text numberOfLines={3} style={styles.subtitle}>{subtitle}</Text>
+      <View style={styles.copy}>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
+          {title}
+        </Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.subtitle}>
+          {subtitle}
+        </Text>
+      </View>
     </Pressable>
   );
 }

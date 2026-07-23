@@ -4,10 +4,16 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useNotifications } from '../contexts/notification-context';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
-export function NotificationBellButton() {
+export function NotificationBellButton({
+  variant = 'default',
+}: {
+  variant?: 'default' | 'hero';
+}) {
   const { unreadCount } = useNotifications();
   const badgeText = unreadCount > 9 ? '9+' : String(unreadCount);
+  const hero = variant === 'hero';
 
   return (
     <Pressable
@@ -18,7 +24,11 @@ export function NotificationBellButton() {
       }
       accessibilityRole="button"
       onPress={() => router.push('/notifications')}
-      style={({ pressed }) => [styles.button, pressed ? styles.buttonPressed : null]}
+      style={({ pressed }) => [
+        styles.button,
+        hero ? styles.heroButton : null,
+        pressed ? styles.buttonPressed : null,
+      ]}
     >
       <SymbolView
         name={{
@@ -26,13 +36,13 @@ export function NotificationBellButton() {
           android: 'notifications',
           web: 'notifications',
         }}
-        size={20}
-        tintColor={colors.text}
+        size={hero ? 27 : 20}
+        tintColor={hero ? '#FFF8F2' : colors.text}
       />
 
       {unreadCount > 0 ? (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badgeText}</Text>
+        <View style={[styles.badge, hero ? styles.heroBadge : null]}>
+          {hero ? null : <Text style={styles.badgeText}>{badgeText}</Text>}
         </View>
       ) : null}
     </Pressable>
@@ -51,6 +61,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FDF9F8',
   },
   buttonPressed: { opacity: 0.7 },
+  heroButton: {
+    width: 36,
+    height: 36,
+    borderWidth: 0,
+    borderRadius: 18,
+    backgroundColor: 'transparent',
+  },
   badge: {
     position: 'absolute',
     top: -3,
@@ -68,6 +85,17 @@ const styles = StyleSheet.create({
   badgeText: {
     color: colors.white,
     fontSize: 8,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
+  },
+  heroBadge: {
+    top: 1,
+    right: 0,
+    minWidth: 7,
+    width: 7,
+    height: 7,
+    paddingHorizontal: 0,
+    borderWidth: 0,
+    borderRadius: 4,
+    backgroundColor: '#FFE5D1',
   },
 });

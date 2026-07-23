@@ -1,98 +1,123 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image, Platform, Pressable, Text, View } from 'react-native';
 
 import { homeStyles as styles } from './HomeDashboardStyles';
 import { HomeQuickActionCardRefined } from './HomeQuickActionCardRefined';
-import { refinedHomeStyles as refined } from './HomeRefinedStyles';
 import { NotificationBellButton } from './NotificationBellButton';
-import { colors } from '../theme/colors';
+
+function HomeTableIllustration() {
+  return (
+    <Image
+      accessibilityIgnoresInvertColors
+      resizeMode="contain"
+      source={require('../../assets/images/home-header-table.png')}
+      style={styles.illustration}
+    />
+  );
+}
 
 export function HomeHeader({
   avatarUri,
   pendingInvitationCount,
+  topInset,
+  userName,
   userInitial,
 }: {
   avatarUri: string | null;
   pendingInvitationCount: number;
+  topInset: number;
+  userName: string;
   userInitial: string;
 }) {
   return (
-    <>
-      <View style={styles.topBar}>
-        <Text style={[styles.brand, refined.brand]}>Mesa</Text>
-
-        <View style={[styles.topActions, refined.topActions]}>
-          <NotificationBellButton />
-          <Pressable
-            accessibilityLabel="Abrir perfil"
-            accessibilityRole="button"
-            onPress={() => router.push('/profile')}
-            style={({ pressed }) => [
-              styles.avatarButton,
-              refined.avatarButton,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            {avatarUri ? (
-              <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-            ) : (
-              <Text style={styles.avatarInitial}>{userInitial}</Text>
-            )}
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={[styles.hero, refined.hero]}>
-        <Text style={[styles.title, refined.title]}>¿Qué te apetece hoy?</Text>
-        <Text style={[styles.subtitle, refined.subtitle]}>
-          Descubre restaurantes increíbles y organiza planes con tus grupos.
-        </Text>
-      </View>
-
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.push('/map')}
-        style={({ pressed }) => [
-          styles.searchBar,
-          refined.searchBar,
-          pressed ? styles.pressed : null,
+    <View style={styles.header}>
+      <LinearGradient
+        colors={['#C74A2D', '#B83B25']}
+        end={{ x: 0.95, y: 1 }}
+        start={{ x: 0.05, y: 0 }}
+        style={[
+          styles.heroBackground,
+          {
+            height: topInset + 187,
+            paddingTop: topInset,
+          },
         ]}
       >
-        <SymbolView
-          name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-          size={18}
-          tintColor={colors.muted}
-        />
-        <Text style={[styles.searchText, refined.searchText]}>
-          Busca restaurantes, cocinas o ubicaciones
-        </Text>
-      </Pressable>
+        <View style={styles.topBar}>
+          <Text allowFontScaling={false} style={styles.brand}>Mesa</Text>
 
-      <View style={[styles.quickActions, refined.quickActions]}>
-        <HomeQuickActionCardRefined
-          icon={{ ios: 'person.2.fill', android: 'group_add', web: 'group_add' }}
-          onPress={() => router.push('/groups/create')}
-          subtitle="Reúne a tus amigos y organizad juntos"
-          title="Crear grupo"
-        />
-        <HomeQuickActionCardRefined
-          badge={pendingInvitationCount}
-          icon={{ ios: 'envelope.fill', android: 'mail', web: 'mail' }}
-          onPress={() => router.push('/group-invitations')}
-          subtitle={pendingInvitationCount > 0
-            ? `Tienes ${pendingInvitationCount} pendientes`
-            : 'No tienes nada pendiente'}
-          title="Invitaciones"
-        />
-        <HomeQuickActionCardRefined
-          icon={{ ios: 'safari.fill', android: 'explore', web: 'explore' }}
+          <View style={styles.topActions}>
+            <NotificationBellButton variant="hero" />
+            <Pressable
+              accessibilityLabel="Abrir perfil"
+              accessibilityRole="button"
+              onPress={() => router.push('/profile')}
+              style={({ pressed }) => [
+                styles.avatarButton,
+                pressed ? styles.pressed : null,
+              ]}
+            >
+              {avatarUri ? (
+                <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+              ) : (
+                <Text allowFontScaling={false} style={styles.avatarInitial}>
+                  {userInitial}
+                </Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.heroCopy}>
+          <Text allowFontScaling={false} style={styles.greeting}>Hola, {userName}</Text>
+          <Text allowFontScaling={false} style={styles.title}>¿Qué te apetece hoy?</Text>
+          <Text allowFontScaling={false} style={styles.subtitle}>
+            Encuentra, comparte y decide con los tuyos.
+          </Text>
+        </View>
+
+        <HomeTableIllustration />
+      </LinearGradient>
+
+      <View style={styles.headerControls}>
+        <Pressable
+          accessibilityLabel="Buscar restaurantes"
+          accessibilityRole="button"
           onPress={() => router.push('/map')}
-          subtitle="Restaurantes y planes para inspirarte"
-          title="Descubrir"
-          tone="sage"
-        />
+          style={({ pressed }) => [
+            styles.searchBar,
+            pressed ? styles.pressed : null,
+          ]}
+        >
+          <SymbolView
+            name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+            size={Platform.OS === 'android' ? 24 : 22}
+            tintColor="#706965"
+          />
+          <Text allowFontScaling={false} numberOfLines={1} style={styles.searchText}>
+            Busca restaurantes, cocinas o lugares
+          </Text>
+        </Pressable>
+
+        <View style={styles.quickActions}>
+          <HomeQuickActionCardRefined
+            icon={{ ios: 'person.badge.plus', android: 'person_add', web: 'person_add' }}
+            onPress={() => router.push('/groups/create')}
+            subtitle="Organiza un plan"
+            title="Crear grupo"
+          />
+          <HomeQuickActionCardRefined
+            badge={pendingInvitationCount}
+            icon={{ ios: 'envelope', android: 'mail', web: 'mail' }}
+            onPress={() => router.push('/group-invitations')}
+            subtitle="Revisa las pendientes"
+            title="Invitaciones"
+            tone="sage"
+          />
+        </View>
       </View>
-    </>
+    </View>
   );
 }

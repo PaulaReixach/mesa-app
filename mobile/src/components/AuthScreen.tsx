@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 type AuthScreenProps = {
   title: string;
@@ -135,12 +136,12 @@ const styles = StyleSheet.create({
   logoText: {
     color: colors.white,
     fontSize: 34,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   brandName: {
     color: colors.text,
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   heading: {
     gap: 8,
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 30,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   topTitle: {
     fontSize: 23,
@@ -157,11 +158,13 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 16,
     lineHeight: 23,
   },
   topSubtitle: {
     maxWidth: 280,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },

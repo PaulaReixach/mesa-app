@@ -47,6 +47,7 @@ import {
   NotificationFilter,
   NotificationType,
 } from '../../types/notification-center';
+import { fonts } from '../../theme/fonts';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -1121,7 +1122,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
     textAlign: 'center',
   },
@@ -1153,7 +1154,7 @@ const styles = StyleSheet.create({
   filterText: {
     color: colors.text,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   filterTextSelected: {
@@ -1176,7 +1177,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   sectionCards: {
@@ -1250,13 +1251,14 @@ const styles = StyleSheet.create({
   notificationTitle: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     lineHeight: 18,
   },
 
   notificationMessage: {
     marginTop: 3,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -1289,7 +1291,7 @@ const styles = StyleSheet.create({
   notificationTime: {
     color: colors.muted,
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   unreadDot: {
@@ -1309,7 +1311,7 @@ const styles = StyleSheet.create({
   loadMoreText: {
     color: colors.primary,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   emptyState: {
@@ -1330,13 +1332,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   emptyText: {
     maxWidth: 280,
     marginTop: 7,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -1354,11 +1357,12 @@ const styles = StyleSheet.create({
   errorTitle: {
     color: colors.danger,
     fontSize: 15,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   errorText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -1366,7 +1370,7 @@ const styles = StyleSheet.create({
   retryText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   inlineError: {
@@ -1378,6 +1382,7 @@ const styles = StyleSheet.create({
 
   inlineErrorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
     textAlign: 'center',

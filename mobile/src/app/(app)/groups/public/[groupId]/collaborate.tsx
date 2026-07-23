@@ -29,6 +29,7 @@ import {
 } from '../../../../../services/group-service';
 import { colors } from '../../../../../theme/colors';
 import type { PublicGroupDetail } from '../../../../../types/group';
+import { fonts } from '../../../../../theme/fonts';
 
 const MAX_MESSAGE_LENGTH = 300;
 
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   content: {
     flexGrow: 1,
@@ -302,17 +303,18 @@ const styles = StyleSheet.create({
   eyebrow: {
     color: colors.primary,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
   },
   groupName: {
     color: colors.text,
     fontSize: 22,
     lineHeight: 28,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   introText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -331,12 +333,12 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   counter: {
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   input: {
     minHeight: 140,
@@ -346,11 +348,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: colors.inputBackground,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
   hint: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 10,
     lineHeight: 15,
   },
@@ -365,7 +369,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: colors.white,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -380,6 +384,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -403,11 +408,12 @@ const styles = StyleSheet.create({
   successTitle: {
     color: colors.text,
     fontSize: 21,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   successText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',

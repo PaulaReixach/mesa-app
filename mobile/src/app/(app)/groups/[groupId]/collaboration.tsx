@@ -33,6 +33,7 @@ import { colors } from '../../../../theme/colors';
 import type { RestaurantGroup } from '../../../../types/group';
 import type { GroupRestaurant } from '../../../../types/restaurant';
 import type { RestaurantProposal } from '../../../../types/restaurant-proposal';
+import { fonts } from '../../../../theme/fonts';
 
 export default function CollaborationWorkspaceScreen() {
   const { groupId } = useLocalSearchParams<{
@@ -365,7 +366,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   content: {
     flexGrow: 1,
@@ -402,16 +403,17 @@ const styles = StyleSheet.create({
   eyebrow: {
     color: colors.primary,
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     letterSpacing: 1,
   },
   groupName: {
     color: colors.text,
     fontSize: 21,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   description: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 17,
   },
@@ -428,7 +430,7 @@ const styles = StyleSheet.create({
     color: '#7A5A20',
     fontSize: 11,
     lineHeight: 17,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   proposeButton: {
     minHeight: 50,
@@ -442,7 +444,7 @@ const styles = StyleSheet.create({
   proposeButtonText: {
     color: colors.white,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   section: {
     gap: 12,
@@ -455,7 +457,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 18,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   sectionCount: {
     minWidth: 28,
@@ -465,7 +467,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FBE9E2',
     color: colors.primary,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   list: {
@@ -482,10 +484,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   emptyText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 17,
   },
@@ -500,17 +503,18 @@ const styles = StyleSheet.create({
   errorTitle: {
     color: colors.danger,
     fontSize: 15,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   errorText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 17,
   },
   retryText: {
     color: colors.primary,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   pressed: {
     opacity: 0.72,

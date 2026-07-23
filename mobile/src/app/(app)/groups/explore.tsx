@@ -27,6 +27,8 @@ import { getErrorMessage } from '../../../lib/api';
 import { getPublicGroups } from '../../../services/group-service';
 import { colors } from '../../../theme/colors';
 import type { PublicGroupSummary } from '../../../types/group';
+import { fonts } from '../../../theme/fonts';
+import { radii, shadows } from '../../../theme/layout';
 
 export default function ExploreGroupsScreen() {
   const { accessToken } = useAuth();
@@ -125,10 +127,10 @@ export default function ExploreGroupsScreen() {
         <View style={styles.header}>
           <View style={styles.headerText}>
             <Text style={styles.title}>
-              Grupos
+              Descubre grupos
             </Text>
             <Text style={styles.subtitle}>
-              Descubre listas creadas por gente de tu zona.
+              Encuentra listas públicas que encajen con tus próximos planes.
             </Text>
           </View>
 
@@ -148,6 +150,7 @@ export default function ExploreGroupsScreen() {
               size={22}
               tintColor={colors.white}
             />
+            <Text style={styles.createButtonText}>Nuevo</Text>
           </Pressable>
         </View>
 
@@ -188,12 +191,24 @@ export default function ExploreGroupsScreen() {
           />
 
           <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
             onChangeText={setQuery}
             placeholder="Buscar grupos, cocinas o zonas..."
             placeholderTextColor={colors.muted}
             style={styles.searchInput}
             value={query}
           />
+
+          {query ? (
+            <Pressable accessibilityLabel="Limpiar búsqueda" onPress={() => setQuery('')}>
+              <SymbolView
+                name={{ ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' }}
+                size={18}
+                tintColor={colors.muted}
+              />
+            </Pressable>
+          ) : null}
         </View>
 
         {loading ? (
@@ -280,15 +295,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: 20,
-    paddingHorizontal: 18,
+    gap: 22,
+    paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 34,
+    paddingBottom: 118,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+    alignItems: 'flex-start',
+    gap: 14,
   },
   headerText: {
     flex: 1,
@@ -296,62 +311,78 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 27,
-    fontWeight: '900',
+    fontSize: 31,
+    lineHeight: 37,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.8,
   },
   subtitle: {
     color: colors.muted,
-    fontSize: 13,
-    lineHeight: 19,
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    lineHeight: 18,
   },
   createButton: {
-    width: 44,
-    height: 44,
+    minHeight: 44,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 22,
+    gap: 5,
+    paddingHorizontal: 13,
+    borderRadius: 16,
     backgroundColor: colors.primary,
+    ...shadows.card,
+  },
+  createButtonText: {
+    color: colors.white,
+    fontFamily: fonts.semiBold,
+    fontSize: 11,
   },
   tabs: {
-    minHeight: 42,
+    minHeight: 48,
     flexDirection: 'row',
     padding: 4,
-    borderRadius: 16,
-    backgroundColor: '#F1E9E4',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surfaceMuted,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 13,
+    borderRadius: radii.md,
   },
   tabActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surfaceElevated,
+    ...shadows.card,
   },
   tabText: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: fonts.medium,
   },
   tabTextActive: {
-    color: colors.white,
+    color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.semiBold,
   },
   searchBar: {
-    minHeight: 48,
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 16,
-    backgroundColor: colors.inputBackground,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
   searchInput: {
     flex: 1,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 13,
   },
   centered: {
@@ -367,13 +398,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 17,
-    fontWeight: '900',
+    fontSize: 18,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.25,
   },
   count: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   list: {
     gap: 11,
@@ -383,22 +415,24 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
   messageTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   messageText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
   },
   retryText: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
 });

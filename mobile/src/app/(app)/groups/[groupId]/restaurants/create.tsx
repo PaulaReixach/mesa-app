@@ -26,6 +26,7 @@ import {
 } from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
 import { RestaurantSearchResult } from '../../../../../types/restaurant';
+import { fonts } from '../../../../../theme/fonts';
 
 type CreationMode = 'SEARCH' | 'MANUAL';
 
@@ -567,13 +568,14 @@ const styles = StyleSheet.create({
   },
   backText: {
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 34,
     lineHeight: 36,
   },
   headerTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   headerSpacer: {
     width: 44,
@@ -586,11 +588,12 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 29,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     lineHeight: 35,
   },
   subtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 16,
     lineHeight: 23,
   },
@@ -615,7 +618,7 @@ const styles = StyleSheet.create({
   modeButtonText: {
     color: colors.muted,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   activeModeButtonText: {
     color: colors.primary,
@@ -631,6 +634,7 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -649,10 +653,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   emptyText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -668,15 +673,16 @@ const styles = StyleSheet.create({
   resultsTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   resultsCount: {
     color: colors.muted,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   resultsHelp: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -685,6 +691,7 @@ const styles = StyleSheet.create({
   },
   attribution: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
     textAlign: 'center',
     textDecorationLine: 'underline',
@@ -703,10 +710,11 @@ const styles = StyleSheet.create({
   manualShortcutTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   manualShortcutText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -725,7 +733,7 @@ const styles = StyleSheet.create({
   manualShortcutButtonText: {
     color: colors.primary,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   notesSection: {
     gap: 8,
@@ -735,10 +743,11 @@ const styles = StyleSheet.create({
   notesTitle: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   notesDescription: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 18,
     marginBottom: 8,
@@ -757,6 +766,7 @@ const styles = StyleSheet.create({
   },
   requestErrorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 20,
   },

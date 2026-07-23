@@ -12,7 +12,8 @@ import {
 import { useAuth } from '../contexts/auth-context';
 import { resolveApiUrl } from '../lib/api';
 import { colors } from '../theme/colors';
-import { RestaurantGroup } from '../types/group';
+import type { RestaurantGroup } from '../types/group';
+import { fonts } from '../theme/fonts';
 
 type GroupCardProps = {
   group: RestaurantGroup;
@@ -79,20 +80,47 @@ export function GroupCard({
         </View>
 
         <View style={styles.content}>
-          <View style={styles.titleRow}>
-            <Text
-              numberOfLines={1}
-              style={styles.title}
+          <View style={styles.badgeRow}>
+            <View
+              style={[
+                styles.badge,
+                group.privacy === 'PUBLIC' ? styles.publicBadge : null,
+                collaborating ? styles.collaborationBadge : null,
+              ]}
             >
-              {group.name}
-            </Text>
-
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
+              <SymbolView
+                name={{
+                  ios: collaborating ? 'person.2' : group.privacy === 'PRIVATE' ? 'lock' : 'globe',
+                  android: collaborating ? 'group' : group.privacy === 'PRIVATE' ? 'lock' : 'public',
+                  web: collaborating ? 'group' : group.privacy === 'PRIVATE' ? 'lock' : 'public',
+                }}
+                size={12}
+                tintColor={
+                  collaborating
+                    ? '#9A6A2C'
+                    : group.privacy === 'PUBLIC'
+                      ? '#607349'
+                      : colors.primaryPressed
+                }
+              />
+              <Text
+                style={[
+                  styles.badgeText,
+                  group.privacy === 'PUBLIC' ? styles.publicBadgeText : null,
+                  collaborating ? styles.collaborationBadgeText : null,
+                ]}
+              >
                 {collaborating ? 'Colaboras' : privacyLabel}
               </Text>
             </View>
           </View>
+
+          <Text
+            numberOfLines={1}
+            style={styles.title}
+          >
+            {group.name}
+          </Text>
 
           {group.description ? (
             <Text
@@ -103,12 +131,23 @@ export function GroupCard({
             </Text>
           ) : null}
 
-          <Text style={styles.location}>
-            {group.city ?? 'Sin ubicación'}
-          </Text>
+          <View style={styles.locationRow}>
+            <SymbolView
+              name={{ ios: 'mappin', android: 'location_on', web: 'location_on' }}
+              size={13}
+              tintColor={colors.muted}
+            />
+            <Text numberOfLines={1} style={styles.location}>
+              {group.city ?? 'Sin ubicación'}
+            </Text>
+          </View>
         </View>
 
-        <Text style={styles.arrow}>›</Text>
+        <SymbolView
+          name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+          size={17}
+          tintColor={colors.muted}
+        />
       </Pressable>
 
       {canManageCollaboration ? (
@@ -126,7 +165,7 @@ export function GroupCard({
               android: 'manage_accounts',
               web: 'manage_accounts',
             }}
-            size={16}
+            size={14}
             tintColor={colors.primary}
           />
           <Text style={styles.manageButtonText}>
@@ -143,27 +182,28 @@ const styles = StyleSheet.create({
   wrapper: {
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
+    borderColor: colors.borderStrong,
+    borderRadius: 10,
     backgroundColor: colors.surface,
   },
   card: {
+    minHeight: 98,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    padding: 16,
+    gap: 9,
+    padding: 8,
   },
   cardPressed: {
-    opacity: 0.75,
+    opacity: 0.72,
   },
   icon: {
-    width: 52,
-    height: 52,
+    width: 68,
+    height: 82,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 17,
-    backgroundColor: '#F7D9CF',
+    borderRadius: 7,
+    backgroundColor: colors.primarySoft,
   },
   image: {
     width: '100%',
@@ -171,59 +211,79 @@ const styles = StyleSheet.create({
   },
   iconText: {
     color: colors.primary,
-    fontSize: 21,
-    fontWeight: '800',
+    fontSize: 24,
+    fontFamily: fonts.bold,
   },
   content: {
     flex: 1,
-    gap: 5,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    gap: 3,
+    paddingVertical: 1,
   },
-  titleRow: {
+  badgeRow: {
+    minHeight: 22,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'flex-end',
   },
   title: {
-    flex: 1,
     color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
+    fontSize: 14,
+    fontFamily: fonts.bold,
   },
   badge: {
-    paddingHorizontal: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: '#E8F1EB',
+    backgroundColor: colors.primarySoft,
   },
   badgeText: {
-    color: colors.success,
-    fontSize: 11,
-    fontWeight: '700',
+    color: colors.primaryPressed,
+    fontSize: 8,
+    fontFamily: fonts.medium,
+  },
+  publicBadge: {
+    backgroundColor: colors.oliveSoft,
+  },
+  publicBadgeText: {
+    color: '#607349',
+  },
+  collaborationBadge: {
+    backgroundColor: colors.amberSoft,
+  },
+  collaborationBadgeText: {
+    color: '#9A6A2C',
   },
   description: {
     color: colors.muted,
-    fontSize: 14,
-    lineHeight: 19,
+    fontFamily: fonts.regular,
+    fontSize: 9,
+    lineHeight: 13,
   },
-  location: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  arrow: {
-    color: colors.muted,
-    fontSize: 28,
-    fontWeight: '300',
-  },
-  manageButton: {
-    minHeight: 43,
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
+    gap: 5,
+  },
+  location: {
+    flex: 1,
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 9,
+  },
+  manageButton: {
+    minHeight: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 13,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
-    backgroundColor: '#FFF8F3',
+    backgroundColor: colors.surfaceMuted,
   },
   manageButtonPressed: {
     opacity: 0.72,
@@ -231,12 +291,12 @@ const styles = StyleSheet.create({
   manageButtonText: {
     flex: 1,
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '900',
+    fontSize: 10,
+    fontFamily: fonts.bold,
   },
   manageArrow: {
     color: colors.primary,
-    fontSize: 19,
-    fontWeight: '400',
+    fontSize: 17,
+    fontFamily: fonts.regular,
   },
 });

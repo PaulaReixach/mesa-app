@@ -62,6 +62,7 @@ export const addHubActionStyles = StyleSheet.create({
     lineHeight: 18,
   },
   subtitleCompact: {
+    fontFamily: fonts.regular,
     fontSize: 12.8,
     lineHeight: 17,
   },

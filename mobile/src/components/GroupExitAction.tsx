@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 type Props = {
   label: string;
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   text: {
     color: colors.danger,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   pressed: {
     opacity: 0.65,

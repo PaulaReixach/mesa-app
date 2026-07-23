@@ -37,6 +37,8 @@ import { colors } from '../../theme/colors';
 import {
   PrivacyPreferences,
 } from '../../types/privacy';
+import { fonts } from '../../theme/fonts';
+import { radii, shadows } from '../../theme/layout';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -645,14 +647,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
   intro: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 34,
-    paddingHorizontal: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#D7DEC5',
+    borderRadius: radii.xl,
+    backgroundColor: colors.oliveSoft,
   },
 
   introIcon: {
@@ -661,24 +667,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    borderRadius: 34,
-    backgroundColor: '#F7E8E2',
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.66)',
   },
 
   introTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
-    textAlign: 'center',
+    fontFamily: fonts.bold,
+    textAlign: 'left',
   },
 
   introDescription: {
     maxWidth: 310,
     marginTop: 7,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
-    textAlign: 'center',
+    textAlign: 'left',
   },
 
   section: {
@@ -689,14 +696,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
 
   sectionContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   settingRow: {
@@ -704,6 +715,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,
+    paddingHorizontal: 13,
   },
 
   settingRowBorder: {
@@ -725,7 +737,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 19,
-    backgroundColor: '#F7EEE9',
+    backgroundColor: colors.oliveSoft,
   },
 
   settingText: {
@@ -736,12 +748,13 @@ const styles = StyleSheet.create({
   settingTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   settingSubtitle: {
     marginTop: 4,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -759,7 +772,7 @@ const styles = StyleSheet.create({
     marginTop: 13,
     color: colors.muted,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   loadError: {
@@ -771,7 +784,7 @@ const styles = StyleSheet.create({
   loadErrorTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
 
@@ -779,6 +792,7 @@ const styles = StyleSheet.create({
     maxWidth: 290,
     marginTop: 8,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -801,7 +815,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: colors.white,
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   saveStatus: {
@@ -816,7 +830,7 @@ const styles = StyleSheet.create({
   saveStatusText: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
 
   errorBox: {
@@ -830,6 +844,7 @@ const styles = StyleSheet.create({
 
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
     textAlign: 'center',

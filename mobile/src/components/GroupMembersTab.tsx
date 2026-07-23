@@ -19,6 +19,7 @@ import { leaveGroup } from '../services/group-member-service';
 import { colors } from '../theme/colors';
 import type { GroupPrivacy } from '../types/group';
 import type { GroupMember } from '../types/group-member';
+import { fonts } from '../theme/fonts';
 
 type Props = {
   privacy: GroupPrivacy;
@@ -131,6 +132,6 @@ export function GroupMembersTab({
 const styles = StyleSheet.create({
   container: { gap: 12 },
   heading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headingTitle: { flex: 1, color: colors.text, fontSize: 12, fontWeight: '900' },
+  headingTitle: { flex: 1, color: colors.text, fontSize: 12, fontFamily: fonts.bold },
   list: { overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 17, backgroundColor: colors.surface },
 });

@@ -12,6 +12,8 @@ import type {
   RestaurantProposal,
   RestaurantProposalStatus,
 } from '../types/restaurant-proposal';
+import { fonts } from '../theme/fonts';
+import { radii, shadows } from '../theme/layout';
 
 const statusPresentation: Record<RestaurantProposalStatus, {
   label: string;
@@ -182,8 +184,9 @@ const styles = StyleSheet.create({
     padding: 15,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
   header: {
     flexDirection: 'row',
@@ -196,7 +199,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 15,
-    backgroundColor: '#F3DED5',
+    backgroundColor: colors.primarySoft,
   },
   heading: {
     flex: 1,
@@ -205,10 +208,11 @@ const styles = StyleSheet.create({
   name: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   meta: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
   },
   status: {
@@ -218,26 +222,28 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 8,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   proposer: {
     color: colors.primary,
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   messageBox: {
     padding: 11,
     borderRadius: 14,
-    backgroundColor: '#FFF8F3',
+    backgroundColor: colors.surfaceMuted,
   },
   message: {
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 17,
     fontStyle: 'italic',
   },
   date: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
   },
   actions: {
@@ -257,7 +263,7 @@ const styles = StyleSheet.create({
   rejectText: {
     color: colors.danger,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   acceptButton: {
     minHeight: 43,
@@ -270,7 +276,7 @@ const styles = StyleSheet.create({
   acceptText: {
     color: colors.white,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   cancelButton: {
     minHeight: 40,
@@ -280,6 +286,6 @@ const styles = StyleSheet.create({
   cancelText: {
     color: colors.danger,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
 });

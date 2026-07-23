@@ -15,6 +15,7 @@ import { colors } from '../theme/colors';
 import type { GroupMember } from '../types/group-member';
 import type { GroupActivityItem } from '../types/group-activity';
 import type { GroupRestaurant } from '../types/restaurant';
+import { fonts } from '../theme/fonts';
 
 type Props = {
   activity?: GroupActivityItem[];
@@ -172,10 +173,11 @@ const styles = StyleSheet.create({
   bannerTitle: {
     color: colors.text,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   bannerText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 8,
   },
   loading: {
@@ -188,7 +190,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   rows: {
     gap: 6,
@@ -204,17 +206,19 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: colors.text,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   emptyText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
     lineHeight: 14,
     textAlign: 'center',
   },
   error: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 8,
     textAlign: 'center',
   },

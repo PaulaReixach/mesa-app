@@ -10,6 +10,8 @@ import {
 import { resolveApiUrl } from '../lib/api';
 import { colors } from '../theme/colors';
 import type { PublicGroupSummary } from '../types/group';
+import { fonts } from '../theme/fonts';
+import { radii, shadows } from '../theme/layout';
 
 type PublicGroupCardProps = {
   group: PublicGroupSummary;
@@ -128,25 +130,27 @@ export function PublicGroupCard({
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 104,
+    minHeight: 116,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 13,
     padding: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: radii.xl,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
   cardPressed: {
-    opacity: 0.72,
+    opacity: 0.82,
+    transform: [{ scale: 0.995 }],
   },
   imageContainer: {
-    width: 78,
-    height: 78,
+    width: 88,
+    height: 88,
     overflow: 'hidden',
-    borderRadius: 18,
-    backgroundColor: '#F3DED5',
+    borderRadius: radii.lg,
+    backgroundColor: colors.primarySoft,
   },
   image: {
     width: '100%',
@@ -159,12 +163,12 @@ const styles = StyleSheet.create({
   },
   imageInitial: {
     color: colors.primary,
-    fontSize: 28,
-    fontWeight: '900',
+    fontSize: 30,
+    fontFamily: fonts.bold,
   },
   content: {
     flex: 1,
-    gap: 4,
+    gap: 5,
   },
   titleRow: {
     flexDirection: 'row',
@@ -174,14 +178,14 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     color: colors.text,
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: '900',
+    fontSize: 15,
+    lineHeight: 19,
+    fontFamily: fonts.bold,
   },
   owner: {
     color: colors.primary,
-    fontSize: 10,
-    fontWeight: '800',
+    fontSize: 9,
+    fontFamily: fonts.semiBold,
   },
   metaRow: {
     flexDirection: 'row',
@@ -196,7 +200,8 @@ const styles = StyleSheet.create({
   },
   metaText: {
     color: colors.muted,
-    fontSize: 9,
+    fontFamily: fonts.regular,
+    fontSize: 8,
   },
   locationRow: {
     flexDirection: 'row',
@@ -205,7 +210,8 @@ const styles = StyleSheet.create({
   },
   locationText: {
     color: colors.muted,
-    fontSize: 9,
+    fontFamily: fonts.regular,
+    fontSize: 8,
   },
   followingBadge: {
     flexDirection: 'row',
@@ -214,11 +220,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: '#E8EEDD',
+    backgroundColor: colors.oliveSoft,
   },
   followingText: {
     color: '#607349',
     fontSize: 8,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
 });

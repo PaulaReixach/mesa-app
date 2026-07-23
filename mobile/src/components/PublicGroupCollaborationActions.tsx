@@ -22,6 +22,7 @@ import {
 } from '../services/group-service';
 import { colors } from '../theme/colors';
 import type { PublicGroupCollaborationState } from '../types/group';
+import { fonts } from '../theme/fonts';
 
 type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
   compactText: {
     flexShrink: 1,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   exitButton: {
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
   exitButtonText: {
     color: colors.danger,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   successCard: {
     gap: 10,
@@ -481,15 +482,16 @@ const styles = StyleSheet.create({
   successTitle: {
     color: '#607349',
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   pendingTitle: {
     color: '#9A6A21',
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   stateSubtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 8,
     lineHeight: 12,
   },
@@ -505,22 +507,23 @@ const styles = StyleSheet.create({
   greenButtonText: {
     color: '#607349',
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   cancelText: {
     color: colors.danger,
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   leaveText: {
     color: colors.danger,
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 8,
     lineHeight: 12,
     textAlign: 'center',

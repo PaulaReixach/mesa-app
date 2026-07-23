@@ -1,5 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import { useFocusEffect } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,13 +10,12 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { HomeActivityEntry } from '../components/HomeActivityRow';
 import { HomeDashboardContentRefined } from '../components/HomeDashboardContentRefined';
 import { HomeHeader } from '../components/HomeHeader';
 import { homeStyles as styles } from '../components/HomeDashboardStyles';
-import { refinedHomeStyles as refined } from '../components/HomeRefinedStyles';
 import type { HomeRecommendation } from '../components/HomeRecommendationCard';
 import { useAuth } from '../contexts/auth-context';
 import { getErrorMessage, resolveApiUrl } from '../lib/api';
@@ -66,6 +66,7 @@ function pickRecommendation(data: GroupDashboardData[]): HomeRecommendation | nu
 
 export default function HomeScreenRefined() {
   const { user, accessToken } = useAuth();
+  const insets = useSafeAreaInsets();
   const [groups, setGroups] = useState<RestaurantGroup[]>([]);
   const [membersByGroup, setMembersByGroup] = useState<Record<string, GroupMember[]>>({});
   const [activity, setActivity] = useState<HomeActivityEntry[]>([]);
@@ -142,14 +143,19 @@ export default function HomeScreenRefined() {
 
   const avatarUri = user?.avatarUrl ? resolveApiUrl(user.avatarUrl) : null;
   const userInitial = user?.name?.charAt(0).toUpperCase() ?? '?';
+  const userName = user?.name?.trim().split(/\s+/)[0] || 'de nuevo';
 
   return (
-    <SafeAreaView
-      edges={['top', 'right', 'left']}
-      style={[styles.safeArea, refined.safeArea]}
-    >
+    <View style={styles.safeArea}>
+      <StatusBar style="light" />
+
       <ScrollView
-        contentContainerStyle={[styles.content, refined.content]}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingBottom: Math.max(insets.bottom, 18) + 78,
+          },
+        ]}
         refreshControl={(
           <RefreshControl
             onRefresh={() => void loadHome(true)}
@@ -162,13 +168,15 @@ export default function HomeScreenRefined() {
         <HomeHeader
           avatarUri={avatarUri}
           pendingInvitationCount={pendingInvitationCount}
+          topInset={insets.top}
+          userName={userName}
           userInitial={userInitial}
         />
 
         {isLoading ? (
-          <View style={[styles.loadingCard, refined.loadingCard]}>
+          <View style={styles.loadingCard}>
             <ActivityIndicator color={colors.primary} size="large" />
-            <Text style={[styles.loadingText, refined.loadingText]}>Preparando tu inicio...</Text>
+            <Text style={styles.loadingText}>Preparando tu inicio...</Text>
           </View>
         ) : null}
 
@@ -201,6 +209,6 @@ export default function HomeScreenRefined() {
           />
         ) : null}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

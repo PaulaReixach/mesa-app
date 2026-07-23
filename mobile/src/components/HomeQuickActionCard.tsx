@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
@@ -108,15 +109,16 @@ const styles = StyleSheet.create({
   badgeText: {
     color: colors.primary,
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   title: {
     color: colors.text,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   subtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
     lineHeight: 13,
   },

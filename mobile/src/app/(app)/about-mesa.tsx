@@ -17,6 +17,8 @@ import {
 } from 'react-native-safe-area-context';
 
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/fonts';
+import { radii, shadows } from '../../theme/layout';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -332,14 +334,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
   hero: {
     alignItems: 'center',
     marginBottom: 30,
-    paddingHorizontal: 20,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: '#EACCC1',
+    borderRadius: radii.xl,
+    backgroundColor: colors.primarySoft,
   },
 
   logo: {
@@ -363,7 +369,7 @@ const styles = StyleSheet.create({
   appName: {
     color: colors.text,
     fontSize: 28,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     letterSpacing: -0.7,
   },
 
@@ -371,6 +377,7 @@ const styles = StyleSheet.create({
     maxWidth: 310,
     marginTop: 7,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 21,
     textAlign: 'center',
@@ -382,18 +389,20 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 22,
+    borderRadius: radii.xl,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   storyTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   storyText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
   },
@@ -406,14 +415,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
 
   sectionContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   aboutRow: {
@@ -421,6 +434,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,
+    paddingHorizontal: 13,
   },
 
   aboutRowBorder: {
@@ -438,7 +452,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 19,
-    backgroundColor: '#F7EEE9',
+    backgroundColor: colors.primarySoft,
   },
 
   aboutText: {
@@ -449,12 +463,13 @@ const styles = StyleSheet.create({
   aboutTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   aboutSubtitle: {
     marginTop: 4,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -462,7 +477,7 @@ const styles = StyleSheet.create({
   aboutValue: {
     color: colors.muted,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   footer: {
@@ -475,7 +490,7 @@ const styles = StyleSheet.create({
   footerTitle: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
 
@@ -483,6 +498,7 @@ const styles = StyleSheet.create({
     maxWidth: 290,
     marginTop: 6,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
     textAlign: 'center',

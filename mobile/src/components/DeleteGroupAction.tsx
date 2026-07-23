@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/auth-context';
 import { getErrorMessage } from '../lib/api';
 import { deleteGroup } from '../services/group-service';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 type Props = {
   groupId: string;
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
   text: {
     color: colors.danger,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   pressed: {
     backgroundColor: '#FDEAE6',

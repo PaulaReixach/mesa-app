@@ -22,6 +22,7 @@ import {
 } from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
 import type { GroupRestaurant } from '../../../../../types/restaurant';
+import { fonts } from '../../../../../theme/fonts';
 
 export default function EditRestaurantScreen() {
   const { groupId, groupRestaurantId } =
@@ -303,8 +304,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 19,
   },
-  headerTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
-  saveText: { color: colors.primary, fontSize: 13, fontWeight: '900' },
+  headerTitle: { color: colors.text, fontSize: 15, fontFamily: fonts.bold },
+  saveText: { color: colors.primary, fontSize: 13, fontFamily: fonts.bold },
   disabledText: { opacity: 0.4 },
   loading: { alignItems: 'center', paddingVertical: 90 },
   heroCard: {
@@ -327,13 +328,13 @@ const styles = StyleSheet.create({
   heroEyebrow: {
     color: colors.primary,
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     letterSpacing: 0.8,
   },
-  heroTitle: { color: colors.text, fontSize: 17, fontWeight: '900' },
+  heroTitle: { color: colors.text, fontSize: 17, fontFamily: fonts.bold },
   heroDescription: { color: colors.muted, fontSize: 10, lineHeight: 15 },
   section: { gap: 10 },
-  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '900' },
+  sectionTitle: { color: colors.text, fontSize: 16, fontFamily: fonts.bold },
   formCard: {
     gap: 17,
     padding: 17,
@@ -360,5 +361,5 @@ const styles = StyleSheet.create({
   },
   primaryButtonPressed: { backgroundColor: colors.primaryPressed },
   primaryButtonDisabled: { opacity: 0.45 },
-  primaryButtonText: { color: colors.white, fontSize: 15, fontWeight: '900' },
+  primaryButtonText: { color: colors.white, fontSize: 15, fontFamily: fonts.bold },
 });

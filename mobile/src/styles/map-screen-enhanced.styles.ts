@@ -38,9 +38,9 @@ export const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontFamily: fonts.bold,
-    fontSize: 28,
-    lineHeight: 34,
-    letterSpacing: -0.7,
+    fontSize: 30,
+    lineHeight: 36,
+    letterSpacing: -0.85,
   },
   subtitle: {
     marginTop: 1,

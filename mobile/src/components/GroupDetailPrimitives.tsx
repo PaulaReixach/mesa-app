@@ -16,6 +16,7 @@ import type {
   GroupRestaurant,
   GroupRestaurantStatus,
 } from '../types/restaurant';
+import { fonts } from '../theme/fonts';
 
 type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
@@ -817,7 +818,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: 'rgba(255,255,255,0.78)',
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     letterSpacing: 2,
   },
   heroOverlay: {
@@ -861,7 +862,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 24,
     lineHeight: 29,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     letterSpacing: -0.5,
   },
   metaRow: {
@@ -878,16 +879,17 @@ const styles = StyleSheet.create({
   metaText: {
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
   metaDot: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 11,
   },
   cityText: {
     color: colors.primary,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   statCard: {
     flex: 1,
@@ -911,13 +913,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
     lineHeight: 17,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   statLabel: {
     color: colors.muted,
     fontSize: 8,
     lineHeight: 10,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
   primaryAction: {
     minHeight: 44,
@@ -937,7 +939,7 @@ const styles = StyleSheet.create({
   primaryActionText: {
     color: colors.white,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   primaryActionTextOutline: {
     color: colors.primary,
@@ -957,11 +959,11 @@ const styles = StyleSheet.create({
   tabText: {
     color: colors.muted,
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   tabTextActive: {
     color: colors.primary,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   tabIndicator: {
     width: '84%',
@@ -1004,10 +1006,11 @@ const styles = StyleSheet.create({
   infoTitle: {
     color: colors.text,
     fontSize: 10,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   infoSubtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 7,
     lineHeight: 10,
   },
@@ -1019,7 +1022,7 @@ const styles = StyleSheet.create({
   infoActionText: {
     color: colors.primary,
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   infoActionTextGreen: {
     color: '#617C3A',
@@ -1049,12 +1052,12 @@ const styles = StyleSheet.create({
   restaurantName: {
     color: colors.text,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   restaurantCategory: {
     color: colors.text,
     fontSize: 9,
-    fontWeight: '600',
+    fontFamily: fonts.semiBold,
   },
   restaurantLocationRow: {
     flexDirection: 'row',
@@ -1064,6 +1067,7 @@ const styles = StyleSheet.create({
   restaurantLocation: {
     flex: 1,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 8,
   },
   restaurantTrailing: {
@@ -1077,7 +1081,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 7,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   ratingPill: {
     flexDirection: 'row',
@@ -1090,16 +1094,18 @@ const styles = StyleSheet.create({
   },
   ratingStar: {
     color: '#E7A52C',
+    fontFamily: fonts.regular,
     fontSize: 11,
   },
   ratingValue: {
     color: colors.text,
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   ratingCount: {
     maxWidth: 62,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 7,
     textAlign: 'right',
   },
@@ -1118,7 +1124,7 @@ const styles = StyleSheet.create({
   memberPreviewTitle: {
     color: colors.text,
     fontSize: 11,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   memberPreviewAction: {
     flexDirection: 'row',
@@ -1128,7 +1134,7 @@ const styles = StyleSheet.create({
   memberPreviewActionText: {
     color: '#617C3A',
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   memberPreviewList: {
     flexDirection: 'row',
@@ -1161,7 +1167,7 @@ const styles = StyleSheet.create({
   previewAvatarText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   ownerCrown: {
     position: 'absolute',
@@ -1181,13 +1187,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: colors.text,
     fontSize: 8,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   previewOwner: {
     marginTop: 1,
     color: colors.primary,
     fontSize: 7,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   ownerStrip: {
     minHeight: 56,
@@ -1216,7 +1222,7 @@ const styles = StyleSheet.create({
   ownerStripInitial: {
     color: colors.primary,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   ownerStripText: {
     flex: 1,
@@ -1225,14 +1231,15 @@ const styles = StyleSheet.create({
   ownerStripTitle: {
     color: colors.muted,
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   ownerStripAccent: {
     color: colors.primary,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   ownerStripSubtitle: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 8,
   },
   emptyTab: {
@@ -1257,11 +1264,12 @@ const styles = StyleSheet.create({
   emptyTabTitle: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   emptyTabText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 9,
     lineHeight: 14,
     textAlign: 'center',

@@ -15,6 +15,7 @@ import {
   GroupRestaurant,
   GroupRestaurantStatus,
 } from '../types/restaurant';
+import { fonts } from '../theme/fonts';
 
 type RestaurantStatusSectionProps = {
   groupId: string;
@@ -309,10 +310,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 21,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   sectionDescription: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -346,20 +348,21 @@ const styles = StyleSheet.create({
   statusOptionTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   selectedStatusOptionTitle: {
     color: colors.primary,
   },
   statusOptionDescription: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
   checkmark: {
     color: colors.primary,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   updateError: {
     borderWidth: 1,
@@ -370,6 +373,7 @@ const styles = StyleSheet.create({
   },
   updateErrorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -386,7 +390,7 @@ const styles = StyleSheet.create({
   archiveButtonText: {
     color: colors.danger,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   restoreButton: {
     minHeight: 48,
@@ -401,7 +405,7 @@ const styles = StyleSheet.create({
   restoreButtonText: {
     color: colors.primary,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   secondaryButtonPressed: {
     opacity: 0.7,

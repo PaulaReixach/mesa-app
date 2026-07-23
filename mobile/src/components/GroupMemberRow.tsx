@@ -5,6 +5,7 @@ import { resolveApiUrl } from '../lib/api';
 import { colors } from '../theme/colors';
 import type { GroupPrivacy } from '../types/group';
 import type { GroupMember } from '../types/group-member';
+import { fonts } from '../theme/fonts';
 
 type Props = {
   member: GroupMember;
@@ -72,15 +73,15 @@ const styles = StyleSheet.create({
   avatarWrap: { position: 'relative' },
   avatar: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 23, backgroundColor: '#F4E1D8' },
   avatarImage: { width: '100%', height: '100%' },
-  avatarText: { color: colors.primary, fontSize: 14, fontWeight: '900' },
+  avatarText: { color: colors.primary, fontSize: 14, fontFamily: fonts.bold },
   crown: { position: 'absolute', right: -2, bottom: -1, width: 19, height: 19, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.surface, borderRadius: 10, backgroundColor: colors.primary },
   copy: { flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 5 },
-  name: { color: colors.text, fontSize: 12, fontWeight: '900' },
+  name: { color: colors.text, fontSize: 12, fontFamily: fonts.bold },
   pill: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999 },
   ownerPill: { backgroundColor: '#FBE9E2' },
   collaboratorPill: { backgroundColor: '#E8EEDD' },
   memberPill: { backgroundColor: '#F4EFEA' },
-  role: { fontSize: 8, fontWeight: '800' },
+  role: { fontSize: 8, fontFamily: fonts.bold },
   ownerText: { color: colors.primary },
   collaboratorText: { color: '#607349' },
   memberText: { color: colors.muted },

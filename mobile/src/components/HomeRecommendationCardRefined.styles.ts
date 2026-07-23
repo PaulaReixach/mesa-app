@@ -1,50 +1,75 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 export const recommendationStyles = StyleSheet.create({
   card: {
-    minHeight: 82,
+    height: 84,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    padding: 7,
+    gap: 13,
+    padding: 8,
     borderWidth: 1,
-    borderColor: '#E4D8D0',
+    borderColor: '#E2D7D1',
     borderRadius: 18,
-    backgroundColor: '#FDF9F8',
+    backgroundColor: '#FFFFFF',
   },
-  artwork: { width: 72, height: 66, overflow: 'hidden', borderRadius: 13 },
-  image: { width: '100%', height: '100%' },
-  fallback: {
+  artwork: {
+    width: 91,
+    height: 68,
+    overflow: 'hidden',
+    borderRadius: 12,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  copy: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E6E0CB',
+    minWidth: 0,
+    gap: 2,
   },
-  copy: { flex: 1, minWidth: 0, gap: 1 },
-  eyebrow: { color: colors.primary, fontSize: 7, fontWeight: '900' },
-  title: { color: colors.text, fontSize: 13, fontWeight: '900' },
-  category: { color: colors.text, fontSize: 8, fontWeight: '600' },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 1 },
-  location: { flex: 1, color: colors.muted, fontSize: 6.5 },
-  trailing: { alignItems: 'flex-end', gap: 5 },
+  eyebrow: {
+    color: '#D34A2B',
+    fontFamily: fonts.medium,
+    fontSize: 9,
+    lineHeight: 12,
+  },
+  title: {
+    color: colors.text,
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  location: {
+    color: colors.text,
+    fontFamily: fonts.medium,
+    fontSize: 10,
+    lineHeight: 13,
+  },
+  description: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 9,
+    lineHeight: 12,
+  },
+  trailing: {
+    alignItems: 'flex-end',
+  },
   statusPill: {
-    paddingHorizontal: 7,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#EAF0DE',
+    backgroundColor: '#E8EEDC',
   },
-  statusText: { color: '#5D7444', fontSize: 6.5, fontWeight: '800' },
-  scorePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 5,
-    borderRadius: 999,
-    backgroundColor: '#FFF1DB',
+  statusText: {
+    color: '#5E714A',
+    fontFamily: fonts.medium,
+    fontSize: 8,
   },
-  scoreText: { color: colors.text, fontSize: 9, fontWeight: '900' },
-  pressed: { opacity: 0.74 },
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.992 }],
+  },
 });

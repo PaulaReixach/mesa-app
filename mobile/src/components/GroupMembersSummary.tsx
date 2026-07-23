@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '../theme/colors';
 import type { GroupPrivacy } from '../types/group';
+import { fonts } from '../theme/fonts';
 
 export function GroupMembersSummary({
   privacy,
@@ -73,6 +74,6 @@ const styles = StyleSheet.create({
   greenIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: '#E8EEDD' },
   warmIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: '#FBE9E2' },
   copy: { flex: 1, minWidth: 0, gap: 3 },
-  title: { color: colors.text, fontSize: 9, fontWeight: '900' },
+  title: { color: colors.text, fontSize: 9, fontFamily: fonts.bold },
   text: { color: colors.muted, fontSize: 7, lineHeight: 10 },
 });

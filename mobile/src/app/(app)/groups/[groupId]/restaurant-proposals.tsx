@@ -27,6 +27,7 @@ import {
 } from '../../../../services/restaurant-proposal-service';
 import { colors } from '../../../../theme/colors';
 import type { RestaurantProposal } from '../../../../types/restaurant-proposal';
+import { fonts } from '../../../../theme/fonts';
 
 type ResolutionAction = 'ACCEPT' | 'REJECT';
 
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
+  headerTitle: { color: colors.text, fontSize: 15, fontFamily: fonts.bold },
   content: {
     flexGrow: 1,
     gap: 22,
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FBE9E2',
   },
   introText: { flex: 1, gap: 4 },
-  introTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
+  introTitle: { color: colors.text, fontSize: 14, fontFamily: fonts.bold },
   introDescription: { color: colors.muted, fontSize: 10, lineHeight: 15 },
   section: { gap: 12 },
   sectionHeader: {
@@ -330,8 +331,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  sectionTitle: { color: colors.text, fontSize: 17, fontWeight: '900' },
-  sectionCount: { color: colors.primary, fontSize: 12, fontWeight: '900' },
+  sectionTitle: { color: colors.text, fontSize: 17, fontFamily: fonts.bold },
+  sectionCount: { color: colors.primary, fontSize: 12, fontFamily: fonts.bold },
   list: { gap: 10 },
   emptyCard: {
     gap: 5,
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: colors.surface,
   },
-  emptyTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
+  emptyTitle: { color: colors.text, fontSize: 14, fontFamily: fonts.bold },
   emptyText: { color: colors.muted, fontSize: 10, lineHeight: 15 },
   errorCard: {
     gap: 6,
@@ -350,5 +351,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF1EE',
   },
   errorText: { color: colors.danger, fontSize: 11, lineHeight: 16 },
-  retryText: { color: colors.primary, fontSize: 10, fontWeight: '900' },
+  retryText: { color: colors.primary, fontSize: 10, fontFamily: fonts.bold },
 });

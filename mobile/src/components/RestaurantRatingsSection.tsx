@@ -20,6 +20,7 @@ import {
 } from '../services/restaurant-rating-service';
 import { colors } from '../theme/colors';
 import { RestaurantRatingsSummary } from '../types/restaurant-rating';
+import { fonts } from '../theme/fonts';
 
 type RestaurantRatingsSectionProps = {
   groupId: string;
@@ -396,10 +397,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
     fontSize: 21,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   sectionDescription: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -416,6 +418,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 14,
   },
   averageCard: {
@@ -438,6 +441,7 @@ const styles = StyleSheet.create({
   },
   averageIconText: {
     color: '#C6841C',
+    fontFamily: fonts.regular,
     fontSize: 29,
   },
   averageContent: {
@@ -447,7 +451,7 @@ const styles = StyleSheet.create({
   averageLabel: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     textTransform: 'uppercase',
   },
   averageRow: {
@@ -458,21 +462,22 @@ const styles = StyleSheet.create({
   averageScore: {
     color: colors.text,
     fontSize: 29,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   averageMaximum: {
     color: colors.muted,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   noRatings: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     lineHeight: 22,
   },
   ratingsCount: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
   },
   myRatingCard: {
@@ -496,16 +501,17 @@ const styles = StyleSheet.create({
   myRatingTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   myRatingDescription: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
   },
   myScore: {
     color: colors.primary,
     fontSize: 15,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   stars: {
     flexDirection: 'row',
@@ -523,6 +529,7 @@ const styles = StyleSheet.create({
   },
   star: {
     color: '#C9BEB8',
+    fontFamily: fonts.regular,
     fontSize: 36,
     lineHeight: 42,
   },
@@ -532,7 +539,7 @@ const styles = StyleSheet.create({
   deleteRatingText: {
     color: colors.danger,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
   memberRatings: {
@@ -541,7 +548,7 @@ const styles = StyleSheet.create({
   memberRatingsTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   memberRatingsList: {
     gap: 9,
@@ -567,7 +574,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: colors.primary,
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   memberContent: {
     flex: 1,
@@ -581,10 +588,11 @@ const styles = StyleSheet.create({
   memberName: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   username: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
   },
   youBadge: {
@@ -596,7 +604,7 @@ const styles = StyleSheet.create({
   youBadgeText: {
     color: colors.primary,
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   memberScore: {
     flexDirection: 'row',
@@ -605,12 +613,13 @@ const styles = StyleSheet.create({
   },
   memberScoreStar: {
     color: '#E6A72E',
+    fontFamily: fonts.regular,
     fontSize: 18,
   },
   memberScoreText: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   errorCard: {
     gap: 8,
@@ -622,12 +631,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
   retryText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 });

@@ -12,6 +12,8 @@ import type {
   GroupRestaurant,
   GroupRestaurantStatus,
 } from '../types/restaurant';
+import { fonts } from '../theme/fonts';
+import { radii, shadows } from '../theme/layout';
 
 type RestaurantCardProps = {
   groupRestaurant: GroupRestaurant;
@@ -202,11 +204,13 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 18,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
+    ...shadows.card,
   },
   cardPressed: {
-    opacity: 0.72,
+    opacity: 0.82,
+    transform: [{ scale: 0.995 }],
   },
   artwork: {
     width: 58,
@@ -214,7 +218,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 16,
-    backgroundColor: '#F3DED5',
+    backgroundColor: colors.primarySoft,
   },
   content: {
     flex: 1,
@@ -229,7 +233,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.text,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   metaRow: {
     flexDirection: 'row',
@@ -243,7 +247,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   ratingBadge: {
     paddingHorizontal: 8,
@@ -254,21 +258,23 @@ const styles = StyleSheet.create({
   ratingText: {
     color: '#9B6717',
     fontSize: 9,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   category: {
     flex: 1,
     color: colors.text,
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   location: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 10,
   },
   notes: {
     marginTop: 1,
     color: colors.primary,
+    fontFamily: fonts.regular,
     fontSize: 9,
     fontStyle: 'italic',
   },

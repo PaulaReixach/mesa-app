@@ -5,6 +5,7 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 import { resolveApiUrl } from '../lib/api';
 import { colors } from '../theme/colors';
 import type { GroupActivityItem } from '../types/group-activity';
+import { fonts } from '../theme/fonts';
 
 type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
@@ -276,12 +277,13 @@ const styles = StyleSheet.create({
   },
   sentence: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 10,
     lineHeight: 15,
   },
   actor: {
     color: colors.primary,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
   trailing: {
     alignItems: 'flex-end',
@@ -289,6 +291,7 @@ const styles = StyleSheet.create({
   },
   time: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 8,
   },
   statusPill: {
@@ -300,6 +303,6 @@ const styles = StyleSheet.create({
   statusText: {
     color: '#A46B16',
     fontSize: 7,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
   },
 });

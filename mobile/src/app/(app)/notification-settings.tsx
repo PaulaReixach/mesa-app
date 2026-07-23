@@ -28,6 +28,8 @@ import {
 } from '../../services/notification-service';
 import { colors } from '../../theme/colors';
 import { NotificationPreferences } from '../../types/notification';
+import { fonts } from '../../theme/fonts';
+import { radii, shadows } from '../../theme/layout';
 
 type SymbolName =
   ComponentProps<typeof SymbolView>['name'];
@@ -607,13 +609,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
 
   intro: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 30,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#EACCC1',
+    borderRadius: radii.xl,
+    backgroundColor: colors.primarySoft,
   },
 
   introIcon: {
@@ -622,23 +629,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 13,
-    borderRadius: 31,
-    backgroundColor: '#F8E9E4',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.68)',
   },
 
   introTitle: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
 
   introDescription: {
     maxWidth: 310,
     marginTop: 6,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
-    textAlign: 'center',
+    textAlign: 'left',
   },
 
   section: {
@@ -649,14 +657,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: colors.muted,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
 
   sectionContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
 
   notificationRow: {
@@ -664,6 +676,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    paddingHorizontal: 13,
   },
 
   notificationRowBorder: {
@@ -681,7 +694,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 19,
-    backgroundColor: '#F7EEE9',
+    backgroundColor: colors.primarySoft,
   },
 
   notificationText: {
@@ -692,12 +705,13 @@ const styles = StyleSheet.create({
   notificationTitle: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   notificationSubtitle: {
     marginTop: 3,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -715,6 +729,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 13,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
   },
 
@@ -726,13 +741,14 @@ const styles = StyleSheet.create({
   loadErrorTitle: {
     color: colors.text,
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     textAlign: 'center',
   },
 
   loadErrorText: {
     marginTop: 7,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -756,7 +772,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: colors.primary,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 
   saveStatus: {
@@ -769,6 +785,7 @@ const styles = StyleSheet.create({
 
   saveStatusText: {
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 12,
   },
 
@@ -784,6 +801,7 @@ const styles = StyleSheet.create({
 
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },

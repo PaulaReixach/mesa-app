@@ -22,6 +22,7 @@ import { useAuth } from '../../contexts/auth-context';
 import { getErrorMessage } from '../../lib/api';
 import { deleteCurrentUserAccount } from '../../services/account-service';
 import { colors } from '../../theme/colors';
+import { fonts } from '../../theme/fonts';
 
 export default function DeleteAccountScreen() {
   const {
@@ -396,7 +397,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.text,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
     letterSpacing: -0.3,
   },
   warningHeader: {
@@ -415,12 +416,13 @@ const styles = StyleSheet.create({
   warningTitle: {
     color: colors.danger,
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: fonts.bold,
   },
   warningText: {
     maxWidth: 330,
     marginTop: 8,
     color: colors.muted,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',
@@ -437,7 +439,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   inputContainer: {
     minHeight: 54,
@@ -454,6 +456,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 52,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 15,
   },
   eyeButton: {
@@ -473,6 +476,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -495,6 +499,6 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: colors.white,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
 });

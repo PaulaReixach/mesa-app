@@ -1,21 +1,113 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { router, Tabs, usePathname } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import type { ComponentProps } from 'react';
+import { useRef } from 'react';
+import { Animated, Pressable, View } from 'react-native';
+import type { ColorValue, StyleProp, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { appTabsStyles as styles, tabNavigationColors as navigationColors } from './AppTabsLayout.styles';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 
 const hiddenScreenOptions = {
   href: null,
   tabBarStyle: { display: 'none' as const },
 };
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+type PrimaryTabButtonProps = Omit<ComponentProps<typeof Pressable>, 'style'> & {
+  style?: StyleProp<ViewStyle>;
+};
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
+
+function PrimaryTabButton({
+  onPressIn,
+  onPressOut,
+  style,
+  ...props
+}: PrimaryTabButtonProps) {
+  const pressProgress = useRef(new Animated.Value(0)).current;
+
+  const animatePress = (toValue: number, duration: number) => {
+    pressProgress.stopAnimation();
+    Animated.timing(pressProgress, {
+      toValue,
+      duration,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <AnimatedPressable
+      {...props}
+      onPressIn={event => {
+        animatePress(1, 90);
+        onPressIn?.(event);
+      }}
+      onPressOut={event => {
+        animatePress(0, 150);
+        onPressOut?.(event);
+      }}
+      style={[
+        style,
+        styles.primaryTabButton,
+        {
+          opacity: pressProgress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 0.72],
+          }),
+          transform: [
+            {
+              scale: pressProgress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, 0.975],
+              }),
+            },
+          ],
+        },
+      ]}
+    />
+  );
+}
+
+function PrimaryTabIcon({
+  color,
+  focused,
+  name,
+  size,
+}: {
+  color: ColorValue;
+  focused: boolean;
+  name: SymbolName;
+  size: number;
+}) {
+  return (
+    <View
+      style={[
+        styles.primaryTabIcon,
+        focused ? styles.primaryTabIconActive : null,
+      ]}
+    >
+      <SymbolView name={name} size={size} tintColor={color} />
+    </View>
+  );
+}
+
 export default function AppTabsLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
-  const bottomPadding = Math.max(insets.bottom, 6);
-  const highlightGroups = pathname === '/add';
+  const bottomInset = Math.max(insets.bottom, 12);
+  const showPrimaryNavigation = [
+    '/home',
+    '/groups',
+    '/groups/explore',
+    '/add',
+    '/map',
+    '/profile',
+  ].includes(pathname);
 
   return (
     <Tabs
@@ -25,28 +117,65 @@ export default function AppTabsLayout() {
         tabBarActiveTintColor: navigationColors.active,
         tabBarInactiveTintColor: navigationColors.inactive,
         tabBarHideOnKeyboard: true,
+        tabBarAllowFontScaling: false,
         tabBarLabelPosition: 'below-icon',
-        tabBarItemStyle: { justifyContent: 'center', paddingTop: 3 },
-        tabBarIconStyle: { width: 24, height: 22, marginBottom: 0 },
+        tabBarButton: ({
+          accessibilityLabel,
+          accessibilityState,
+          children,
+          onLongPress,
+          onPress,
+          style,
+          testID,
+        }) => (
+          <PrimaryTabButton
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole="button"
+            accessibilityState={accessibilityState}
+            onLongPress={onLongPress}
+            onPress={onPress}
+            style={style}
+            testID={testID}
+          >
+            {children}
+          </PrimaryTabButton>
+        ),
+        tabBarItemStyle: {
+          height: 60,
+          justifyContent: 'center',
+          paddingTop: 4,
+        },
+        tabBarIconStyle: {
+          width: 64,
+          height: 32,
+          marginBottom: 0,
+        },
         tabBarLabelStyle: {
           marginTop: 0,
-          fontSize: 10,
-          fontWeight: '500',
-          lineHeight: 13,
+          fontSize: 11,
+          fontFamily: fonts.medium,
+          lineHeight: 14,
         },
-        tabBarStyle: {
-          height: 54 + bottomPadding,
-          paddingTop: 4,
-          paddingBottom: bottomPadding,
-          borderTopWidth: 1,
-          borderTopColor: navigationColors.border,
+        tabBarStyle: showPrimaryNavigation ? {
+          position: 'absolute',
+          right: 0,
+          bottom: 0,
+          left: 0,
+          height: 66 + bottomInset,
+          paddingHorizontal: 8,
+          paddingTop: 6,
+          paddingBottom: bottomInset,
+          overflow: 'visible',
+          borderTopWidth: 0,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
           backgroundColor: navigationColors.background,
-          shadowColor: '#2B2421',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.03,
-          shadowRadius: 5,
-          elevation: 5,
-        },
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: -5 },
+          shadowOpacity: 0.09,
+          shadowRadius: 18,
+          elevation: 14,
+        } : { display: 'none' },
       }}
     >
       <Tabs.Screen
@@ -55,25 +184,38 @@ export default function AppTabsLayout() {
           title: 'Inicio',
           tabBarAccessibilityLabel: 'Inicio',
           tabBarIcon: ({ focused, color }) => (
-            <SymbolView
+            <PrimaryTabIcon
+              color={color}
+              focused={focused}
               name={{ ios: focused ? 'house.fill' : 'house', android: 'home', web: 'home' }}
-              size={20}
-              tintColor={color}
+              size={23}
             />
           ),
         }}
       />
 
       <Tabs.Screen
-        name="map"
+        name="groups"
+        listeners={{
+          tabPress: event => {
+            event.preventDefault();
+            router.replace('/groups');
+          },
+        }}
         options={{
-          title: 'Mapa',
-          tabBarAccessibilityLabel: 'Mapa',
+          title: 'Grupos',
+          tabBarAccessibilityLabel: 'Grupos',
+          popToTopOnBlur: true,
           tabBarIcon: ({ focused, color }) => (
-            <SymbolView
-              name={{ ios: focused ? 'map.fill' : 'map', android: 'map', web: 'map' }}
-              size={20}
-              tintColor={color}
+            <PrimaryTabIcon
+              color={color}
+              focused={focused}
+              name={{
+                ios: focused ? 'person.2.fill' : 'person.2',
+                android: 'group',
+                web: 'group',
+              }}
+              size={24}
             />
           ),
         }}
@@ -99,56 +241,49 @@ export default function AppTabsLayout() {
               onLongPress={onLongPress}
               onPress={onPress}
               testID={testID}
-              style={({ pressed }) => [
-                styles.addTabButton,
-                pressed ? styles.addTabButtonPressed : null,
-              ]}
+              style={styles.addTabButton}
             >
-              <View style={styles.addCircle}>
-                <SymbolView
-                  name={{ ios: 'plus', android: 'add', web: 'add' }}
-                  size={25}
-                  tintColor={colors.white}
-                />
-              </View>
+              {({ pressed }) => (
+                <View
+                  style={[
+                    styles.addCircleFrame,
+                    pressed ? styles.addCircleFramePressed : null,
+                  ]}
+                >
+                  <LinearGradient
+                    colors={
+                      pressed
+                        ? ['#A9321F', '#C74329', '#B73822']
+                        : ['#B93620', '#DD4D2C', '#C43E24']
+                    }
+                    end={{ x: 1, y: 1 }}
+                    start={{ x: 0, y: 0 }}
+                    style={styles.addCircle}
+                  >
+                    <SymbolView
+                      name={{ ios: 'plus', android: 'add', web: 'add' }}
+                      size={31}
+                      tintColor={colors.white}
+                    />
+                  </LinearGradient>
+                </View>
+              )}
             </Pressable>
           ),
         }}
       />
 
       <Tabs.Screen
-        name="groups"
-        listeners={{
-          tabPress: event => {
-            event.preventDefault();
-            router.replace('/groups');
-          },
-        }}
+        name="map"
         options={{
-          title: 'Grupos',
-          tabBarAccessibilityLabel: 'Grupos',
-          popToTopOnBlur: true,
-          tabBarLabel: ({ color }) => (
-            <Text
-              style={{
-                color: highlightGroups ? navigationColors.active : color,
-                fontSize: 10,
-                fontWeight: highlightGroups ? '600' : '500',
-                lineHeight: 13,
-              }}
-            >
-              Grupos
-            </Text>
-          ),
+          title: 'Mapa',
+          tabBarAccessibilityLabel: 'Mapa',
           tabBarIcon: ({ focused, color }) => (
-            <SymbolView
-              name={{
-                ios: focused || highlightGroups ? 'person.2.fill' : 'person.2',
-                android: 'group',
-                web: 'group',
-              }}
-              size={21}
-              tintColor={highlightGroups ? navigationColors.active : color}
+            <PrimaryTabIcon
+              color={color}
+              focused={focused}
+              name={{ ios: focused ? 'map.fill' : 'map', android: 'map', web: 'map' }}
+              size={23}
             />
           ),
         }}
@@ -160,10 +295,11 @@ export default function AppTabsLayout() {
           title: 'Perfil',
           tabBarAccessibilityLabel: 'Perfil',
           tabBarIcon: ({ focused, color }) => (
-            <SymbolView
+            <PrimaryTabIcon
+              color={color}
+              focused={focused}
               name={{ ios: focused ? 'person.fill' : 'person', android: 'person', web: 'person' }}
-              size={20}
-              tintColor={color}
+              size={23}
             />
           ),
         }}
