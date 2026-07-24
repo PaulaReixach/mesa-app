@@ -6,6 +6,11 @@ import type {
   ReactNode,
 } from 'react';
 import {
+  useEffect,
+  useState,
+} from 'react';
+import {
+  Keyboard,
   KeyboardAvoidingView,
   Image,
   Platform,
@@ -59,10 +64,35 @@ export function AuthScreen({
     height: windowHeight,
     width: windowWidth,
   } = useWindowDimensions();
+  const [
+    keyboardVisible,
+    setKeyboardVisible,
+  ] = useState(false);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      },
+    );
+    const hideSubscription = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      },
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const contentWidth = Math.min(windowWidth, MAX_CONTENT_WIDTH);
+  const condensedHero = compactHero || keyboardVisible;
   const heroHeight = (
-    compactHero
+    condensedHero
       ? 88
       : 210
   ) + insets.top;
@@ -110,7 +140,7 @@ export function AuthScreen({
                 },
               ]}
             >
-              {!compactHero ? (
+              {!condensedHero ? (
                 <Image
                   accessible={false}
                   resizeMode="contain"
@@ -142,13 +172,13 @@ export function AuthScreen({
                 <View
                   style={[
                     styles.brandLockup,
-                    compactHero ? styles.brandLockupCompact : null,
+                    condensedHero ? styles.brandLockupCompact : null,
                   ]}
                 >
                   <View
                     style={[
                       styles.brandLogoFrame,
-                      compactHero
+                      condensedHero
                         ? styles.brandLogoFrameCompact
                         : null,
                     ]}
@@ -159,7 +189,7 @@ export function AuthScreen({
                       source={require('../../assets/images/mesa-logo.png')}
                       style={[
                         styles.brandLogo,
-                        compactHero ? styles.brandLogoCompact : null,
+                        condensedHero ? styles.brandLogoCompact : null,
                       ]}
                     />
                   </View>
@@ -168,7 +198,7 @@ export function AuthScreen({
                     allowFontScaling={false}
                     style={[
                       styles.wordmark,
-                      compactHero ? styles.wordmarkCompact : null,
+                      condensedHero ? styles.wordmarkCompact : null,
                     ]}
                   >
                     MESA
@@ -176,7 +206,7 @@ export function AuthScreen({
                 </View>
               </View>
 
-              {!compactHero ? (
+              {!condensedHero ? (
                 <View style={styles.heroCopy}>
                   <Text
                     maxFontSizeMultiplier={1.1}
@@ -191,7 +221,7 @@ export function AuthScreen({
             <View
               style={[
                 styles.card,
-                compactHero
+                condensedHero
                   ? styles.cardCompact
                   : styles.cardRegular,
                 {
@@ -316,11 +346,11 @@ const styles = StyleSheet.create({
   },
   heroIllustration: {
     position: 'absolute',
-    right: -6,
-    bottom: -38,
-    width: 330,
-    height: 150,
-    opacity: 0.16,
+    right: -2,
+    bottom: -40,
+    width: 340,
+    height: 156,
+    opacity: 0.22,
   },
   topBar: {
     position: 'relative',
@@ -394,12 +424,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   heroMessage: {
-    maxWidth: 330,
+    maxWidth: 326,
     color: colors.onPrimary,
     fontFamily: fonts.bold,
-    fontSize: 21,
-    lineHeight: 28,
-    letterSpacing: -0.45,
+    fontSize: 20,
+    lineHeight: 27,
+    letterSpacing: -0.35,
     textAlign: 'center',
     textShadowColor: 'rgba(116, 45, 28, 0.18)',
     textShadowOffset: {
