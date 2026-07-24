@@ -153,7 +153,7 @@ export default function HomeScreenRefined() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingBottom: Math.max(insets.bottom, 18) + 78,
+            paddingBottom: Math.max(insets.bottom, 14) + 72,
           },
         ]}
         refreshControl={(

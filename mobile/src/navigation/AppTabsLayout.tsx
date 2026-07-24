@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { router, Tabs, usePathname } from 'expo-router';
 import type { ComponentProps } from 'react';
@@ -99,7 +98,7 @@ function PrimaryTabIcon({
 export default function AppTabsLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
-  const bottomInset = Math.max(insets.bottom, 12);
+  const bottomInset = Math.max(insets.bottom, 8);
   const showPrimaryNavigation = [
     '/home',
     '/groups',
@@ -141,34 +140,34 @@ export default function AppTabsLayout() {
           </PrimaryTabButton>
         ),
         tabBarItemStyle: {
-          height: 60,
+          height: 54,
           justifyContent: 'center',
-          paddingTop: 4,
+          paddingTop: 2,
         },
         tabBarIconStyle: {
-          width: 64,
-          height: 32,
+          width: 60,
+          height: 29,
           marginBottom: 0,
         },
         tabBarLabelStyle: {
           marginTop: 0,
-          fontSize: 11,
+          fontSize: 10,
           fontFamily: fonts.medium,
-          lineHeight: 14,
+          lineHeight: 13,
         },
         tabBarStyle: showPrimaryNavigation ? {
           position: 'absolute',
           right: 0,
           bottom: 0,
           left: 0,
-          height: 66 + bottomInset,
+          height: 60 + bottomInset,
           paddingHorizontal: 8,
-          paddingTop: 6,
+          paddingTop: 4,
           paddingBottom: bottomInset,
           overflow: 'visible',
           borderTopWidth: 0,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
+          borderTopLeftRadius: 22,
+          borderTopRightRadius: 22,
           backgroundColor: navigationColors.background,
           shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: -5 },
@@ -250,22 +249,18 @@ export default function AppTabsLayout() {
                     pressed ? styles.addCircleFramePressed : null,
                   ]}
                 >
-                  <LinearGradient
-                    colors={
-                      pressed
-                        ? ['#A9321F', '#C74329', '#B73822']
-                        : ['#B93620', '#DD4D2C', '#C43E24']
-                    }
-                    end={{ x: 1, y: 1 }}
-                    start={{ x: 0, y: 0 }}
-                    style={styles.addCircle}
+                  <View
+                    style={[
+                      styles.addCircle,
+                      pressed ? styles.addCirclePressed : null,
+                    ]}
                   >
                     <SymbolView
                       name={{ ios: 'plus', android: 'add', web: 'add' }}
-                      size={31}
+                      size={29}
                       tintColor={colors.white}
                     />
-                  </LinearGradient>
+                  </View>
                 </View>
               )}
             </Pressable>

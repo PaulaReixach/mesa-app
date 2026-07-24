@@ -1,174 +1,534 @@
-import { ReactNode } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
+import { SymbolView } from 'expo-symbols';
+import type {
+  ComponentProps,
+  ReactNode,
+} from 'react';
 import {
+  useEffect,
+  useState,
+} from 'react';
+import {
+  Keyboard,
   KeyboardAvoidingView,
+  Image,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
+import {
+  radii,
+  shadows,
+  spacing,
+  touchTargets,
+} from '../theme/layout';
+
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
 type AuthScreenProps = {
   title: string;
   subtitle: string;
+  heroMessage: string;
   children: ReactNode;
-  showBrand?: boolean;
-  alignment?: 'center' | 'top';
+  compactHero?: boolean;
+  onBack?: () => void;
+};
+
+const MAX_CONTENT_WIDTH = 480;
+
+const backIcon: SymbolName = {
+  ios: 'chevron.left',
+  android: 'arrow_back',
+  web: 'arrow_back',
 };
 
 export function AuthScreen({
   title,
   subtitle,
+  heroMessage,
   children,
-  showBrand = true,
-  alignment = 'center',
+  compactHero = false,
+  onBack,
 }: AuthScreenProps) {
-  const isTopAligned = alignment === 'top';
+  const insets = useSafeAreaInsets();
+  const {
+    height: windowHeight,
+    width: windowWidth,
+  } = useWindowDimensions();
+  const [
+    keyboardVisible,
+    setKeyboardVisible,
+  ] = useState(false);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      },
+    );
+    const hideSubscription = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      },
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  const contentWidth = Math.min(windowWidth, MAX_CONTENT_WIDTH);
+  const condensedHero = compactHero || keyboardVisible;
+  const heroHeight = (
+    condensedHero
+      ? 88
+      : 190
+  ) + insets.top;
+  const cardMinHeight = Math.max(
+    windowHeight - heroHeight + 20,
+    0,
+  );
 
   return (
-    <SafeAreaView
-      edges={['top', 'right', 'bottom', 'left']}
-      style={styles.safeArea}
-    >
+    <View style={styles.screen}>
+      <StatusBar style="light" />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
-          contentContainerStyle={[
-            styles.content,
-            isTopAligned
-              ? styles.topAlignedContent
-              : styles.centeredContent,
-          ]}
+          bounces={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {showBrand ? (
-            <View style={styles.brand}>
-              <View style={styles.logo}>
-                <Text
-                  maxFontSizeMultiplier={1.1}
-                  style={styles.logoText}
+          <View
+            style={[
+              styles.shell,
+              {
+                minHeight: windowHeight,
+                width: contentWidth,
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={[
+                colors.brandStart,
+                colors.brandEnd,
+              ]}
+              end={{ x: 0.94, y: 1 }}
+              start={{ x: 0.06, y: 0 }}
+              style={[
+                styles.hero,
+                {
+                  minHeight: heroHeight,
+                  paddingTop: insets.top + spacing.sm,
+                },
+              ]}
+            >
+              {!condensedHero ? (
+                <Image
+                  accessible={false}
+                  resizeMode="contain"
+                  source={require('../../assets/images/groups-header-illustration.png')}
+                  style={styles.heroIllustration}
+                />
+              ) : null}
+
+              <View style={styles.topBar}>
+                {onBack ? (
+                  <Pressable
+                    accessibilityLabel="Volver"
+                    accessibilityRole="button"
+                    hitSlop={8}
+                    onPress={onBack}
+                    style={({ pressed }) => [
+                      styles.backButton,
+                      pressed ? styles.controlPressed : null,
+                    ]}
+                  >
+                    <SymbolView
+                      name={backIcon}
+                      size={22}
+                      tintColor={colors.onPrimary}
+                    />
+                  </Pressable>
+                ) : null}
+
+                <View
+                  style={[
+                    styles.brandLockup,
+                    condensedHero ? styles.brandLockupCompact : null,
+                  ]}
                 >
-                  M
+                  <View
+                    style={[
+                      styles.brandLogoFrame,
+                      condensedHero
+                        ? styles.brandLogoFrameCompact
+                        : null,
+                    ]}
+                  >
+                    <Image
+                      accessible={false}
+                      resizeMode="contain"
+                      source={require('../../assets/images/mesa-logo.png')}
+                      style={[
+                        styles.brandLogo,
+                        condensedHero ? styles.brandLogoCompact : null,
+                      ]}
+                    />
+                  </View>
+
+                  <Text
+                    allowFontScaling={false}
+                    style={[
+                      styles.wordmark,
+                      condensedHero ? styles.wordmarkCompact : null,
+                    ]}
+                  >
+                    MESA
+                  </Text>
+                </View>
+              </View>
+
+              {!condensedHero ? (
+                <View style={styles.heroCopy}>
+                  <Text
+                    maxFontSizeMultiplier={1.1}
+                    style={styles.heroMessage}
+                  >
+                    {heroMessage}
+                  </Text>
+                </View>
+              ) : null}
+            </LinearGradient>
+
+            <View
+              style={[
+                styles.card,
+                condensedHero
+                  ? styles.cardCompact
+                  : styles.cardRegular,
+                {
+                  minHeight: cardMinHeight,
+                  paddingBottom: Math.max(
+                    insets.bottom + spacing.lg,
+                    spacing.xxl,
+                  ),
+                },
+              ]}
+            >
+              <View style={styles.heading}>
+                <Text
+                  maxFontSizeMultiplier={1.15}
+                  style={styles.title}
+                >
+                  {title}
+                </Text>
+
+                <Text
+                  maxFontSizeMultiplier={1.15}
+                  style={styles.subtitle}
+                >
+                  {subtitle}
                 </Text>
               </View>
 
-              <Text
-                maxFontSizeMultiplier={1.1}
-                style={styles.brandName}
-              >
-                Mesa
-              </Text>
+              <View style={styles.form}>
+                {children}
+              </View>
             </View>
-          ) : null}
-
-          <View style={styles.heading}>
-            <Text
-              maxFontSizeMultiplier={1.15}
-              style={[
-                styles.title,
-                isTopAligned ? styles.topTitle : null,
-              ]}
-            >
-              {title}
-            </Text>
-
-            <Text
-              maxFontSizeMultiplier={1.15}
-              style={[
-                styles.subtitle,
-                isTopAligned ? styles.topSubtitle : null,
-              ]}
-            >
-              {subtitle}
-            </Text>
-          </View>
-
-          <View style={styles.form}>
-            {children}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
+  );
+}
+
+export function AuthErrorBanner({
+  message,
+}: {
+  message: string;
+}) {
+  return (
+    <View
+      accessibilityLiveRegion="polite"
+      style={styles.errorBanner}
+    >
+      <View style={styles.errorIcon}>
+        <SymbolView
+          name={{
+            ios: 'exclamationmark',
+            android: 'priority_high',
+            web: 'priority_high',
+          }}
+          size={15}
+          tintColor={colors.danger}
+        />
+      </View>
+
+      <Text style={styles.errorText}>
+        {message}
+      </Text>
+    </View>
+  );
+}
+
+export function AuthSwitchPrompt({
+  action,
+  onPress,
+  prompt,
+}: {
+  action: string;
+  onPress: () => void;
+  prompt: string;
+}) {
+  return (
+    <View style={styles.switchPrompt}>
+      <Text style={styles.switchPromptText}>
+        {prompt}
+      </Text>
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.switchPromptButton,
+          pressed ? styles.switchPromptPressed : null,
+        ]}
+      >
+        <Text style={styles.switchPromptAction}>
+          {action}
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screen: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.primarySoft,
   },
   keyboardView: {
     flex: 1,
   },
-  content: {
+  scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 30,
+    alignItems: 'center',
+    backgroundColor: colors.primarySoft,
   },
-  centeredContent: {
+  shell: {
+    overflow: 'hidden',
+    backgroundColor: colors.brandStart,
+    ...shadows.floating,
+  },
+  hero: {
+    position: 'relative',
+    overflow: 'hidden',
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
+  },
+  heroIllustration: {
+    position: 'absolute',
+    right: -2,
+    bottom: -40,
+    width: 340,
+    height: 156,
+    opacity: 0.22,
+  },
+  topBar: {
+    position: 'relative',
+    minHeight: touchTargets.comfortable,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 40,
   },
-  topAlignedContent: {
-    justifyContent: 'flex-start',
-    paddingTop: 34,
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    zIndex: 1,
+    width: touchTargets.minimum,
+    height: touchTargets.minimum,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 249, 244, 0.22)',
+    borderRadius: radii.round,
+    backgroundColor: 'rgba(255, 249, 244, 0.10)',
   },
-  brand: {
+  controlPressed: {
+    opacity: 0.74,
+    transform: [{ scale: 0.98 }],
+  },
+  brandLockup: {
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 36,
   },
-  logo: {
-    width: 64,
-    height: 64,
+  brandLockupCompact: {
+    gap: 8,
+  },
+  brandLogoFrame: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
-    backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 249, 244, 0.72)',
+    borderRadius: radii.round,
+    backgroundColor: colors.onPrimary,
   },
-  logoText: {
-    color: colors.white,
-    fontSize: 34,
-    fontFamily: fonts.bold,
+  brandLogoFrameCompact: {
+    width: 34,
+    height: 34,
   },
-  brandName: {
-    color: colors.text,
-    fontSize: 24,
+  brandLogo: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.round,
+  },
+  brandLogoCompact: {
+    width: 30,
+    height: 30,
+  },
+  wordmark: {
+    color: colors.onPrimary,
     fontFamily: fonts.bold,
+    fontSize: 18,
+    letterSpacing: 2.6,
+  },
+  wordmarkCompact: {
+    fontSize: 16,
+    letterSpacing: 2.3,
+  },
+  heroCopy: {
+    alignItems: 'center',
+    zIndex: 1,
+    marginTop: spacing.sm,
+  },
+  heroMessage: {
+    maxWidth: 304,
+    color: colors.onPrimary,
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: -0.2,
+    textAlign: 'center',
+    textShadowColor: 'rgba(116, 45, 28, 0.18)',
+    textShadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    textShadowRadius: 5,
+  },
+  card: {
+    zIndex: 2,
+    marginTop: -20,
+    paddingHorizontal: spacing.xl,
+    borderTopLeftRadius: radii.xxl,
+    borderTopRightRadius: radii.xxl,
+    backgroundColor: colors.background,
+  },
+  cardRegular: {
+    paddingTop: spacing.xxl,
+  },
+  cardCompact: {
+    paddingTop: 28,
   },
   heading: {
-    gap: 8,
-    marginBottom: 28,
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 22,
   },
   title: {
     color: colors.text,
-    fontSize: 30,
     fontFamily: fonts.bold,
-  },
-  topTitle: {
-    fontSize: 23,
-    lineHeight: 29,
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: -0.7,
+    textAlign: 'center',
   },
   subtitle: {
+    maxWidth: 370,
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 16,
-    lineHeight: 23,
-  },
-  topSubtitle: {
-    maxWidth: 280,
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: 'center',
   },
   form: {
-    gap: 18,
+    flexGrow: 1,
+    gap: spacing.lg,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 13,
+    borderWidth: 1,
+    borderColor: '#E8C1BA',
+    borderRadius: radii.md,
+    backgroundColor: colors.dangerSoft,
+  },
+  errorIcon: {
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.round,
+    backgroundColor: '#F5D8D2',
+  },
+  errorText: {
+    flex: 1,
+    paddingTop: 1,
+    color: colors.danger,
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  switchPrompt: {
+    minHeight: touchTargets.minimum,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 'auto',
+  },
+  switchPromptText: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 13,
+  },
+  switchPromptButton: {
+    minHeight: touchTargets.minimum,
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  switchPromptPressed: {
+    opacity: 0.68,
+  },
+  switchPromptAction: {
+    color: colors.primary,
+    fontFamily: fonts.bold,
+    fontSize: 13,
   },
 });

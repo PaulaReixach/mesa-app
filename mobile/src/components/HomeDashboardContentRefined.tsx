@@ -49,7 +49,7 @@ export function HomeDashboardContentRefined({
   pendingInvitationCount: number;
   recommendation: HomeRecommendation | null;
 }) {
-  const featuredGroup = groups[0] ?? null;
+  const visibleGroups = groups.slice(0, 2);
 
   function openGroup(group: RestaurantGroup): void {
     if (group.privacy === 'PUBLIC') {
@@ -80,12 +80,17 @@ export function HomeDashboardContentRefined({
           <SectionAction label="Ver todos" onPress={() => router.push('/groups')} />
         </View>
 
-        {featuredGroup ? (
-          <HomeGroupCard
-            group={featuredGroup}
-            members={membersByGroup[featuredGroup.id] ?? []}
-            onPress={() => openGroup(featuredGroup)}
-          />
+        {visibleGroups.length > 0 ? (
+          <View style={styles.groupGrid}>
+            {visibleGroups.map(group => (
+              <HomeGroupCard
+                group={group}
+                key={group.id}
+                members={membersByGroup[group.id] ?? []}
+                onPress={() => openGroup(group)}
+              />
+            ))}
+          </View>
         ) : (
           <Pressable
             onPress={() => router.push('/groups/create')}
@@ -119,7 +124,9 @@ export function HomeDashboardContentRefined({
       {recommendation ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text allowFontScaling={false} style={styles.sectionTitle}>Una buena opción</Text>
+            <Text allowFontScaling={false} style={styles.sectionTitle}>
+              Para vuestro próximo plan
+            </Text>
           </View>
           <HomeRecommendationCard
             onPress={openRecommendation}
@@ -131,7 +138,7 @@ export function HomeDashboardContentRefined({
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text allowFontScaling={false} style={styles.sectionTitle}>Actividad reciente</Text>
-          <SectionAction label="Ver toda" onPress={() => router.push('/notifications')} />
+          <SectionAction label="Ver todo" onPress={() => router.push('/notifications')} />
         </View>
 
         {activity.length > 0 ? (

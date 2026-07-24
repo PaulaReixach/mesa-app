@@ -1,12 +1,13 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { shadows } from '../theme/layout';
 
 export const tabNavigationColors = {
-  active: '#C84A30',
-  inactive: '#6F6864',
+  active: colors.primary,
+  inactive: colors.mutedStrong,
   border: colors.border,
-  background: '#FFFDFC',
+  background: colors.surface,
 } as const;
 
 export const appTabsStyles = StyleSheet.create({
@@ -15,44 +16,49 @@ export const appTabsStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   primaryTabIcon: {
-    width: 62,
-    height: 32,
+    width: 58,
+    height: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
+    borderRadius: 15,
   },
   primaryTabIconActive: {
-    backgroundColor: '#F9E4DC',
+    backgroundColor: colors.primarySoft,
   },
   addTabButton: {
     flex: 1,
-    height: 60,
+    height: 54,
     alignItems: 'center',
     justifyContent: 'flex-start',
     overflow: 'visible',
   },
   addCircleFrame: {
-    width: 58,
-    height: 58,
+    width: 54,
+    height: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -6,
+    marginTop: -5,
     padding: 4,
-    borderRadius: 29,
-    backgroundColor: '#FFFDFC',
+    borderRadius: 27,
+    backgroundColor: colors.surfaceElevated,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#F0E4DE',
+    borderColor: colors.border,
+    ...shadows.floating,
   },
   addCircleFramePressed: {
     opacity: 0.94,
     transform: [{ scale: 0.985 }],
   },
   addCircle: {
-    width: 50,
-    height: 50,
+    width: 46,
+    height: 46,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 25,
+    borderRadius: 23,
+    backgroundColor: colors.primary,
+  },
+  addCirclePressed: {
+    backgroundColor: colors.primaryPressed,
   },
 });

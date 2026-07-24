@@ -22,9 +22,17 @@ export function HomeRecommendationCardRefined({
   const restaurant = groupRestaurant.restaurant;
   const imageUri = getRestaurantFallbackImage(restaurant.name);
   const location = restaurant.city ?? group.city ?? 'Sin ciudad';
+  const score = groupRestaurant.averageScore;
+  const ratingLabel = groupRestaurant.ratingsCount === 1
+    ? '1 valoración'
+    : `${groupRestaurant.ratingsCount} valoraciones`;
+  const statusLabel = groupRestaurant.favorite
+    ? 'Favorito del grupo'
+    : 'Guardado en el grupo';
 
   return (
     <Pressable
+      accessibilityLabel={`Abrir ${restaurant.name}, ${location}, del grupo ${group.name}`}
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
@@ -34,25 +42,35 @@ export function HomeRecommendationCardRefined({
       </View>
 
       <View style={styles.copy}>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.eyebrow}>
-          Recomendación para ti
-        </Text>
         <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
           {restaurant.name}
         </Text>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.location}>
-          {location}
-        </Text>
+        <View style={styles.metaRow}>
+          <Text allowFontScaling={false} numberOfLines={1} style={styles.location}>
+            {location}
+          </Text>
+          <View style={styles.metaDot} />
+          <Text allowFontScaling={false} numberOfLines={1} style={styles.groupName}>
+            {group.name}
+          </Text>
+        </View>
         <Text allowFontScaling={false} numberOfLines={1} style={styles.description}>
-          La mejor valorada en {group.name}
+          {score != null ? ratingLabel : statusLabel}
         </Text>
       </View>
 
-      <View style={styles.trailing}>
-        <View style={styles.statusPill}>
-          <Text allowFontScaling={false} style={styles.statusText}>Para descubrir</Text>
+      {score != null ? (
+        <View style={styles.scorePill}>
+          <SymbolView
+            name={{ ios: 'star.fill', android: 'star', web: 'star' }}
+            size={12}
+            tintColor="#5E714A"
+          />
+          <Text allowFontScaling={false} style={styles.scoreText}>
+            {score.toFixed(1).replace('.', ',')}
+          </Text>
         </View>
-      </View>
+      ) : null}
 
       <SymbolView
         name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}

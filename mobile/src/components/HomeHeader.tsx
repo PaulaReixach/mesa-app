@@ -3,6 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import { Image, Platform, Pressable, Text, View } from 'react-native';
 
+import { colors } from '../theme/colors';
 import { homeStyles as styles } from './HomeDashboardStyles';
 import { HomeQuickActionCardRefined } from './HomeQuickActionCardRefined';
 import { NotificationBellButton } from './NotificationBellButton';
@@ -34,19 +35,33 @@ export function HomeHeader({
   return (
     <View style={styles.header}>
       <LinearGradient
-        colors={['#C74A2D', '#B83B25']}
+        colors={[colors.brandStart, colors.brandEnd]}
         end={{ x: 0.95, y: 1 }}
         start={{ x: 0.05, y: 0 }}
         style={[
           styles.heroBackground,
           {
-            height: topInset + 187,
+            height: topInset + 162,
             paddingTop: topInset,
           },
         ]}
       >
         <View style={styles.topBar}>
-          <Text allowFontScaling={false} style={styles.brand}>Mesa</Text>
+          <View
+            accessibilityLabel="Mesa"
+            accessibilityRole="image"
+            style={styles.brandLockup}
+          >
+            <View style={styles.brandLogoFrame}>
+              <Image
+                accessibilityIgnoresInvertColors
+                resizeMode="contain"
+                source={require('../../assets/images/mesa-logo.png')}
+                style={styles.brandLogo}
+              />
+            </View>
+            <Text allowFontScaling={false} style={styles.brand}>MESA</Text>
+          </View>
 
           <View style={styles.topActions}>
             <NotificationBellButton variant="hero" />
@@ -112,7 +127,9 @@ export function HomeHeader({
             badge={pendingInvitationCount}
             icon={{ ios: 'envelope', android: 'mail', web: 'mail' }}
             onPress={() => router.push('/group-invitations')}
-            subtitle="Revisa las pendientes"
+            subtitle={pendingInvitationCount > 0
+              ? `${pendingInvitationCount} por revisar`
+              : 'Sin pendientes'}
             title="Invitaciones"
             tone="sage"
           />
