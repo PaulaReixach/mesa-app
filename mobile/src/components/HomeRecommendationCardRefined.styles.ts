@@ -5,7 +5,7 @@ import { fonts } from '../theme/fonts';
 
 export const recommendationStyles = StyleSheet.create({
   card: {
-    minHeight: 102,
+    minHeight: 96,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,
@@ -16,10 +16,10 @@ export const recommendationStyles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
   },
   artwork: {
-    width: 82,
-    height: 82,
+    width: 76,
+    height: 76,
     overflow: 'hidden',
-    borderRadius: 15,
+    borderRadius: 14,
   },
   image: {
     width: '100%',
@@ -28,13 +28,7 @@ export const recommendationStyles = StyleSheet.create({
   copy: {
     flex: 1,
     minWidth: 0,
-    gap: 3,
-  },
-  eyebrow: {
-    color: colors.primary,
-    fontFamily: fonts.semiBold,
-    fontSize: 9,
-    lineHeight: 13,
+    gap: 4,
   },
   title: {
     color: colors.text,

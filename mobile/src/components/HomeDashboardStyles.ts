@@ -84,13 +84,13 @@ export const homeStyles = StyleSheet.create({
     marginTop: 13,
   },
   greeting: {
-    color: '#F8DCCC',
-    fontFamily: fonts.medium,
+    color: '#FFE8DC',
+    fontFamily: fonts.semiBold,
     fontSize: 13,
     lineHeight: 18,
   },
   title: {
-    marginTop: 3,
+    marginTop: 6,
     color: '#FFFFFF',
     fontFamily: fonts.bold,
     fontSize: 25,
@@ -146,7 +146,7 @@ export const homeStyles = StyleSheet.create({
     marginTop: 12,
   },
   dashboard: {
-    gap: 24,
+    gap: 22,
     paddingHorizontal: 22,
     paddingTop: 22,
   },
@@ -154,7 +154,7 @@ export const homeStyles = StyleSheet.create({
     gap: 10,
   },
   sectionHeader: {
-    minHeight: 28,
+    minHeight: 26,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -162,10 +162,10 @@ export const homeStyles = StyleSheet.create({
   },
   sectionTitle: {
     color: '#29221F',
-    fontFamily: fonts.bold,
-    fontSize: 19,
-    lineHeight: 25,
-    letterSpacing: -0.3,
+    fontFamily: fonts.semiBold,
+    fontSize: 17,
+    lineHeight: 22,
+    letterSpacing: -0.2,
   },
   sectionAction: {
     minHeight: 28,

@@ -119,7 +119,9 @@ export function HomeDashboardContentRefined({
       {recommendation ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text allowFontScaling={false} style={styles.sectionTitle}>Una buena opción</Text>
+            <Text allowFontScaling={false} style={styles.sectionTitle}>
+              Para vuestro próximo plan
+            </Text>
           </View>
           <HomeRecommendationCard
             onPress={openRecommendation}

@@ -42,9 +42,6 @@ export function HomeRecommendationCardRefined({
       </View>
 
       <View style={styles.copy}>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.eyebrow}>
-          Para vuestro próximo plan
-        </Text>
         <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
           {restaurant.name}
         </Text>
