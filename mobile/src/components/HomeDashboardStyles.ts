@@ -181,7 +181,7 @@ export const homeStyles = StyleSheet.create({
     lineHeight: 15,
   },
   groupGrid: {
-    gap: 12,
+    gap: 10,
   },
   activityList: {
     overflow: 'hidden',
