@@ -94,7 +94,7 @@ export function AuthScreen({
   const heroHeight = (
     condensedHero
       ? 88
-      : 210
+      : 190
   ) + insets.top;
   const cardMinHeight = Math.max(
     windowHeight - heroHeight + 20,
@@ -421,15 +421,15 @@ const styles = StyleSheet.create({
   heroCopy: {
     alignItems: 'center',
     zIndex: 1,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
   heroMessage: {
-    maxWidth: 326,
+    maxWidth: 304,
     color: colors.onPrimary,
     fontFamily: fonts.bold,
-    fontSize: 20,
-    lineHeight: 27,
-    letterSpacing: -0.35,
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: -0.2,
     textAlign: 'center',
     textShadowColor: 'rgba(116, 45, 28, 0.18)',
     textShadowOffset: {
