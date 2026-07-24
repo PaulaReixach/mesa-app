@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { ImageBackground, Pressable, Text, View } from 'react-native';
 
@@ -20,9 +21,13 @@ export function HomeGroupCardRefined({
   const imageUri = group.imageUrl
     ? resolveApiUrl(group.imageUrl)
     : getRestaurantFallbackImage(group.name);
-  const memberLabel = members.length === 1
-    ? '1 miembro'
-    : `${members.length} miembros`;
+  const memberLabel = members.length > 0
+    ? (
+        members.length === 1
+          ? '1 miembro'
+          : `${members.length} miembros`
+      )
+    : undefined;
 
   return (
     <Pressable
@@ -41,7 +46,15 @@ export function HomeGroupCardRefined({
         source={{ uri: imageUri }}
         style={styles.image}
       >
-        <View style={styles.overlay} />
+        <LinearGradient
+          colors={[
+            'rgba(26, 20, 17, 0.08)',
+            'rgba(26, 20, 17, 0.18)',
+            'rgba(26, 20, 17, 0.78)',
+          ]}
+          locations={[0, 0.42, 1]}
+          style={styles.overlay}
+        />
 
         <View style={styles.privacyPill}>
           <SymbolView
@@ -55,6 +68,19 @@ export function HomeGroupCardRefined({
             {group.privacy === 'PRIVATE' ? 'Privado' : 'Público'}
           </Text>
         </View>
+
+        {memberLabel ? (
+          <View style={styles.memberPill}>
+            <SymbolView
+              name={{ ios: 'person.2.fill', android: 'group', web: 'group' }}
+              size={12}
+              tintColor="#FFFFFF"
+            />
+            <Text allowFontScaling={false} style={styles.memberText}>
+              {memberLabel}
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.bottomContent}>
           <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>

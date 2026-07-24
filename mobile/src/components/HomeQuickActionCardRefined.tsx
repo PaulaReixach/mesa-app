@@ -35,7 +35,7 @@ export function HomeQuickActionCardRefined({
       <View style={[styles.iconWrap, sage ? styles.iconWrapSage : null]}>
         <SymbolView
           name={icon}
-          size={29}
+          size={22}
           tintColor={sage ? '#5B7740' : colors.primary}
         />
       </View>

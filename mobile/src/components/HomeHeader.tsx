@@ -41,13 +41,27 @@ export function HomeHeader({
         style={[
           styles.heroBackground,
           {
-            height: topInset + 187,
+            height: topInset + 162,
             paddingTop: topInset,
           },
         ]}
       >
         <View style={styles.topBar}>
-          <Text allowFontScaling={false} style={styles.brand}>Mesa</Text>
+          <View
+            accessibilityLabel="Mesa"
+            accessibilityRole="image"
+            style={styles.brandLockup}
+          >
+            <View style={styles.brandLogoFrame}>
+              <Image
+                accessibilityIgnoresInvertColors
+                resizeMode="contain"
+                source={require('../../assets/images/mesa-logo.png')}
+                style={styles.brandLogo}
+              />
+            </View>
+            <Text allowFontScaling={false} style={styles.brand}>MESA</Text>
+          </View>
 
           <View style={styles.topActions}>
             <NotificationBellButton variant="hero" />
@@ -113,7 +127,9 @@ export function HomeHeader({
             badge={pendingInvitationCount}
             icon={{ ios: 'envelope', android: 'mail', web: 'mail' }}
             onPress={() => router.push('/group-invitations')}
-            subtitle="Revisa las pendientes"
+            subtitle={pendingInvitationCount > 0
+              ? `${pendingInvitationCount} por revisar`
+              : 'Sin pendientes'}
             title="Invitaciones"
             tone="sage"
           />

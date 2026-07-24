@@ -131,7 +131,7 @@ export function HomeDashboardContentRefined({
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text allowFontScaling={false} style={styles.sectionTitle}>Actividad reciente</Text>
-          <SectionAction label="Ver toda" onPress={() => router.push('/notifications')} />
+          <SectionAction label="Ver todo" onPress={() => router.push('/notifications')} />
         </View>
 
         {activity.length > 0 ? (
