@@ -63,8 +63,8 @@ export function AuthScreen({
   const contentWidth = Math.min(windowWidth, MAX_CONTENT_WIDTH);
   const heroHeight = (
     compactHero
-      ? 108
-      : 190
+      ? 94
+      : 232
   ) + insets.top;
   const cardMinHeight = Math.max(
     windowHeight - heroHeight + 22,
@@ -110,6 +110,15 @@ export function AuthScreen({
                 },
               ]}
             >
+              {!compactHero ? (
+                <Image
+                  accessible={false}
+                  resizeMode="contain"
+                  source={require('../../assets/images/groups-header-illustration.png')}
+                  style={styles.heroIllustration}
+                />
+              ) : null}
+
               <View style={styles.topBar}>
                 {onBack ? (
                   <Pressable
@@ -130,44 +139,15 @@ export function AuthScreen({
                   </Pressable>
                 ) : null}
 
-                <View
+                <Text
+                  allowFontScaling={false}
                   style={[
-                    styles.brand,
-                    compactHero
-                      ? styles.brandCompact
-                      : styles.brandCentered,
+                    styles.wordmark,
+                    compactHero ? styles.wordmarkCompact : null,
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.brandLogoFrame,
-                      compactHero
-                        ? styles.brandLogoFrameCompact
-                        : styles.brandLogoFrameCentered,
-                    ]}
-                  >
-                    <Image
-                      accessible={false}
-                      resizeMode="contain"
-                      source={require('../../assets/images/mesa-logo.png')}
-                      style={[
-                        styles.brandLogo,
-                        compactHero
-                          ? styles.brandLogoCompact
-                          : styles.brandLogoCentered,
-                      ]}
-                    />
-                  </View>
-
-                  {!compactHero ? (
-                    <Text
-                      allowFontScaling={false}
-                      style={styles.brandName}
-                    >
-                      MESA
-                    </Text>
-                  ) : null}
-                </View>
+                  MESA
+                </Text>
               </View>
 
               {!compactHero ? (
@@ -185,6 +165,7 @@ export function AuthScreen({
             <View
               style={[
                 styles.card,
+                compactHero ? styles.cardCompact : styles.cardRegular,
                 {
                   minHeight: cardMinHeight,
                   paddingBottom: Math.max(
@@ -194,6 +175,27 @@ export function AuthScreen({
                 },
               ]}
             >
+              <View
+                style={[
+                  styles.cardLogoFrame,
+                  compactHero
+                    ? styles.cardLogoFrameCompact
+                    : styles.cardLogoFrameRegular,
+                ]}
+              >
+                <Image
+                  accessible={false}
+                  resizeMode="contain"
+                  source={require('../../assets/images/mesa-logo.png')}
+                  style={[
+                    styles.cardLogo,
+                    compactHero
+                      ? styles.cardLogoCompact
+                      : styles.cardLogoRegular,
+                  ]}
+                />
+              </View>
+
               <View style={styles.heading}>
                 <Text
                   maxFontSizeMultiplier={1.15}
@@ -305,9 +307,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xxl,
   },
+  heroIllustration: {
+    position: 'absolute',
+    right: -34,
+    bottom: -31,
+    width: 340,
+    height: 154,
+    opacity: 0.23,
+  },
   topBar: {
     position: 'relative',
-    minHeight: 58,
+    minHeight: touchTargets.minimum,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -330,73 +340,86 @@ const styles = StyleSheet.create({
     opacity: 0.74,
     transform: [{ scale: 0.98 }],
   },
-  brand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandCentered: {
-    gap: spacing.sm,
-  },
-  brandCompact: {
-    width: touchTargets.comfortable,
-    height: touchTargets.comfortable,
-  },
-  brandLogoFrame: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.round,
-    backgroundColor: colors.onPrimary,
-    padding: 1,
-  },
-  brandLogoFrameCentered: {
-    width: 56,
-    height: 56,
-  },
-  brandLogoFrameCompact: {
-    width: 44,
-    height: 44,
-  },
-  brandLogo: {
-    borderRadius: radii.round,
-  },
-  brandLogoCentered: {
-    width: 54,
-    height: 54,
-  },
-  brandLogoCompact: {
-    width: 42,
-    height: 42,
-  },
-  brandName: {
+  wordmark: {
     color: colors.onPrimary,
     fontFamily: fonts.bold,
-    fontSize: 24,
-    letterSpacing: 1,
+    fontSize: 19,
+    letterSpacing: 2.8,
+  },
+  wordmarkCompact: {
+    fontSize: 17,
+    letterSpacing: 2.5,
   },
   heroCopy: {
     alignItems: 'center',
-    marginTop: spacing.md,
+    zIndex: 1,
+    marginTop: spacing.lg,
   },
   heroMessage: {
-    maxWidth: 330,
+    maxWidth: 340,
     color: colors.onPrimary,
     fontFamily: fonts.bold,
-    fontSize: 21,
-    lineHeight: 27,
-    letterSpacing: -0.45,
+    fontSize: 22,
+    lineHeight: 29,
+    letterSpacing: -0.55,
     textAlign: 'center',
+    textShadowColor: 'rgba(116, 45, 28, 0.18)',
+    textShadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    textShadowRadius: 5,
   },
   card: {
     zIndex: 2,
     marginTop: -22,
     paddingHorizontal: spacing.xl,
-    paddingTop: 30,
     borderTopLeftRadius: radii.xxl,
     borderTopRightRadius: radii.xxl,
     backgroundColor: colors.background,
   },
+  cardRegular: {
+    paddingTop: 52,
+  },
+  cardCompact: {
+    paddingTop: 44,
+  },
+  cardLogoFrame: {
+    position: 'absolute',
+    left: '50%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 5,
+    borderColor: colors.background,
+    borderRadius: radii.round,
+    backgroundColor: colors.surfaceElevated,
+    ...shadows.card,
+  },
+  cardLogoFrameRegular: {
+    top: -34,
+    width: 68,
+    height: 68,
+    transform: [{ translateX: -34 }],
+  },
+  cardLogoFrameCompact: {
+    top: -27,
+    width: 54,
+    height: 54,
+    transform: [{ translateX: -27 }],
+  },
+  cardLogo: {
+    borderRadius: radii.round,
+  },
+  cardLogoRegular: {
+    width: 58,
+    height: 58,
+  },
+  cardLogoCompact: {
+    width: 44,
+    height: 44,
+  },
   heading: {
+    alignItems: 'center',
     gap: spacing.xs,
     marginBottom: spacing.xl,
   },
@@ -406,6 +429,7 @@ const styles = StyleSheet.create({
     fontSize: 29,
     lineHeight: 36,
     letterSpacing: -0.8,
+    textAlign: 'center',
   },
   subtitle: {
     maxWidth: 370,
@@ -413,8 +437,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 21,
+    textAlign: 'center',
   },
   form: {
+    flexGrow: 1,
     gap: spacing.lg,
   },
   errorBanner: {
@@ -451,6 +477,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexWrap: 'wrap',
     gap: 4,
+    marginTop: 'auto',
   },
   switchPromptText: {
     color: colors.muted,

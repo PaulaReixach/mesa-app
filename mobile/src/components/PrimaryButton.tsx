@@ -50,7 +50,14 @@ export function PrimaryButton({
           <Text style={styles.title}>{loadingTitle}</Text>
         </View>
       ) : (
-        <Text style={styles.title}>{title}</Text>
+        <Text
+          style={[
+            styles.title,
+            isDisabled ? styles.titleDisabled : null,
+          ]}
+        >
+          {title}
+        </Text>
       )}
     </Pressable>
   );
@@ -71,12 +78,17 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.992 }],
   },
   buttonDisabled: {
-    opacity: 0.6,
+    elevation: 0,
+    backgroundColor: colors.primaryDisabled,
+    shadowOpacity: 0,
   },
   title: {
     color: colors.white,
     fontSize: 16,
     fontFamily: fonts.bold,
+  },
+  titleDisabled: {
+    color: colors.onPrimaryDisabled,
   },
   content: {
     flexDirection: 'row',

@@ -100,7 +100,7 @@ export default function LoginScreen() {
     <AuthScreen
       heroMessage="Tus restaurantes, tus grupos y el próximo buen plan."
       subtitle="Vuelve a tus grupos, favoritos y restaurantes pendientes."
-      title="Qué bien verte"
+      title="Qué alegría verte de nuevo"
     >
       <View style={styles.fields}>
         <FormField

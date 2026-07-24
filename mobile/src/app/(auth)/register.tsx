@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: 11,
+    lineHeight: 16,
   },
 });
