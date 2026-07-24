@@ -1,6 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
-import { ImageBackground, Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  Image,
+  ImageBackground,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 
 import { groupCardStyles as styles } from './HomeGroupCardRefined.styles';
 import { resolveApiUrl } from '../lib/api';
@@ -8,6 +15,41 @@ import { getRestaurantFallbackImage } from '../lib/restaurant-images';
 import { colors } from '../theme/colors';
 import type { RestaurantGroup } from '../types/group';
 import type { GroupMember } from '../types/group-member';
+
+function GroupMemberAvatar({
+  member,
+  index,
+}: {
+  member: GroupMember;
+  index: number;
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const avatarUri = member.avatarUrl && !imageFailed
+    ? resolveApiUrl(member.avatarUrl)
+    : null;
+
+  return (
+    <View
+      accessibilityLabel={member.name}
+      style={[
+        styles.memberAvatar,
+        index > 0 ? styles.memberAvatarOverlap : null,
+      ]}
+    >
+      {avatarUri ? (
+        <Image
+          onError={() => setImageFailed(true)}
+          source={{ uri: avatarUri }}
+          style={styles.memberAvatarImage}
+        />
+      ) : (
+        <Text allowFontScaling={false} style={styles.memberAvatarInitial}>
+          {member.name.trim().charAt(0).toUpperCase() || '?'}
+        </Text>
+      )}
+    </View>
+  );
+}
 
 export function HomeGroupCardRefined({
   group,
@@ -28,6 +70,8 @@ export function HomeGroupCardRefined({
           : `${members.length} miembros`
       )
     : undefined;
+  const visibleMembers = members.slice(0, 3);
+  const remainingMembers = Math.max(members.length - visibleMembers.length, 0);
 
   return (
     <Pressable
@@ -71,11 +115,32 @@ export function HomeGroupCardRefined({
 
         {memberLabel ? (
           <View style={styles.memberPill}>
-            <SymbolView
-              name={{ ios: 'person.2.fill', android: 'group', web: 'group' }}
-              size={12}
-              tintColor="#FFFFFF"
-            />
+            <View style={styles.memberAvatarStack}>
+              {visibleMembers.map((member, index) => (
+                <GroupMemberAvatar
+                  index={index}
+                  key={member.id}
+                  member={member}
+                />
+              ))}
+              {remainingMembers > 0 ? (
+                <View
+                  accessibilityLabel={`${remainingMembers} miembros más`}
+                  style={[
+                    styles.memberAvatar,
+                    styles.memberAvatarOverlap,
+                    styles.remainingMembers,
+                  ]}
+                >
+                  <Text
+                    allowFontScaling={false}
+                    style={styles.remainingMembersText}
+                  >
+                    +{remainingMembers}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
             <Text allowFontScaling={false} style={styles.memberText}>
               {memberLabel}
             </Text>
