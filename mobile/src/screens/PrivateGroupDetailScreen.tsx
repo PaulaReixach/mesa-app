@@ -52,7 +52,10 @@ const tabs = [
 ];
 
 export default function PrivateGroupDetailScreen() {
-  const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  const { groupId, created } = useLocalSearchParams<{
+    groupId: string;
+    created?: string;
+  }>();
   const { accessToken, user } = useAuth();
 
   const [group, setGroup] = useState<RestaurantGroup | null>(null);
@@ -64,6 +67,28 @@ export default function PrivateGroupDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCreatedBanner, setShowCreatedBanner] =
+    useState(created === '1');
+
+  useEffect(() => {
+    if (
+      !showCreatedBanner
+      || loading
+      || !group
+    ) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setShowCreatedBanner(false);
+    }, 3500);
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    group,
+    loading,
+    showCreatedBanner,
+  ]);
 
   const load = useCallback(async (
     isRefresh = false,
@@ -379,6 +404,19 @@ export default function PrivateGroupDetailScreen() {
                       />
                     </View>
                   </View>
+                ) : null}
+
+                {showCreatedBanner ? (
+                  <GroupInfoBanner
+                    icon={{
+                      ios: 'checkmark.circle.fill',
+                      android: 'check_circle',
+                      web: 'check_circle',
+                    }}
+                    subtitle="Ya podéis empezar a guardar restaurantes."
+                    title="Grupo creado"
+                    tone="green"
+                  />
                 ) : null}
               </View>
 

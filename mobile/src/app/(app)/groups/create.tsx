@@ -1,13 +1,19 @@
 import * as ImagePicker from 'expo-image-picker';
 import { SymbolView } from 'expo-symbols';
-import { router } from 'expo-router';
 import {
+  router,
+  useFocusEffect,
+} from 'expo-router';
+import {
+  useCallback,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -27,6 +33,7 @@ import {
 } from '../../../contexts/auth-context';
 import {
   getErrorMessage,
+  resolveApiUrl,
 } from '../../../lib/api';
 import {
   addGroupMember,
@@ -35,23 +42,23 @@ import {
   createGroup,
   uploadGroupImage,
 } from '../../../services/group-service';
+import {
+  searchInvitableUsers,
+} from '../../../services/user-search-service';
 import { colors } from '../../../theme/colors';
 import {
   GroupPrivacy,
 } from '../../../types/group';
 import { fonts } from '../../../theme/fonts';
 import { radii, shadows } from '../../../theme/layout';
+import type {
+  UserSearchResult,
+} from '../../../types/user-search';
 
 const MAXIMUM_GROUP_IMAGE_SIZE =
   5 * 1024 * 1024;
-
-function normalizeUsername(
-  value: string,
-): string {
-  return value
-    .trim()
-    .replace(/^@+/, '');
-}
+const MINIMUM_USER_SEARCH_LENGTH = 2;
+const USER_SEARCH_DELAY = 300;
 
 export default function CreateGroupScreen() {
   const {
@@ -91,14 +98,29 @@ export default function CreateGroupScreen() {
     );
 
   const [
-    inviteUsername,
-    setInviteUsername,
+    userSearchQuery,
+    setUserSearchQuery,
   ] = useState('');
 
   const [
-    invitedUsernames,
-    setInvitedUsernames,
-  ] = useState<string[]>([]);
+    userSearchResults,
+    setUserSearchResults,
+  ] = useState<UserSearchResult[]>([]);
+
+  const [
+    selectedUsers,
+    setSelectedUsers,
+  ] = useState<UserSearchResult[]>([]);
+
+  const [
+    isSearchingUsers,
+    setIsSearchingUsers,
+  ] = useState(false);
+
+  const [
+    userSearchError,
+    setUserSearchError,
+  ] = useState<string | null>(null);
 
   const [
     isPickingImage,
@@ -122,6 +144,24 @@ export default function CreateGroupScreen() {
 
   const stepTitles = ['La idea', 'Visibilidad', 'Tu gente'] as const;
 
+  const hasUnsavedChanges = useMemo(() => {
+    return (
+      name.trim().length > 0
+      || description.trim().length > 0
+      || city.trim().length > 0
+      || selectedImage !== null
+      || privacy !== 'PRIVATE'
+      || selectedUsers.length > 0
+    );
+  }, [
+    city,
+    description,
+    name,
+    privacy,
+    selectedImage,
+    selectedUsers.length,
+  ]);
+
   const canCreate = useMemo(() => {
     return (
       name.trim().length > 0
@@ -132,6 +172,127 @@ export default function CreateGroupScreen() {
     accessToken,
     isSubmitting,
     name,
+  ]);
+
+  const normalizedUserSearchQuery =
+    userSearchQuery
+      .trim()
+      .replace(/^@+/, '');
+
+  const requestClose = useCallback(() => {
+    if (isSubmitting) {
+      return;
+    }
+
+    if (!hasUnsavedChanges) {
+      router.back();
+      return;
+    }
+
+    Alert.alert(
+      '¿Quieres salir?',
+      'Se perderán los cambios de este grupo.',
+      [
+        {
+          text: 'Seguir editando',
+          style: 'cancel',
+        },
+        {
+          text: 'Salir',
+          style: 'destructive',
+          onPress: () => router.back(),
+        },
+      ],
+    );
+  }, [
+    hasUnsavedChanges,
+    isSubmitting,
+  ]);
+
+  const handleBack = useCallback(() => {
+    if (isSubmitting) {
+      return;
+    }
+
+    if (step > 0) {
+      setRequestError(null);
+      setStep(current => current - 1);
+      return;
+    }
+
+    requestClose();
+  }, [
+    isSubmitting,
+    requestClose,
+    step,
+  ]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const subscription =
+        BackHandler.addEventListener(
+          'hardwareBackPress',
+          () => {
+            handleBack();
+            return true;
+          },
+        );
+
+      return () => subscription.remove();
+    }, [handleBack]),
+  );
+
+  useEffect(() => {
+    if (
+      step !== 2
+      || !accessToken
+      || normalizedUserSearchQuery.length
+        < MINIMUM_USER_SEARCH_LENGTH
+    ) {
+      setUserSearchResults([]);
+      setIsSearchingUsers(false);
+      setUserSearchError(null);
+      return;
+    }
+
+    let requestIsActive = true;
+
+    const timeoutId = setTimeout(() => {
+      setIsSearchingUsers(true);
+      setUserSearchError(null);
+
+      void searchInvitableUsers(
+        normalizedUserSearchQuery,
+        accessToken,
+      )
+        .then(results => {
+          if (requestIsActive) {
+            setUserSearchResults(results);
+          }
+        })
+        .catch(error => {
+          if (requestIsActive) {
+            setUserSearchResults([]);
+            setUserSearchError(
+              getErrorMessage(error),
+            );
+          }
+        })
+        .finally(() => {
+          if (requestIsActive) {
+            setIsSearchingUsers(false);
+          }
+        });
+    }, USER_SEARCH_DELAY);
+
+    return () => {
+      requestIsActive = false;
+      clearTimeout(timeoutId);
+    };
+  }, [
+    accessToken,
+    normalizedUserSearchQuery,
+    step,
   ]);
 
   function validateSelectedImage(
@@ -290,107 +451,33 @@ export default function CreateGroupScreen() {
     );
   }
 
-  function getInviteValidationError(
-    username: string,
-    existingUsernames:
-      string[],
-  ): string | null {
-    if (username.length < 3) {
-      return 'El nombre de usuario debe tener al menos 3 caracteres.';
-    }
-
-    if (
-      user?.username
-      && username.toLowerCase()
-        === user.username.toLowerCase()
-    ) {
-      return 'Tú ya serás la propietaria del grupo.';
-    }
-
-    const alreadyAdded =
-      existingUsernames.some(
-        existingUsername =>
-          existingUsername.toLowerCase()
-          === username.toLowerCase(),
+  function selectUser(
+    selectedUser: UserSearchResult,
+  ): void {
+    setSelectedUsers(current => {
+      const alreadySelected = current.some(
+        item => item.id === selectedUser.id,
       );
 
-    if (alreadyAdded) {
-      return `@${username} ya está en la lista.`;
-    }
+      return alreadySelected
+        ? current
+        : [...current, selectedUser];
+    });
 
-    return null;
-  }
-
-  function handleAddInvite(): void {
-    const username =
-      normalizeUsername(
-        inviteUsername,
-      );
-
-    if (!username) {
-      return;
-    }
-
-    const validationError =
-      getInviteValidationError(
-        username,
-        invitedUsernames,
-      );
-
-    if (validationError) {
-      setRequestError(validationError);
-      return;
-    }
-
-    setInvitedUsernames(current => [
-      ...current,
-      username,
-    ]);
-
-    setInviteUsername('');
+    setUserSearchQuery('');
+    setUserSearchResults([]);
+    setUserSearchError(null);
     setRequestError(null);
   }
 
-  function removeInvitedUsername(
-    username: string,
+  function removeSelectedUser(
+    userId: string,
   ): void {
-    setInvitedUsernames(current =>
+    setSelectedUsers(current =>
       current.filter(
-        currentUsername =>
-          currentUsername !== username,
+        item => item.id !== userId,
       ),
     );
-  }
-
-  function getUsernamesToInvite():
-  string[] | null {
-    const usernames = [
-      ...invitedUsernames,
-    ];
-
-    const pendingUsername =
-      normalizeUsername(
-        inviteUsername,
-      );
-
-    if (!pendingUsername) {
-      return usernames;
-    }
-
-    const validationError =
-      getInviteValidationError(
-        pendingUsername,
-        usernames,
-      );
-
-    if (validationError) {
-      setRequestError(validationError);
-      return null;
-    }
-
-    usernames.push(pendingUsername);
-
-    return usernames;
   }
 
   function openCreatedGroup(
@@ -401,6 +488,7 @@ export default function CreateGroupScreen() {
         '/groups/[groupId]',
       params: {
         groupId,
+        created: '1',
       },
     });
   }
@@ -425,13 +513,6 @@ export default function CreateGroupScreen() {
         'Tu sesión no está disponible. Inicia sesión de nuevo.',
       );
 
-      return;
-    }
-
-    const usernamesToInvite =
-      getUsernamesToInvite();
-
-    if (!usernamesToInvite) {
       return;
     }
 
@@ -474,20 +555,21 @@ export default function CreateGroupScreen() {
       }
 
       for (
-        const username
-        of usernamesToInvite
+        const selectedUser
+        of selectedUsers
       ) {
         try {
           await addGroupMember(
             createdGroup.id,
             {
-              username,
+              username:
+                selectedUser.username,
             },
             accessToken,
           );
         } catch (error) {
           warnings.push(
-            `@${username}: ${getErrorMessage(error)}`,
+            `@${selectedUser.username}: ${getErrorMessage(error)}`,
           );
         }
       }
@@ -540,25 +622,30 @@ export default function CreateGroupScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <Pressable
-              accessibilityLabel="Volver"
-              accessibilityRole="button"
-              disabled={isSubmitting}
-              onPress={() => step > 0 ? setStep(current => current - 1) : router.back()}
-              style={({ pressed }) => [styles.headerButton, pressed ? styles.headerButtonPressed : null]}
-            >
-              <SymbolView
-                name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
-                size={20}
-                tintColor={colors.text}
-              />
-            </Pressable>
+            {step > 0 ? (
+              <Pressable
+                accessibilityLabel="Volver al paso anterior"
+                accessibilityRole="button"
+                disabled={isSubmitting}
+                onPress={handleBack}
+                style={({ pressed }) => [styles.headerButton, pressed ? styles.headerButtonPressed : null]}
+              >
+                <SymbolView
+                  name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
+                  size={20}
+                  tintColor={colors.text}
+                />
+              </Pressable>
+            ) : (
+              <View style={styles.headerButtonPlaceholder} />
+            )}
             <Text style={styles.headerTitle}>Crear grupo</Text>
             <Pressable
               accessibilityLabel="Cerrar"
               accessibilityRole="button"
-              onPress={() => router.back()}
-              style={styles.headerButton}
+              disabled={isSubmitting}
+              onPress={requestClose}
+              style={({ pressed }) => [styles.headerButton, pressed ? styles.headerButtonPressed : null]}
             >
               <SymbolView
                 name={{ ios: 'xmark', android: 'close', web: 'close' }}
@@ -617,13 +704,16 @@ export default function CreateGroupScreen() {
                   </View>
                 </Pressable>
                 <View style={styles.imageCopy}>
-                  <Text style={styles.imageTitle}>Ponle una imagen reconocible</Text>
-                  <Text style={styles.imageHint}>Opcional · cuadrada · máximo 5 MB</Text>
+                  <Text style={styles.imageTitle}>Imagen del grupo</Text>
+                  <Text style={styles.imageHint}>Opcional · formato cuadrado · máx. 5 MB</Text>
                 </View>
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Nombre del grupo</Text>
+                <View style={styles.fieldLabelRow}>
+                  <Text style={styles.label}>Nombre del grupo</Text>
+                  <Text style={styles.characterCount}>{name.length}/100</Text>
+                </View>
                 <View style={styles.inputContainer}>
                   <TextInput
                     autoCapitalize="sentences"
@@ -639,7 +729,10 @@ export default function CreateGroupScreen() {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Descripción <Text style={styles.optional}>opcional</Text></Text>
+                <View style={styles.fieldLabelRow}>
+                  <Text style={styles.label}>Descripción <Text style={styles.optional}>opcional</Text></Text>
+                  <Text style={styles.characterCount}>{description.length}/500</Text>
+                </View>
                 <View style={[styles.inputContainer, styles.descriptionContainer]}>
                   <TextInput
                     maxLength={500}
@@ -671,6 +764,7 @@ export default function CreateGroupScreen() {
                     placeholderTextColor={colors.muted}
                     selectionColor={colors.primary}
                     style={[styles.input, styles.inputWithIcon]}
+                    textContentType="addressCity"
                     value={city}
                   />
                 </View>
@@ -722,7 +816,7 @@ export default function CreateGroupScreen() {
                 </View>
                 <View style={styles.optionText}>
                   <Text style={styles.optionTitle}>Público</Text>
-                  <Text style={styles.optionSubtitle}>Cualquiera puede descubrirlo, seguirlo y guardar ideas.</Text>
+                  <Text style={styles.optionSubtitle}>Cualquiera puede encontrarlo y ver sus restaurantes. Solo los miembros pueden participar.</Text>
                 </View>
                 <View style={[styles.radio, !isPrivate ? styles.radioActiveOlive : null]}>
                   {!isPrivate ? <View style={[styles.radioDot, styles.radioDotOlive]} /> : null}
@@ -737,8 +831,8 @@ export default function CreateGroupScreen() {
                 />
                 <Text style={styles.choiceSummaryText}>
                   {isPrivate
-                    ? 'Ideal para planes entre amigos, pareja o familia.'
-                    : 'Ideal para compartir recomendaciones y crear comunidad.'}
+                    ? 'Solo aparecerá para ti y las personas invitadas.'
+                    : 'Otras personas podrán seguirlo; para participar tendrán que colaborar.'}
                 </Text>
               </View>
             </View>
@@ -751,11 +845,41 @@ export default function CreateGroupScreen() {
                 <Text style={styles.choiceText}>Es opcional. También podrás invitar personas cuando el grupo ya esté creado.</Text>
               </View>
 
+              <View style={styles.ownerCard}>
+                <View style={styles.personAvatar}>
+                  {user?.avatarUrl ? (
+                    <Image
+                      source={{ uri: resolveApiUrl(user.avatarUrl) }}
+                      style={styles.personAvatarImage}
+                    />
+                  ) : (
+                    <Text style={styles.personAvatarText}>
+                      {user?.name.charAt(0).toUpperCase() ?? 'T'}
+                    </Text>
+                  )}
+                </View>
+                <View style={styles.personCopy}>
+                  <Text numberOfLines={1} style={styles.personName}>
+                    {user?.name ?? 'Tú'}
+                  </Text>
+                  <Text numberOfLines={1} style={styles.personUsername}>
+                    {user?.username ? `@${user.username} · ` : ''}Creadora
+                  </Text>
+                </View>
+                <View style={styles.ownerCheck}>
+                  <SymbolView
+                    name={{ ios: 'checkmark', android: 'check', web: 'check' }}
+                    size={16}
+                    tintColor={colors.white}
+                  />
+                </View>
+              </View>
+
               <View style={styles.field}>
-                <Text style={styles.label}>Añadir por nombre de usuario</Text>
+                <Text style={styles.label}>Invitar personas <Text style={styles.optional}>opcional</Text></Text>
                 <View style={styles.inputContainer}>
                   <SymbolView
-                    name={{ ios: 'at', android: 'alternate_email', web: 'alternate_email' }}
+                    name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
                     size={18}
                     tintColor={colors.muted}
                   />
@@ -763,65 +887,169 @@ export default function CreateGroupScreen() {
                     autoCapitalize="none"
                     autoCorrect={false}
                     maxLength={50}
-                    onChangeText={setInviteUsername}
-                    onSubmitEditing={handleAddInvite}
-                    placeholder="usuario"
+                    onChangeText={setUserSearchQuery}
+                    placeholder="Nombre o @usuario"
                     placeholderTextColor={colors.muted}
-                    returnKeyType="done"
+                    returnKeyType="search"
                     selectionColor={colors.primary}
                     style={[styles.input, styles.inviteInput]}
-                    value={inviteUsername}
+                    value={userSearchQuery}
                   />
-                  <Pressable
-                    accessibilityLabel="Añadir usuario"
-                    accessibilityRole="button"
-                    onPress={handleAddInvite}
-                    style={({ pressed }) => [styles.addInviteButton, pressed ? styles.addInviteButtonPressed : null]}
-                  >
-                    <SymbolView
-                      name={{ ios: 'plus', android: 'add', web: 'add' }}
-                      size={20}
-                      tintColor={colors.white}
-                    />
-                  </Pressable>
+                  {isSearchingUsers ? (
+                    <ActivityIndicator color={colors.primary} size="small" />
+                  ) : userSearchQuery.length > 0 ? (
+                    <Pressable
+                      accessibilityLabel="Borrar búsqueda"
+                      accessibilityRole="button"
+                      hitSlop={8}
+                      onPress={() => setUserSearchQuery('')}
+                    >
+                      <SymbolView
+                        name={{ ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' }}
+                        size={18}
+                        tintColor={colors.muted}
+                      />
+                    </Pressable>
+                  ) : null}
                 </View>
 
-                {invitedUsernames.length > 0 ? (
-                  <View style={styles.inviteChips}>
-                    {invitedUsernames.map(username => (
-                      <View key={username} style={styles.inviteChip}>
-                        <Text style={styles.inviteChipText}>@{username}</Text>
+                {normalizedUserSearchQuery.length > 0
+                && normalizedUserSearchQuery.length < MINIMUM_USER_SEARCH_LENGTH ? (
+                  <Text style={styles.fieldHint}>Escribe al menos 2 caracteres.</Text>
+                ) : null}
+
+                {userSearchError ? (
+                  <Text style={styles.inlineError}>{userSearchError}</Text>
+                ) : null}
+
+                {!isSearchingUsers
+                && !userSearchError
+                && normalizedUserSearchQuery.length >= MINIMUM_USER_SEARCH_LENGTH
+                && userSearchResults.length === 0 ? (
+                  <Text style={styles.fieldHint}>No hemos encontrado ningún usuario.</Text>
+                ) : null}
+
+                {userSearchResults.length > 0 ? (
+                  <View style={styles.searchResults}>
+                    {userSearchResults.map(searchResult => {
+                      const avatarUri = searchResult.avatarUrl
+                        ? resolveApiUrl(searchResult.avatarUrl)
+                        : null;
+                      const isSelected = selectedUsers.some(
+                        selectedUser => selectedUser.id === searchResult.id,
+                      );
+
+                      return (
                         <Pressable
-                          accessibilityLabel={`Eliminar a @${username}`}
+                          accessibilityLabel={isSelected
+                            ? `${searchResult.name} ya está en la invitación`
+                            : `Añadir a ${searchResult.name}`}
                           accessibilityRole="button"
-                          hitSlop={8}
-                          onPress={() => removeInvitedUsername(username)}
+                          disabled={isSelected}
+                          key={searchResult.id}
+                          onPress={() => selectUser(searchResult)}
+                          style={({ pressed }) => [
+                            styles.searchResultRow,
+                            pressed ? styles.searchResultRowPressed : null,
+                          ]}
                         >
-                          <SymbolView
-                            name={{ ios: 'xmark', android: 'close', web: 'close' }}
-                            size={12}
-                            tintColor={colors.primary}
-                          />
+                          <View style={styles.personAvatarSmall}>
+                            {avatarUri ? (
+                              <Image source={{ uri: avatarUri }} style={styles.personAvatarImage} />
+                            ) : (
+                              <Text style={styles.personAvatarTextSmall}>
+                                {searchResult.name.charAt(0).toUpperCase()}
+                              </Text>
+                            )}
+                          </View>
+                          <View style={styles.personCopy}>
+                            <Text numberOfLines={1} style={styles.personName}>
+                              {searchResult.name}
+                            </Text>
+                            <Text numberOfLines={1} style={styles.personUsername}>
+                              @{searchResult.username}
+                            </Text>
+                          </View>
+                          <View style={isSelected ? styles.resultAdded : styles.resultAdd}>
+                            <SymbolView
+                              name={{
+                                ios: isSelected ? 'checkmark' : 'plus',
+                                android: isSelected ? 'check' : 'add',
+                                web: isSelected ? 'check' : 'add',
+                              }}
+                              size={15}
+                              tintColor={isSelected ? colors.olive : colors.primary}
+                            />
+                          </View>
                         </Pressable>
-                      </View>
-                    ))}
+                      );
+                    })}
                   </View>
-                ) : (
-                  <View style={styles.inviteEmpty}>
-                    <View style={styles.inviteAvatarStack}>
-                      <View style={styles.inviteAvatar}><Text style={styles.inviteAvatarText}>P</Text></View>
-                      <View style={[styles.inviteAvatar, styles.inviteAvatarOverlap]}>
-                        <SymbolView
-                          name={{ ios: 'plus', android: 'add', web: 'add' }}
-                          size={15}
-                          tintColor={colors.muted}
-                        />
-                      </View>
-                    </View>
-                    <Text style={styles.fieldHint}>Tú serás la persona creadora del grupo.</Text>
-                  </View>
-                )}
+                ) : null}
               </View>
+
+              {selectedUsers.length > 0 ? (
+                <View style={styles.selectedSection}>
+                  <Text style={styles.selectedTitle}>
+                    Invitaciones ({selectedUsers.length})
+                  </Text>
+                  <View style={styles.selectedList}>
+                    {selectedUsers.map(selectedUser => {
+                      const avatarUri = selectedUser.avatarUrl
+                        ? resolveApiUrl(selectedUser.avatarUrl)
+                        : null;
+
+                      return (
+                        <View key={selectedUser.id} style={styles.selectedUserRow}>
+                          <View style={styles.personAvatarSmall}>
+                            {avatarUri ? (
+                              <Image source={{ uri: avatarUri }} style={styles.personAvatarImage} />
+                            ) : (
+                              <Text style={styles.personAvatarTextSmall}>
+                                {selectedUser.name.charAt(0).toUpperCase()}
+                              </Text>
+                            )}
+                          </View>
+                          <View style={styles.personCopy}>
+                            <Text numberOfLines={1} style={styles.personName}>
+                              {selectedUser.name}
+                            </Text>
+                            <Text numberOfLines={1} style={styles.personUsername}>
+                              @{selectedUser.username}
+                            </Text>
+                          </View>
+                          <Pressable
+                            accessibilityLabel={`Eliminar a ${selectedUser.name}`}
+                            accessibilityRole="button"
+                            hitSlop={8}
+                            onPress={() => removeSelectedUser(selectedUser.id)}
+                            style={styles.removeUserButton}
+                          >
+                            <SymbolView
+                              name={{ ios: 'xmark', android: 'close', web: 'close' }}
+                              size={14}
+                              tintColor={colors.mutedStrong}
+                            />
+                          </Pressable>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.inviteNote}>
+                  <View style={styles.inviteNoteIcon}>
+                    <SymbolView
+                      name={{ ios: 'person.crop.circle.badge.plus', android: 'person_add', web: 'person_add' }}
+                      size={18}
+                      tintColor={colors.primary}
+                    />
+                  </View>
+                  <Text style={styles.fieldHint}>
+                    Puedes crear el grupo solo contigo e invitar a más personas después.
+                  </Text>
+                </View>
+              )}
 
               {requestError ? (
                 <View style={styles.errorBox}>
@@ -837,16 +1065,6 @@ export default function CreateGroupScreen() {
           ) : null}
 
           <View style={styles.footerActions}>
-            {step > 0 ? (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setStep(current => current - 1)}
-                style={styles.backButton}
-              >
-                <Text style={styles.backButtonText}>Atrás</Text>
-              </Pressable>
-            ) : null}
-
             <Pressable
               accessibilityRole="button"
               disabled={step === 2 ? !canCreate : !canContinue}
@@ -925,6 +1143,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6EFE9',
   },
 
+  headerButtonPlaceholder: {
+    width: 40,
+    height: 40,
+  },
+
   headerTitle: {
     color: colors.text,
     fontSize: 17,
@@ -972,7 +1195,7 @@ const styles = StyleSheet.create({
   },
 
   imageSection: {
-    minHeight: 104,
+    minHeight: 92,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
@@ -986,9 +1209,9 @@ const styles = StyleSheet.create({
 
   imageButton: {
     position: 'relative',
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+    width: 68,
+    height: 68,
+    borderRadius: 18,
   },
 
   imageButtonPressed: {
@@ -996,21 +1219,21 @@ const styles = StyleSheet.create({
   },
 
   imagePlaceholder: {
-    width: 80,
-    height: 80,
+    width: 68,
+    height: 68,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: 18,
     backgroundColor: colors.primarySoft,
   },
 
   groupImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+    width: 68,
+    height: 68,
+    borderRadius: 18,
     backgroundColor: '#E9DDD6',
   },
 
@@ -1018,13 +1241,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -5,
     bottom: -5,
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
     borderColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 15,
     backgroundColor: colors.surface,
   },
 
@@ -1054,6 +1277,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
+  fieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+
   label: {
     color: colors.text,
     fontSize: 13,
@@ -1061,6 +1291,12 @@ const styles = StyleSheet.create({
   },
 
   optional: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 10,
+  },
+
+  characterCount: {
     color: colors.muted,
     fontFamily: fonts.regular,
     fontSize: 10,
@@ -1159,7 +1395,7 @@ const styles = StyleSheet.create({
   },
 
   privacyCard: {
-    minHeight: 104,
+    minHeight: 108,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -1248,76 +1484,187 @@ const styles = StyleSheet.create({
     paddingLeft: 2,
   },
 
-  addInviteButton: {
+  inlineError: {
+    color: colors.danger,
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+
+  ownerCard: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
+  },
+
+  personAvatar: {
+    width: 46,
+    height: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderRadius: 23,
+    backgroundColor: colors.primarySoft,
+  },
+
+  personAvatarSmall: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderRadius: 20,
+    backgroundColor: colors.primarySoft,
+  },
+
+  personAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+
+  personAvatarText: {
+    color: colors.primary,
+    fontFamily: fonts.bold,
+    fontSize: 15,
+  },
+
+  personAvatarTextSmall: {
+    color: colors.primary,
+    fontFamily: fonts.bold,
+    fontSize: 13,
+  },
+
+  personCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+
+  personName: {
+    color: colors.text,
+    fontFamily: fonts.bold,
+    fontSize: 13,
+  },
+
+  personUsername: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 11,
+  },
+
+  ownerCheck: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    backgroundColor: colors.olive,
+  },
+
+  searchResults: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+  },
+
+  searchResultRow: {
+    minHeight: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+
+  searchResultRowPressed: {
+    backgroundColor: colors.surfaceMuted,
+  },
+
+  resultAdd: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+    backgroundColor: colors.primarySoft,
+  },
+
+  resultAdded: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+    backgroundColor: colors.oliveSoft,
+  },
+
+  selectedSection: {
+    gap: 8,
+  },
+
+  selectedTitle: {
+    color: colors.text,
+    fontFamily: fonts.bold,
+    fontSize: 12,
+  },
+
+  selectedList: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+  },
+
+  selectedUserRow: {
+    minHeight: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+
+  removeUserButton: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+    backgroundColor: colors.surfaceMuted,
+  },
+
+  inviteNote: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 12,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceMuted,
+  },
+
+  inviteNoteIcon: {
     width: 34,
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 17,
-    backgroundColor: colors.primary,
-  },
-
-  addInviteButtonPressed: {
-    backgroundColor: colors.primaryPressed,
-  },
-
-  inviteChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-
-  inviteChip: {
-    minHeight: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    paddingHorizontal: 10,
-    borderRadius: 15,
-    backgroundColor: '#F7E8E2',
-  },
-
-  inviteChipText: {
-    color: colors.primary,
-    fontSize: 12,
-    fontFamily: fonts.bold,
-  },
-
-  inviteEmpty: {
-    minHeight: 72,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderRadius: radii.md,
-    backgroundColor: colors.surfaceMuted,
-  },
-
-  inviteAvatarStack: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  inviteAvatar: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.surface,
-    borderRadius: 18,
     backgroundColor: colors.primarySoft,
-  },
-
-  inviteAvatarOverlap: {
-    marginLeft: -8,
-    backgroundColor: colors.surface,
-  },
-
-  inviteAvatarText: {
-    color: colors.primary,
-    fontFamily: fonts.bold,
-    fontSize: 12,
   },
 
   errorBox: {
@@ -1340,28 +1687,8 @@ const styles = StyleSheet.create({
   },
 
   footerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
     marginTop: 'auto',
     paddingTop: 8,
-  },
-
-  backButton: {
-    minWidth: 92,
-    minHeight: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.round,
-    backgroundColor: colors.surface,
-  },
-
-  backButtonText: {
-    color: colors.mutedStrong,
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
   },
 
   createButton: {
