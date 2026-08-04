@@ -52,11 +52,13 @@ function GroupMemberAvatar({
 }
 
 export function HomeGroupCardRefined({
+  cardWidth,
   group,
   layout = 'wide',
   members,
   onPress,
 }: {
+  cardWidth?: number;
   group: RestaurantGroup;
   layout?: 'grid' | 'wide';
   members: GroupMember[];
@@ -87,6 +89,7 @@ export function HomeGroupCardRefined({
       style={({ pressed }) => [
         styles.card,
         isGrid ? styles.gridCard : styles.wideCard,
+        cardWidth != null ? { width: cardWidth } : null,
         pressed ? styles.pressed : null,
       ]}
     >

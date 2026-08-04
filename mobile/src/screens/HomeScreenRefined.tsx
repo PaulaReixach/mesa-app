@@ -13,7 +13,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { HomeActivityEntry } from '../components/HomeActivityRow';
-import { HomeDashboardContentRefined } from '../components/HomeDashboardContentRefined';
+import {
+  HOME_GROUP_PREVIEW_LIMIT,
+  HomeDashboardContentRefined,
+} from '../components/HomeDashboardContentRefined';
 import { HomeHeader } from '../components/HomeHeader';
 import { homeStyles as styles } from '../components/HomeDashboardStyles';
 import type { HomeRecommendation } from '../components/HomeRecommendationCard';
@@ -92,7 +95,7 @@ export default function HomeScreenRefined() {
       ]);
 
       const orderedGroups = sortGroups(groupsResponse);
-      const groupsToEnrich = orderedGroups.slice(0, 4);
+      const groupsToEnrich = orderedGroups.slice(0, HOME_GROUP_PREVIEW_LIMIT);
       const dashboardData = await Promise.all(
         groupsToEnrich.map(async group => {
           const [members, groupActivity, restaurants] = await Promise.all([

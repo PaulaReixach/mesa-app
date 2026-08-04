@@ -6,7 +6,6 @@ import { fonts } from '../theme/fonts';
 export const groupCardStyles = StyleSheet.create({
   card: {
     minWidth: 0,
-    flex: 1,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(73, 55, 46, 0.18)',
@@ -14,11 +13,11 @@ export const groupCardStyles = StyleSheet.create({
     backgroundColor: '#D7CEC8',
   },
   gridCard: {
-    height: 184,
+    height: 158,
   },
   wideCard: {
     width: '100%',
-    height: 128,
+    height: 120,
   },
   image: {
     flex: 1,
@@ -105,9 +104,9 @@ export const groupCardStyles = StyleSheet.create({
     textShadowRadius: 3,
   },
   gridTitle: {
-    minHeight: 38,
-    fontSize: 16,
-    lineHeight: 19,
+    minHeight: 34,
+    fontSize: 15,
+    lineHeight: 17,
   },
   wideTitle: {
     fontSize: 19,

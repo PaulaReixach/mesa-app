@@ -180,9 +180,14 @@ export const homeStyles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
   },
-  groupGrid: {
-    flexDirection: 'row',
+  groupCarousel: {
+    overflow: 'visible',
+  },
+  groupCarouselContent: {
     alignItems: 'stretch',
+    gap: 10,
+  },
+  groupGrid: {
     gap: 10,
   },
   activityList: {
