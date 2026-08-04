@@ -146,9 +146,9 @@ export const homeStyles = StyleSheet.create({
     marginTop: 12,
   },
   dashboard: {
-    gap: 22,
+    gap: 20,
     paddingHorizontal: 22,
-    paddingTop: 22,
+    paddingTop: 20,
   },
   section: {
     gap: 10,
@@ -181,6 +181,8 @@ export const homeStyles = StyleSheet.create({
     lineHeight: 15,
   },
   groupGrid: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
     gap: 10,
   },
   activityList: {

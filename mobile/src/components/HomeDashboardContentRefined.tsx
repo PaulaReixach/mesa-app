@@ -86,6 +86,7 @@ export function HomeDashboardContentRefined({
               <HomeGroupCard
                 group={group}
                 key={group.id}
+                layout={visibleGroups.length === 1 ? 'wide' : 'grid'}
                 members={membersByGroup[group.id] ?? []}
                 onPress={() => openGroup(group)}
               />

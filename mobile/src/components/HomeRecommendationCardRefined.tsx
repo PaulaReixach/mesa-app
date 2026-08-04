@@ -2,7 +2,7 @@ import { SymbolView } from 'expo-symbols';
 import { Image, Pressable, Text, View } from 'react-native';
 
 import { recommendationStyles as styles } from './HomeRecommendationCardRefined.styles';
-import { getRestaurantFallbackImage } from '../lib/restaurant-images';
+import { getRestaurantInteriorFallbackImage } from '../lib/restaurant-images';
 import type { RestaurantGroup } from '../types/group';
 import type { GroupRestaurant } from '../types/restaurant';
 
@@ -20,7 +20,7 @@ export function HomeRecommendationCardRefined({
 }) {
   const { group, restaurant: groupRestaurant } = recommendation;
   const restaurant = groupRestaurant.restaurant;
-  const imageUri = getRestaurantFallbackImage(restaurant.name);
+  const imageUri = getRestaurantInteriorFallbackImage(restaurant.name);
   const location = restaurant.city ?? group.city ?? 'Sin ciudad';
   const score = groupRestaurant.averageScore;
   const ratingLabel = groupRestaurant.ratingsCount === 1
@@ -29,6 +29,10 @@ export function HomeRecommendationCardRefined({
   const statusLabel = groupRestaurant.favorite
     ? 'Favorito del grupo'
     : 'Guardado en el grupo';
+  const detailLabel = [
+    restaurant.category?.trim(),
+    score != null ? ratingLabel : statusLabel,
+  ].filter((detail): detail is string => Boolean(detail)).join(' · ');
 
   return (
     <Pressable
@@ -55,7 +59,7 @@ export function HomeRecommendationCardRefined({
           </Text>
         </View>
         <Text allowFontScaling={false} numberOfLines={1} style={styles.description}>
-          {score != null ? ratingLabel : statusLabel}
+          {detailLabel}
         </Text>
       </View>
 
