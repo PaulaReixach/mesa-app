@@ -181,7 +181,7 @@ export const homeStyles = StyleSheet.create({
     lineHeight: 15,
   },
   groupCarousel: {
-    overflow: 'visible',
+    overflow: 'hidden',
   },
   groupCarouselContent: {
     alignItems: 'stretch',
