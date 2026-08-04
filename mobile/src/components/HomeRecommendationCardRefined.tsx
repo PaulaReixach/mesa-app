@@ -21,22 +21,17 @@ export function HomeRecommendationCardRefined({
   const { group, restaurant: groupRestaurant } = recommendation;
   const restaurant = groupRestaurant.restaurant;
   const imageUri = getRestaurantInteriorFallbackImage(restaurant.name);
-  const location = restaurant.city ?? group.city ?? 'Sin ciudad';
+  const location = restaurant.city?.trim() || 'Sin ciudad';
+  const category = restaurant.category?.trim();
   const score = groupRestaurant.averageScore;
-  const ratingLabel = groupRestaurant.ratingsCount === 1
-    ? '1 valoración'
-    : `${groupRestaurant.ratingsCount} valoraciones`;
-  const statusLabel = groupRestaurant.favorite
-    ? 'Favorito del grupo'
-    : 'Guardado en el grupo';
-  const detailLabel = [
-    restaurant.category?.trim(),
-    score != null ? ratingLabel : statusLabel,
-  ].filter((detail): detail is string => Boolean(detail)).join(' · ');
+  const detailLabel = [location, category]
+    .filter((detail): detail is string => Boolean(detail))
+    .join(' · ');
+  const savedLabel = `Guardado en ${group.name}`;
 
   return (
     <Pressable
-      accessibilityLabel={`Abrir ${restaurant.name}, ${location}, del grupo ${group.name}`}
+      accessibilityLabel={`Abrir ${restaurant.name}, pendiente en ${group.name}`}
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
@@ -49,17 +44,11 @@ export function HomeRecommendationCardRefined({
         <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
           {restaurant.name}
         </Text>
-        <View style={styles.metaRow}>
-          <Text allowFontScaling={false} numberOfLines={1} style={styles.location}>
-            {location}
-          </Text>
-          <View style={styles.metaDot} />
-          <Text allowFontScaling={false} numberOfLines={1} style={styles.groupName}>
-            {group.name}
-          </Text>
-        </View>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.description}>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.meta}>
           {detailLabel}
+        </Text>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.savedLabel}>
+          {savedLabel}
         </Text>
       </View>
 

@@ -40,6 +40,11 @@ type GroupDashboardData = {
   restaurants: GroupRestaurant[];
 };
 
+const RECOMMENDATION_STATUSES = new Set<GroupRestaurant['status']>([
+  'WANT_TO_GO',
+  'WANT_TO_REPEAT',
+]);
+
 function sortGroups(groups: RestaurantGroup[]): RestaurantGroup[] {
   return [...groups].sort((left, right) => (
     new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
@@ -48,19 +53,22 @@ function sortGroups(groups: RestaurantGroup[]): RestaurantGroup[] {
 
 function pickRecommendation(data: GroupDashboardData[]): HomeRecommendation | null {
   const candidates = data.flatMap(({ group, restaurants }) => (
-    restaurants.map(restaurant => ({ group, restaurant }))
+    restaurants
+      .filter(restaurant => RECOMMENDATION_STATUSES.has(restaurant.status))
+      .map(restaurant => ({ group, restaurant }))
   ));
 
   if (candidates.length === 0) return null;
 
   return [...candidates].sort((left, right) => {
-    const leftScore = left.restaurant.averageScore ?? -1;
-    const rightScore = right.restaurant.averageScore ?? -1;
-
-    if (rightScore !== leftScore) return rightScore - leftScore;
-    if (right.restaurant.ratingsCount !== left.restaurant.ratingsCount) {
-      return right.restaurant.ratingsCount - left.restaurant.ratingsCount;
+    if (left.restaurant.favorite !== right.restaurant.favorite) {
+      return left.restaurant.favorite ? -1 : 1;
     }
+
+    const createdAtDifference = new Date(right.restaurant.createdAt).getTime()
+      - new Date(left.restaurant.createdAt).getTime();
+
+    if (createdAtDifference !== 0) return createdAtDifference;
 
     return new Date(right.restaurant.updatedAt).getTime()
       - new Date(left.restaurant.updatedAt).getTime();

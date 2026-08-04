@@ -153,6 +153,9 @@ export const homeStyles = StyleSheet.create({
   section: {
     gap: 10,
   },
+  sectionIntro: {
+    gap: 2,
+  },
   sectionHeader: {
     minHeight: 26,
     flexDirection: 'row',
@@ -166,6 +169,12 @@ export const homeStyles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
     letterSpacing: -0.2,
+  },
+  sectionSubtitle: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    lineHeight: 15,
   },
   sectionAction: {
     minHeight: 28,

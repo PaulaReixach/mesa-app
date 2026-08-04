@@ -36,37 +36,17 @@ export const recommendationStyles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 21,
   },
-  metaRow: {
-    minWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  location: {
-    flexShrink: 1,
+  meta: {
     color: colors.mutedStrong,
     fontFamily: fonts.medium,
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 11,
+    lineHeight: 15,
   },
-  metaDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.borderStrong,
-  },
-  groupName: {
-    flexShrink: 1,
+  savedLabel: {
     color: colors.olive,
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.medium,
     fontSize: 10,
-    lineHeight: 13,
-  },
-  description: {
-    color: colors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 9,
-    lineHeight: 13,
+    lineHeight: 14,
   },
   scorePill: {
     flexDirection: 'row',

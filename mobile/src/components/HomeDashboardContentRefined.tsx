@@ -167,9 +167,12 @@ export function HomeDashboardContentRefined({
 
       {recommendation ? (
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
+          <View style={styles.sectionIntro}>
             <Text allowFontScaling={false} style={styles.sectionTitle}>
               Para vuestro próximo plan
+            </Text>
+            <Text allowFontScaling={false} style={styles.sectionSubtitle}>
+              Uno de vuestros restaurantes pendientes
             </Text>
           </View>
           <HomeRecommendationCard
