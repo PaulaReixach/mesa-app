@@ -1,12 +1,11 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   RefreshControl,
   ScrollView,
-  Share,
   StyleSheet,
   View,
 } from 'react-native';
@@ -171,22 +170,6 @@ export default function PrivateGroupDetailScreen() {
       }
     : null;
 
-  const thirdStat = useMemo(() => {
-    if (isOwner) {
-      return {
-        kind: 'invitations' as const,
-        value: pendingInvitationCount,
-        label: 'invitaciones',
-      };
-    }
-
-    return {
-      kind: 'members' as const,
-      value: members.length,
-      label: 'personas',
-    };
-  }, [isOwner, members.length, pendingInvitationCount]);
-
   function openCreateRestaurant(): void {
     router.push({
       pathname: '/groups/[groupId]/restaurants/create',
@@ -225,20 +208,6 @@ export default function PrivateGroupDetailScreen() {
     });
   }
 
-  async function shareGroup(): Promise<void> {
-    if (!group) {
-      return;
-    }
-
-    try {
-      await Share.share({
-        message: `Descubre “${group.name}” en Mesa.`,
-      });
-    } catch (shareError) {
-      Alert.alert('No se ha podido compartir', getErrorMessage(shareError));
-    }
-  }
-
   function openMenu(): void {
     if (!group) {
       return;
@@ -247,16 +216,11 @@ export default function PrivateGroupDetailScreen() {
     Alert.alert(
       group.name,
       undefined,
-      isOwner
-        ? [
-            { text: 'Editar grupo', onPress: openEdit },
-            { text: 'Invitar personas', onPress: openInvitations },
-            { text: 'Cancelar', style: 'cancel' },
-          ]
-        : [
-            { text: 'Compartir grupo', onPress: () => void shareGroup() },
-            { text: 'Cancelar', style: 'cancel' },
-          ],
+      [
+        { text: 'Editar grupo', onPress: openEdit },
+        { text: 'Invitar personas', onPress: openInvitations },
+        { text: 'Cancelar', style: 'cancel' },
+      ],
     );
   }
 
@@ -346,8 +310,7 @@ export default function PrivateGroupDetailScreen() {
               fallbackInitial={group.name.charAt(0).toUpperCase()}
               imageUri={groupImageUri}
               onBack={() => router.back()}
-              onMenu={openMenu}
-              onShare={() => void shareGroup()}
+              onMenu={isOwner ? openMenu : undefined}
             />
 
             <View style={styles.sheet}>
@@ -363,19 +326,25 @@ export default function PrivateGroupDetailScreen() {
                 <View style={styles.statsRow}>
                   <GroupStat
                     kind="restaurants"
-                    label="restaurantes"
+                    label={restaurants.length === 1
+                      ? 'restaurante'
+                      : 'restaurantes'}
                     value={restaurants.length}
                   />
                   <GroupStat
                     kind="members"
-                    label="miembros"
+                    label={members.length === 1 ? 'miembro' : 'miembros'}
                     value={members.length}
                   />
-                  <GroupStat
-                    kind={thirdStat.kind}
-                    label={thirdStat.label}
-                    value={thirdStat.value}
-                  />
+                  {isOwner ? (
+                    <GroupStat
+                      kind="invitations"
+                      label={pendingInvitationCount === 1
+                        ? 'invitación'
+                        : 'invitaciones'}
+                      value={pendingInvitationCount}
+                    />
+                  ) : null}
                 </View>
 
                 {isOwner ? (
@@ -504,6 +473,7 @@ export default function PrivateGroupDetailScreen() {
                     onManageInvitations={openInvitations}
                     onMemberPress={openMember}
                     pendingInvitationCount={pendingInvitationCount}
+                    plain
                     privacy={group.privacy}
                   />
                 ) : null}
@@ -513,6 +483,7 @@ export default function PrivateGroupDetailScreen() {
                     groupCreatedAt={group.createdAt}
                     members={members}
                     owner={activityOwner}
+                    plain
                     restaurants={restaurants}
                   />
                 ) : null}
@@ -548,14 +519,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   summary: {
-    gap: 13,
+    gap: 11,
     paddingHorizontal: 18,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingTop: 17,
+    paddingBottom: 10,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 8,
+    paddingVertical: 9,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -568,9 +542,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabContent: {
-    gap: 10,
+    gap: 14,
     paddingHorizontal: 18,
-    paddingTop: 12,
+    paddingTop: 14,
   },
   restaurantList: {
     gap: 6,

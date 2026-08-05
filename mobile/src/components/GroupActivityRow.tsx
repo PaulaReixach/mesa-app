@@ -170,7 +170,13 @@ function activityBadge(item: GroupActivityItem): ActivityBadge {
   };
 }
 
-export function GroupActivityRow({ item }: { item: GroupActivityItem }) {
+export function GroupActivityRow({
+  item,
+  plain = false,
+}: {
+  item: GroupActivityItem;
+  plain?: boolean;
+}) {
   const avatarUrl = item.actorAvatarUrl ?? item.subjectAvatarUrl;
   const avatar = avatarUrl ? resolveApiUrl(avatarUrl) : null;
   const displayName = item.actorName ?? item.subjectName;
@@ -179,7 +185,7 @@ export function GroupActivityRow({ item }: { item: GroupActivityItem }) {
     && item.restaurantStatus;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, plain ? styles.cardPlain : null]}>
       <View style={styles.avatarWrap}>
         <View style={styles.avatar}>
           {avatar ? (
@@ -240,6 +246,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 16,
     backgroundColor: colors.surface,
+  },
+  cardPlain: {
+    minHeight: 60,
+    paddingHorizontal: 0,
+    paddingVertical: 9,
+    borderWidth: 0,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    borderRadius: 0,
+    backgroundColor: 'transparent',
   },
   avatarWrap: {
     position: 'relative',

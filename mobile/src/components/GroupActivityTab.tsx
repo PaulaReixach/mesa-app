@@ -22,6 +22,7 @@ type Props = {
   groupCreatedAt?: string;
   members?: GroupMember[];
   owner?: unknown;
+  plain?: boolean;
   restaurants?: GroupRestaurant[];
 };
 
@@ -39,6 +40,7 @@ function sectionLabel(value: string): string {
 export function GroupActivityTab({
   activity: initialActivity = [],
   members,
+  plain = false,
   restaurants,
 }: Props) {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
@@ -87,25 +89,27 @@ export function GroupActivityTab({
 
   return (
     <View style={styles.container}>
-      <View style={styles.banner}>
-        <View style={styles.bannerIcon}>
-          <SymbolView
-            name={{
-              ios: 'waveform.path.ecg',
-              android: 'monitor_heart',
-              web: 'monitor_heart',
-            }}
-            size={19}
-            tintColor={colors.primary}
-          />
+      {!plain ? (
+        <View style={styles.banner}>
+          <View style={styles.bannerIcon}>
+            <SymbolView
+              name={{
+                ios: 'waveform.path.ecg',
+                android: 'monitor_heart',
+                web: 'monitor_heart',
+              }}
+              size={19}
+              tintColor={colors.primary}
+            />
+          </View>
+          <View style={styles.bannerCopy}>
+            <Text style={styles.bannerTitle}>Actividad reciente</Text>
+            <Text style={styles.bannerText}>
+              Todo lo que pasa en tu grupo, en un vistazo.
+            </Text>
+          </View>
         </View>
-        <View style={styles.bannerCopy}>
-          <Text style={styles.bannerTitle}>Actividad reciente</Text>
-          <Text style={styles.bannerText}>
-            Todo lo que pasa en tu grupo, en un vistazo.
-          </Text>
-        </View>
-      </View>
+      ) : null}
 
       {loading ? (
         <View style={styles.loading}>
@@ -114,7 +118,7 @@ export function GroupActivityTab({
       ) : null}
 
       {!loading && recentActivity.length === 0 ? (
-        <View style={styles.empty}>
+        <View style={[styles.empty, plain ? styles.emptyPlain : null]}>
           <Text style={styles.emptyTitle}>Todavía no hay actividad</Text>
           <Text style={styles.emptyText}>
             Invitaciones, incorporaciones, puntuaciones y cambios aparecerán aquí.
@@ -132,7 +136,7 @@ export function GroupActivityTab({
                 <Text style={styles.sectionTitle}>{label}</Text>
                 <View style={styles.rows}>
                   {items.map(item => (
-                    <GroupActivityRow item={item} key={item.id} />
+                    <GroupActivityRow item={item} key={item.id} plain={plain} />
                   ))}
                 </View>
               </View>
@@ -202,6 +206,13 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 16,
     backgroundColor: colors.surface,
+  },
+  emptyPlain: {
+    paddingHorizontal: 10,
+    paddingVertical: 28,
+    borderWidth: 0,
+    borderRadius: 0,
+    backgroundColor: 'transparent',
   },
   emptyTitle: {
     color: colors.text,

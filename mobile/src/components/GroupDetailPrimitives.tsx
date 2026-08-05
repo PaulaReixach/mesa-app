@@ -29,8 +29,8 @@ type GroupHeroProps = {
   imageUri: string | null;
   fallbackInitial: string;
   onBack: () => void;
-  onShare: () => void;
-  onMenu: () => void;
+  onShare?: () => void;
+  onMenu?: () => void;
 };
 
 export function GroupHero({
@@ -82,26 +82,32 @@ export function GroupHero({
           onPress={onBack}
         />
 
-        <View style={styles.heroNavigationRight}>
-          <RoundHeroButton
-            accessibilityLabel="Compartir grupo"
-            icon={{
-              ios: 'square.and.arrow.up',
-              android: 'share',
-              web: 'share',
-            }}
-            onPress={onShare}
-          />
-          <RoundHeroButton
-            accessibilityLabel="Más opciones"
-            icon={{
-              ios: 'ellipsis',
-              android: 'more_horiz',
-              web: 'more_horiz',
-            }}
-            onPress={onMenu}
-          />
-        </View>
+        {onShare || onMenu ? (
+          <View style={styles.heroNavigationRight}>
+            {onShare ? (
+              <RoundHeroButton
+                accessibilityLabel="Compartir grupo"
+                icon={{
+                  ios: 'square.and.arrow.up',
+                  android: 'share',
+                  web: 'share',
+                }}
+                onPress={onShare}
+              />
+            ) : null}
+            {onMenu ? (
+              <RoundHeroButton
+                accessibilityLabel="Más opciones"
+                icon={{
+                  ios: 'ellipsis',
+                  android: 'more_horiz',
+                  web: 'more_horiz',
+                }}
+                onPress={onMenu}
+              />
+            ) : null}
+          </View>
+        ) : null}
       </View>
     </View>
   );

@@ -11,9 +11,10 @@ type Props = {
   member: GroupMember;
   privacy: GroupPrivacy;
   onPress?: () => void;
+  plain?: boolean;
 };
 
-export function GroupMemberRow({ member, privacy, onPress }: Props) {
+export function GroupMemberRow({ member, privacy, onPress, plain = false }: Props) {
   const avatar = member.avatarUrl ? resolveApiUrl(member.avatarUrl) : null;
   const owner = member.role === 'OWNER';
   const collaborator = privacy === 'PUBLIC' && !owner;
@@ -23,7 +24,11 @@ export function GroupMemberRow({ member, privacy, onPress }: Props) {
     <Pressable
       disabled={!onPress}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && onPress ? styles.pressed : null]}
+      style={({ pressed }) => [
+        styles.row,
+        plain ? styles.rowPlain : null,
+        pressed && onPress ? styles.pressed : null,
+      ]}
     >
       <View style={styles.avatarWrap}>
         <View style={styles.avatar}>
@@ -48,7 +53,10 @@ export function GroupMemberRow({ member, privacy, onPress }: Props) {
         <Text numberOfLines={1} style={styles.name}>{member.name}</Text>
         <View style={[
           styles.pill,
-          owner ? styles.ownerPill : collaborator ? styles.collaboratorPill : styles.memberPill,
+          plain ? styles.pillPlain : null,
+          !plain && owner ? styles.ownerPill : null,
+          !plain && collaborator ? styles.collaboratorPill : null,
+          !plain && !owner && !collaborator ? styles.memberPill : null,
         ]}>
           <Text style={[
             styles.role,
@@ -70,6 +78,7 @@ export function GroupMemberRow({ member, privacy, onPress }: Props) {
 
 const styles = StyleSheet.create({
   row: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 11, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  rowPlain: { minHeight: 60, paddingHorizontal: 0, paddingVertical: 7 },
   avatarWrap: { position: 'relative' },
   avatar: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 23, backgroundColor: '#F4E1D8' },
   avatarImage: { width: '100%', height: '100%' },
@@ -78,6 +87,7 @@ const styles = StyleSheet.create({
   copy: { flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 5 },
   name: { color: colors.text, fontSize: 12, fontFamily: fonts.bold },
   pill: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999 },
+  pillPlain: { paddingHorizontal: 0, paddingVertical: 0, borderRadius: 0 },
   ownerPill: { backgroundColor: '#FBE9E2' },
   collaboratorPill: { backgroundColor: '#E8EEDD' },
   memberPill: { backgroundColor: '#F4EFEA' },
