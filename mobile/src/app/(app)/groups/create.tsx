@@ -1045,7 +1045,7 @@ export default function CreateGroupScreen() {
                       tintColor={colors.primary}
                     />
                   </View>
-                  <Text style={styles.fieldHint}>
+                  <Text style={[styles.fieldHint, styles.inviteNoteText]}>
                     Puedes crear el grupo solo contigo e invitar a más personas después.
                   </Text>
                 </View>
@@ -1654,8 +1654,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 12,
+    paddingVertical: 12,
     borderRadius: radii.md,
     backgroundColor: colors.surfaceMuted,
+  },
+
+  inviteNoteText: {
+    flex: 1,
+    minWidth: 0,
   },
 
   inviteNoteIcon: {
