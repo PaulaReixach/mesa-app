@@ -20,7 +20,6 @@ import {
   GroupRestaurantListCard,
   GroupStat,
   GroupTabs,
-  MemberPreview,
   PrimaryGroupAction,
 } from '../components/GroupDetailPrimitivesTuned';
 import { GroupMembersTab } from '../components/GroupMembersTab';
@@ -455,14 +454,6 @@ export default function PrivateGroupDetailScreen() {
                       </View>
                     )}
 
-                    {members.length > 0 ? (
-                      <MemberPreview
-                        actionLabel={`Ver todos (${members.length})`}
-                        members={members}
-                        onAction={() => setActiveTab('members')}
-                        title="Miembros del grupo"
-                      />
-                    ) : null}
                   </>
                 ) : null}
 
