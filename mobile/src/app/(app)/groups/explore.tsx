@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import {
   router,
@@ -127,10 +128,10 @@ export default function ExploreGroupsScreen() {
         <View style={styles.header}>
           <View style={styles.headerText}>
             <Text style={styles.title}>
-              Descubre grupos
+              Grupos
             </Text>
             <Text style={styles.subtitle}>
-              Encuentra listas públicas que encajen con tus próximos planes.
+              Tus listas, tu gente y los sitios que queréis probar.
             </Text>
           </View>
 
@@ -139,18 +140,32 @@ export default function ExploreGroupsScreen() {
             onPress={() => {
               router.push('/groups/create');
             }}
-            style={styles.createButton}
+            style={({ pressed }) => [
+              styles.createButton,
+              pressed ? styles.createButtonPressed : null,
+            ]}
           >
-            <SymbolView
-              name={{
-                ios: 'plus',
-                android: 'add',
-                web: 'add',
-              }}
-              size={22}
-              tintColor={colors.white}
-            />
-            <Text style={styles.createButtonText}>Nuevo</Text>
+            <LinearGradient
+              colors={['#B93825', '#D65339', '#C8442D']}
+              end={{ x: 1, y: 1 }}
+              start={{ x: 0, y: 0 }}
+              style={styles.createButtonFill}
+            >
+              <View style={styles.createButtonIcon}>
+                <SymbolView
+                  name={{
+                    ios: 'plus',
+                    android: 'add',
+                    web: 'add',
+                  }}
+                  size={18}
+                  tintColor={colors.white}
+                />
+              </View>
+              <Text style={styles.createButtonText}>
+                Nuevo grupo
+              </Text>
+            </LinearGradient>
           </Pressable>
         </View>
 
@@ -160,22 +175,21 @@ export default function ExploreGroupsScreen() {
             onPress={() => {
               router.replace('/groups');
             }}
-            style={styles.tab}
+            style={({ pressed }) => [
+              styles.tab,
+              pressed ? styles.tabPressed : null,
+            ]}
           >
             <Text style={styles.tabText}>
               Mis grupos
             </Text>
           </Pressable>
 
-          <View
-            style={[
-              styles.tab,
-              styles.tabActive,
-            ]}
-          >
+          <View style={styles.tab}>
             <Text style={styles.tabTextActive}>
               Explorar
             </Text>
+            <View style={styles.tabIndicator} />
           </View>
         </View>
 
@@ -186,7 +200,7 @@ export default function ExploreGroupsScreen() {
               android: 'search',
               web: 'search',
             }}
-            size={18}
+            size={23}
             tintColor={colors.muted}
           />
 
@@ -194,14 +208,18 @@ export default function ExploreGroupsScreen() {
             autoCapitalize="none"
             autoCorrect={false}
             onChangeText={setQuery}
-            placeholder="Buscar grupos, cocinas o zonas..."
+            placeholder="Buscar por nombre, ciudad o creador"
             placeholderTextColor={colors.muted}
             style={styles.searchInput}
             value={query}
           />
 
           {query ? (
-            <Pressable accessibilityLabel="Limpiar búsqueda" onPress={() => setQuery('')}>
+            <Pressable
+              accessibilityLabel="Limpiar búsqueda"
+              onPress={() => setQuery('')}
+              style={styles.clearSearchButton}
+            >
               <SymbolView
                 name={{ ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' }}
                 size={18}
@@ -223,7 +241,7 @@ export default function ExploreGroupsScreen() {
         {!loading && error ? (
           <View style={styles.messageCard}>
             <Text style={styles.messageTitle}>
-              No hemos podido cargar Explorar
+              No hemos podido cargar los grupos públicos
             </Text>
             <Text style={styles.messageText}>
               {error}
@@ -242,17 +260,39 @@ export default function ExploreGroupsScreen() {
 
         {!loading
         && !error
+        && query.trim()
         && visibleGroups.length === 0 ? (
           <View style={styles.messageCard}>
             <Text style={styles.messageTitle}>
-              {query.trim()
-                ? 'No encontramos coincidencias'
-                : 'Todavía no hay grupos públicos'}
+              No encontramos coincidencias
             </Text>
             <Text style={styles.messageText}>
-              {query.trim()
-                ? 'Prueba con otro nombre, creador o ciudad.'
-                : 'Los grupos públicos de la zona aparecerán aquí.'}
+              Prueba con otro nombre, creador o ciudad.
+            </Text>
+          </View>
+        ) : null}
+
+        {!loading
+        && !error
+        && !query.trim()
+        && visibleGroups.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIcon}>
+              <SymbolView
+                name={{
+                  ios: 'globe.europe.africa',
+                  android: 'public',
+                  web: 'public',
+                }}
+                size={28}
+                tintColor={colors.primary}
+              />
+            </View>
+            <Text style={styles.emptyTitle}>
+              Todavía no hay grupos públicos
+            </Text>
+            <Text style={styles.emptyText}>
+              Cuando haya listas públicas disponibles, aparecerán aquí para que puedas descubrirlas.
             </Text>
           </View>
         ) : null}
@@ -266,7 +306,8 @@ export default function ExploreGroupsScreen() {
                 Grupos públicos
               </Text>
               <Text style={styles.count}>
-                {visibleGroups.length}
+                {visibleGroups.length}{' '}
+                {visibleGroups.length === 1 ? 'grupo' : 'grupos'}
               </Text>
             </View>
 
@@ -295,43 +336,63 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: 22,
+    gap: 20,
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 118,
+    paddingTop: 24,
+    paddingBottom: 128,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 14,
+    justifyContent: 'space-between',
+    gap: 12,
   },
   headerText: {
     flex: 1,
-    gap: 5,
+    minWidth: 0,
   },
   title: {
     color: colors.text,
-    fontSize: 31,
-    lineHeight: 37,
+    fontSize: 32,
+    lineHeight: 39,
     fontFamily: fonts.bold,
-    letterSpacing: -0.8,
+    letterSpacing: -1,
   },
   subtitle: {
+    marginTop: 9,
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 20,
   },
   createButton: {
-    minHeight: 44,
+    width: 114,
+    height: 40,
+    marginTop: 10,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.24)',
+    borderRadius: 10,
+  },
+  createButtonPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
+  },
+  createButtonFill: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    paddingHorizontal: 13,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    ...shadows.card,
+    gap: 6,
+    paddingHorizontal: 7,
+  },
+  createButtonIcon: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
   },
   createButtonText: {
     color: colors.white,
@@ -339,51 +400,61 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   tabs: {
-    minHeight: 48,
+    minHeight: 50,
     flexDirection: 'row',
-    padding: 4,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    backgroundColor: colors.surfaceMuted,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderStrong,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.md,
   },
-  tabActive: {
-    backgroundColor: colors.surfaceElevated,
-    ...shadows.card,
+  tabPressed: {
+    opacity: 0.55,
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: -1,
+    width: 58,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: '#C64A32',
   },
   tabText: {
     color: colors.muted,
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.medium,
   },
   tabTextActive: {
     color: colors.primary,
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.semiBold,
   },
   searchBar: {
     minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
+    gap: 12,
+    paddingLeft: 16,
+    paddingRight: 8,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
+    borderColor: colors.borderStrong,
+    borderRadius: 10,
     backgroundColor: colors.surface,
-    ...shadows.card,
   },
   searchInput: {
     flex: 1,
+    minHeight: 50,
     color: colors.text,
     fontFamily: fonts.regular,
     fontSize: 13,
+  },
+  clearSearchButton: {
+    width: 34,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   centered: {
     alignItems: 'center',
@@ -394,18 +465,19 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 19,
     fontFamily: fonts.bold,
-    letterSpacing: -0.25,
+    letterSpacing: -0.35,
   },
   count: {
-    color: colors.primary,
+    color: colors.muted,
     fontSize: 12,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
   },
   list: {
     gap: 11,
@@ -434,5 +506,36 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 12,
     fontFamily: fonts.bold,
+  },
+  emptyCard: {
+    alignItems: 'center',
+    gap: 14,
+    padding: 28,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.xl,
+    backgroundColor: colors.surface,
+    ...shadows.card,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 22,
+    backgroundColor: colors.primarySoft,
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 19,
+    fontFamily: fonts.bold,
+    textAlign: 'center',
+  },
+  emptyText: {
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });

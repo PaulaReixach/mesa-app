@@ -13,7 +13,6 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -241,7 +240,7 @@ export default function GroupsScreen() {
           <View style={styles.header}>
             <View style={styles.headerText}>
               <Text style={styles.title}>
-                {selectingGroup ? '¿Dónde lo guardamos?' : 'Mis grupos'}
+                {selectingGroup ? '¿Dónde lo guardamos?' : 'Grupos'}
               </Text>
               <Text style={styles.subtitle}>
                 {selectingGroup
@@ -282,27 +281,23 @@ export default function GroupsScreen() {
               </LinearGradient>
             </Pressable>
           </View>
-
-          {!selectingGroup ? (
-            <Image
-              resizeMode="contain"
-              source={require('../../../../assets/images/groups-header-illustration.png')}
-              style={styles.heroIllustration}
-            />
-          ) : null}
         </View>
 
         {!selectingGroup ? (
           <View style={styles.tabs}>
             <View style={styles.tab}>
-              <Text style={styles.tabTextActive}>
+              <Text
+                accessibilityRole="text"
+                style={styles.tabTextActive}
+              >
                 Mis grupos
               </Text>
               <View style={styles.tabIndicator} />
             </View>
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.push('/groups/explore')}
+              accessibilityState={{ selected: false }}
+              onPress={() => router.replace('/groups/explore')}
               style={({ pressed }) => [
                 styles.tab,
                 pressed ? styles.tabPressed : null,
@@ -649,7 +644,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: 20,
     paddingHorizontal: 20,
-    paddingTop: 28,
+    paddingTop: 24,
     paddingBottom: 128,
   },
   selectionHeader: {
@@ -671,8 +666,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   hero: {
-    position: 'relative',
-    minHeight: 142,
+    minHeight: 0,
   },
   selectionHero: {
     minHeight: 0,
@@ -686,7 +680,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
-    maxWidth: 224,
+    minWidth: 0,
   },
   title: {
     color: colors.text,
@@ -740,13 +734,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontFamily: fonts.semiBold,
     fontSize: 11,
-  },
-  heroIllustration: {
-    position: 'absolute',
-    right: -25,
-    bottom: -28,
-    width: 164,
-    height: 115,
   },
   tabs: {
     minHeight: 50,
