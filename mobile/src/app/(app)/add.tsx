@@ -1,6 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { SymbolView } from 'expo-symbols';
 import type { ComponentProps } from 'react';
 import {
@@ -153,8 +152,6 @@ export default function AddScreen() {
 
   return (
     <View style={styles.screen}>
-      <StatusBar style="light" />
-
       <ScrollView
         bounces={false}
         contentContainerStyle={styles.content}

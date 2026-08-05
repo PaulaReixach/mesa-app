@@ -1,6 +1,5 @@
 import { SymbolView } from 'expo-symbols';
 import { useFocusEffect } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -158,8 +157,6 @@ export default function HomeScreenRefined() {
 
   return (
     <View style={styles.safeArea}>
-      <StatusBar style="light" />
-
       <ScrollView
         contentContainerStyle={[
           styles.content,

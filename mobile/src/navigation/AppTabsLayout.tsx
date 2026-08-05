@@ -1,4 +1,5 @@
 import { SymbolView } from 'expo-symbols';
+import { StatusBar } from 'expo-status-bar';
 import { router, Tabs, usePathname } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { useRef } from 'react';
@@ -107,11 +108,14 @@ export default function AppTabsLayout() {
     '/map',
     '/profile',
   ].includes(pathname);
+  const usesDarkHeader = pathname === '/home' || pathname === '/add';
 
   return (
-    <Tabs
-      initialRouteName="home"
-      screenOptions={{
+    <>
+      <StatusBar style={usesDarkHeader ? 'light' : 'dark'} />
+      <Tabs
+        initialRouteName="home"
+        screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: navigationColors.active,
         tabBarInactiveTintColor: navigationColors.inactive,
@@ -310,7 +314,8 @@ export default function AppTabsLayout() {
       <Tabs.Screen name="privacy-settings" options={hiddenScreenOptions} />
       <Tabs.Screen name="help-support" options={hiddenScreenOptions} />
       <Tabs.Screen name="support-request" options={hiddenScreenOptions} />
-      <Tabs.Screen name="about-mesa" options={hiddenScreenOptions} />
-    </Tabs>
+        <Tabs.Screen name="about-mesa" options={hiddenScreenOptions} />
+      </Tabs>
+    </>
   );
 }
