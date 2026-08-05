@@ -36,6 +36,21 @@ import type { RestaurantGroup } from '../../../../../types/group';
 import type { GroupRestaurant } from '../../../../../types/restaurant';
 import { fonts } from '../../../../../theme/fonts';
 
+type RestaurantDetailTab = 'summary' | 'photos' | 'ratings';
+
+const privateRestaurantTabs: Array<{
+  key: RestaurantDetailTab;
+  label: string;
+}> = [
+  { key: 'summary', label: 'Resumen' },
+  { key: 'photos', label: 'Fotos' },
+  { key: 'ratings', label: 'Valoraciones' },
+];
+
+const publicRestaurantTabs = privateRestaurantTabs.filter(
+  tab => tab.key !== 'photos',
+);
+
 export default function RestaurantDetailScreen() {
   const { groupId, groupRestaurantId } = useLocalSearchParams<{
     groupId: string;
@@ -46,6 +61,7 @@ export default function RestaurantDetailScreen() {
   const [item, setItem] = useState<GroupRestaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<RestaurantDetailTab>('summary');
 
   const load = useCallback(async () => {
     if (!accessToken || !groupId || !groupRestaurantId) {
@@ -104,6 +120,9 @@ export default function RestaurantDetailScreen() {
       || item.status === 'DO_NOT_REPEAT'
       || item.status === 'FAVORITE'
     : false;
+  const detailTabs = group?.privacy === 'PRIVATE'
+    ? privateRestaurantTabs
+    : publicRestaurantTabs;
 
   const ensureRestaurantVisited = useCallback(async (): Promise<boolean> => {
     if (!accessToken || !item || !groupId || !groupRestaurantId) {
@@ -299,55 +318,99 @@ export default function RestaurantDetailScreen() {
               </ImageBackground>
             </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                Información
-              </Text>
-              <View style={styles.infoList}>
-                <View style={styles.infoRow}>
-                  <SymbolView
-                    name={{
-                      ios: 'mappin.and.ellipse',
-                      android: 'location_on',
-                      web: 'location_on',
-                    }}
-                    size={19}
-                    tintColor={colors.primary}
-                  />
-                  <View style={styles.infoText}>
-                    <Text style={styles.infoLabel}>
-                      Ubicación
+            <View
+              accessibilityRole="tablist"
+              style={styles.tabs}
+            >
+              {detailTabs.map(tab => {
+                const selected = activeTab === tab.key;
+
+                return (
+                  <Pressable
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected }}
+                    key={tab.key}
+                    onPress={() => setActiveTab(tab.key)}
+                    style={({ pressed }) => [
+                      styles.tab,
+                      pressed ? styles.tabPressed : null,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.tabLabel,
+                        selected ? styles.tabLabelSelected : null,
+                      ]}
+                    >
+                      {tab.label}
                     </Text>
-                    <Text style={styles.infoValue}>
-                      {location || 'Sin ubicación disponible'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.infoRow}>
-                  <SymbolView
-                    name={{
-                      ios: 'note.text',
-                      android: 'notes',
-                      web: 'notes',
-                    }}
-                    size={19}
-                    tintColor={colors.primary}
-                  />
-                  <View style={styles.infoText}>
-                    <Text style={styles.infoLabel}>
-                      Notas del grupo
-                    </Text>
-                    <Text style={styles.infoValue}>
-                      {item.groupNotes
-                        || 'Sin notas todavía.'}
-                    </Text>
-                  </View>
-                </View>
-              </View>
+                    {selected ? <View style={styles.tabIndicator} /> : null}
+                  </Pressable>
+                );
+              })}
             </View>
 
-            {group.privacy === 'PRIVATE' ? (
+            {activeTab === 'summary' ? (
+              <>
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>
+                    Información
+                  </Text>
+                  <View style={styles.infoList}>
+                    <View style={styles.infoRow}>
+                      <SymbolView
+                        name={{
+                          ios: 'mappin.and.ellipse',
+                          android: 'location_on',
+                          web: 'location_on',
+                        }}
+                        size={19}
+                        tintColor={colors.primary}
+                      />
+                      <View style={styles.infoText}>
+                        <Text style={styles.infoLabel}>
+                          Ubicación
+                        </Text>
+                        <Text style={styles.infoValue}>
+                          {location || 'Sin ubicación disponible'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.divider} />
+                    <View style={styles.infoRow}>
+                      <SymbolView
+                        name={{
+                          ios: 'note.text',
+                          android: 'notes',
+                          web: 'notes',
+                        }}
+                        size={19}
+                        tintColor={colors.primary}
+                      />
+                      <View style={styles.infoText}>
+                        <Text style={styles.infoLabel}>
+                          Notas del grupo
+                        </Text>
+                        <Text style={styles.infoValue}>
+                          {item.groupNotes || 'Sin notas todavía.'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                {canManageRestaurant ? (
+                  <RestaurantStatusSection
+                    accessToken={accessToken}
+                    groupId={groupId}
+                    groupRestaurant={item}
+                    onUpdated={setItem}
+                  />
+                ) : null}
+              </>
+            ) : null}
+
+            {activeTab === 'photos' && group.privacy === 'PRIVATE' ? (
               <RestaurantPhotosSection
                 accessToken={accessToken}
                 canAddPhotos={canManageRestaurant}
@@ -357,23 +420,16 @@ export default function RestaurantDetailScreen() {
               />
             ) : null}
 
-            <RestaurantRatingsSection
-              accessToken={accessToken}
-              groupId={groupId}
-              groupRestaurantId={groupRestaurantId}
-              onEnsureVisited={
-                group.privacy === 'PRIVATE' && canManageRestaurant && !isVisited
-                  ? ensureRestaurantVisited
-                  : undefined
-              }
-            />
-
-            {canManageRestaurant ? (
-              <RestaurantStatusSection
+            {activeTab === 'ratings' ? (
+              <RestaurantRatingsSection
                 accessToken={accessToken}
                 groupId={groupId}
-                groupRestaurant={item}
-                onUpdated={setItem}
+                groupRestaurantId={groupRestaurantId}
+                onEnsureVisited={
+                  group.privacy === 'PRIVATE' && canManageRestaurant && !isVisited
+                    ? ensureRestaurantVisited
+                    : undefined
+                }
               />
             ) : null}
           </>
@@ -390,7 +446,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: 18,
+    gap: 16,
     paddingHorizontal: 18,
     paddingTop: 4,
     paddingBottom: 32,
@@ -481,6 +537,40 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 9,
     fontFamily: fonts.bold,
+  },
+  tabs: {
+    minHeight: 43,
+    flexDirection: 'row',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  tab: {
+    flex: 1,
+    minHeight: 43,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  tabPressed: {
+    opacity: 0.62,
+  },
+  tabLabel: {
+    color: colors.muted,
+    fontSize: 10,
+    fontFamily: fonts.semiBold,
+  },
+  tabLabelSelected: {
+    color: colors.primary,
+    fontFamily: fonts.bold,
+  },
+  tabIndicator: {
+    position: 'absolute',
+    right: 13,
+    bottom: -1,
+    left: 13,
+    height: 2,
+    borderRadius: 2,
+    backgroundColor: colors.primary,
   },
   section: {
     gap: 8,

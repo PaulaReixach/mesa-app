@@ -12,16 +12,17 @@ import {
   Image,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getErrorMessage, resolveApiUrl } from '../lib/api';
+import { getErrorMessage } from '../lib/api';
 import {
+  clearCachedRestaurantPhoto,
   deleteRestaurantPhoto,
+  getCachedRestaurantPhotoUri,
   getRestaurantPhotos,
   uploadRestaurantPhoto,
 } from '../services/restaurant-photo-service';
@@ -80,6 +81,10 @@ export function RestaurantPhotosSection({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [photoUris, setPhotoUris] = useState<Record<string, string>>({});
+  const [photoDownloadErrors, setPhotoDownloadErrors] = useState<
+    Record<string, boolean>
+  >({});
 
   const loadPhotos = useCallback(async () => {
     try {
@@ -101,6 +106,73 @@ export function RestaurantPhotosSection({
     void loadPhotos();
   }, [loadPhotos]);
 
+  useEffect(() => {
+    const photosToDownload = photos.filter(photo =>
+      !photoUris[photo.id] && !photoDownloadErrors[photo.id]
+    );
+
+    if (photosToDownload.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void Promise.all(
+      photosToDownload.map(async photo => {
+        try {
+          const uri = await getCachedRestaurantPhotoUri(
+            photo.id,
+            photo.imageUrl,
+            accessToken,
+          );
+
+          return { id: photo.id, uri, failed: false };
+        } catch {
+          return { id: photo.id, uri: null, failed: true };
+        }
+      }),
+    ).then(results => {
+      if (cancelled) {
+        return;
+      }
+
+      setPhotoUris(current => {
+        const next = { ...current };
+
+        results.forEach(result => {
+          if (result.uri) {
+            next[result.id] = result.uri;
+          }
+        });
+
+        return next;
+      });
+
+      setPhotoDownloadErrors(current => {
+        const next = { ...current };
+
+        results.forEach(result => {
+          if (result.failed) {
+            next[result.id] = true;
+          } else {
+            delete next[result.id];
+          }
+        });
+
+        return next;
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    accessToken,
+    photoDownloadErrors,
+    photoUris,
+    photos,
+  ]);
+
   const selectedPhoto = useMemo(() => {
     if (selectedPhotoIndex === null) {
       return null;
@@ -109,13 +181,27 @@ export function RestaurantPhotosSection({
     return photos[selectedPhotoIndex] ?? null;
   }, [photos, selectedPhotoIndex]);
 
-  function photoSource(photo: RestaurantPhoto) {
-    return {
-      uri: resolveApiUrl(photo.imageUrl),
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    };
+  function retryPhotoDownload(photoId: string) {
+    setPhotoDownloadErrors(current => {
+      const next = { ...current };
+      delete next[photoId];
+      return next;
+    });
+  }
+
+  function handlePhotoRenderError(photoId: string) {
+    clearCachedRestaurantPhoto(photoId);
+
+    setPhotoUris(current => {
+      const next = { ...current };
+      delete next[photoId];
+      return next;
+    });
+
+    setPhotoDownloadErrors(current => ({
+      ...current,
+      [photoId]: true,
+    }));
   }
 
   function validateAssets(
@@ -294,6 +380,16 @@ export function RestaurantPhotosSection({
       );
 
       setPhotos(current => current.filter(item => item.id !== photo.id));
+      setPhotoUris(current => {
+        const next = { ...current };
+        delete next[photo.id];
+        return next;
+      });
+      setPhotoDownloadErrors(current => {
+        const next = { ...current };
+        delete next[photo.id];
+        return next;
+      });
       setSelectedPhotoIndex(null);
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
@@ -320,14 +416,31 @@ export function RestaurantPhotosSection({
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
-        <Text style={styles.sectionTitle}>Fotos del grupo</Text>
-        {photos.length > 0 ? (
+        <View style={styles.headingCopy}>
+          <Text style={styles.sectionTitle}>Fotos del grupo</Text>
+          {!isLoading && photos.length > 0 ? (
+            <Text style={styles.photoCount}>
+              {photos.length} {photos.length === 1 ? 'foto' : 'fotos'} compartidas
+            </Text>
+          ) : null}
+        </View>
+        {canAddPhotos && photos.length > 0 && photos.length < MAXIMUM_PHOTOS ? (
           <Pressable
+            accessibilityLabel="Añadir fotos"
             accessibilityRole="button"
-            onPress={() => setSelectedPhotoIndex(0)}
-            style={({ pressed }) => pressed ? styles.pressed : null}
+            disabled={isPicking || uploadingProgress !== null}
+            onPress={openAddOptions}
+            style={({ pressed }) => [
+              styles.headerAction,
+              pressed ? styles.pressed : null,
+            ]}
           >
-            <Text style={styles.viewAll}>Ver todas</Text>
+            <SymbolView
+              name={{ ios: 'plus', android: 'add', web: 'add' }}
+              size={15}
+              tintColor={colors.primary}
+            />
+            <Text style={styles.headerActionText}>Añadir</Text>
           </Pressable>
         ) : null}
       </View>
@@ -371,11 +484,7 @@ export function RestaurantPhotosSection({
       ) : null}
 
       {!isLoading && photos.length > 0 ? (
-        <ScrollView
-          contentContainerStyle={styles.photoStrip}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
+        <View style={styles.photoGrid}>
           {photos.map((photo, index) => (
             <Pressable
               accessibilityLabel={`Abrir foto ${index + 1}`}
@@ -383,34 +492,39 @@ export function RestaurantPhotosSection({
               key={photo.id}
               onPress={() => setSelectedPhotoIndex(index)}
               style={({ pressed }) => [
-                styles.thumbnailButton,
+                styles.photoTile,
                 pressed ? styles.pressed : null,
               ]}
             >
-              <Image source={photoSource(photo)} style={styles.thumbnail} />
+              {photoUris[photo.id] ? (
+                <Image
+                  onError={() => handlePhotoRenderError(photo.id)}
+                  resizeMode="cover"
+                  source={{ uri: photoUris[photo.id] }}
+                  style={styles.thumbnail}
+                />
+              ) : photoDownloadErrors[photo.id] ? (
+                <Pressable
+                  accessibilityLabel="Reintentar cargar foto"
+                  accessibilityRole="button"
+                  onPress={() => retryPhotoDownload(photo.id)}
+                  style={styles.photoLoadState}
+                >
+                  <SymbolView
+                    name={{ ios: 'arrow.clockwise', android: 'refresh', web: 'refresh' }}
+                    size={19}
+                    tintColor={colors.primary}
+                  />
+                  <Text style={styles.photoLoadErrorText}>Reintentar</Text>
+                </Pressable>
+              ) : (
+                <View style={styles.photoLoadState}>
+                  <ActivityIndicator color={colors.primary} size="small" />
+                </View>
+              )}
             </Pressable>
           ))}
-
-          {canAddPhotos && photos.length < MAXIMUM_PHOTOS ? (
-            <Pressable
-              accessibilityLabel="Añadir más fotos"
-              accessibilityRole="button"
-              disabled={isPicking || uploadingProgress !== null}
-              onPress={openAddOptions}
-              style={({ pressed }) => [
-                styles.addTile,
-                pressed ? styles.pressed : null,
-              ]}
-            >
-              <SymbolView
-                name={{ ios: 'plus', android: 'add', web: 'add' }}
-                size={23}
-                tintColor={colors.primary}
-              />
-              <Text style={styles.addTileText}>Añadir</Text>
-            </Pressable>
-          ) : null}
-        </ScrollView>
+        </View>
       ) : null}
 
       {uploadingProgress ? (
@@ -482,11 +596,36 @@ export function RestaurantPhotosSection({
               </View>
 
               <View style={styles.galleryImageArea}>
-                <Image
-                  resizeMode="contain"
-                  source={photoSource(selectedPhoto)}
-                  style={styles.galleryImage}
-                />
+                {photoUris[selectedPhoto.id] ? (
+                  <Image
+                    onError={() => handlePhotoRenderError(selectedPhoto.id)}
+                    resizeMode="contain"
+                    source={{ uri: photoUris[selectedPhoto.id] }}
+                    style={styles.galleryImage}
+                  />
+                ) : photoDownloadErrors[selectedPhoto.id] ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => retryPhotoDownload(selectedPhoto.id)}
+                    style={styles.galleryLoadState}
+                  >
+                    <SymbolView
+                      name={{ ios: 'arrow.clockwise', android: 'refresh', web: 'refresh' }}
+                      size={25}
+                      tintColor={colors.white}
+                    />
+                    <Text style={styles.galleryLoadText}>
+                      Reintentar carga
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <View style={styles.galleryLoadState}>
+                    <ActivityIndicator color={colors.white} size="large" />
+                    <Text style={styles.galleryLoadText}>
+                      Cargando foto...
+                    </Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.galleryFooter}>
@@ -550,16 +689,35 @@ const styles = StyleSheet.create({
   heading: {
     minHeight: 24,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: 12,
+  },
+  headingCopy: {
+    flex: 1,
+    gap: 2,
   },
   sectionTitle: {
     color: colors.text,
     fontSize: 17,
     fontFamily: fonts.bold,
   },
-  viewAll: {
+  photoCount: {
+    color: colors.muted,
+    fontSize: 10,
+    fontFamily: fonts.regular,
+  },
+  headerAction: {
+    minHeight: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingHorizontal: 9,
+    borderRadius: 11,
+    backgroundColor: colors.primarySoft,
+  },
+  headerActionText: {
     color: colors.primary,
     fontSize: 10,
     fontFamily: fonts.bold,
@@ -622,36 +780,32 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontFamily: fonts.bold,
   },
-  photoStrip: {
-    gap: 8,
-    paddingRight: 2,
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 7,
   },
-  thumbnailButton: {
+  photoTile: {
     overflow: 'hidden',
-    width: 104,
-    height: 104,
-    borderRadius: 16,
+    width: '31.8%',
+    aspectRatio: 1,
+    borderRadius: 14,
     backgroundColor: colors.surfaceMuted,
   },
   thumbnail: {
     width: '100%',
     height: '100%',
   },
-  addTile: {
-    width: 104,
-    height: 104,
+  photoLoadState: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
+    gap: 4,
   },
-  addTileText: {
+  photoLoadErrorText: {
     color: colors.primary,
-    fontSize: 9,
-    fontFamily: fonts.bold,
+    fontSize: 8,
+    fontFamily: fonts.semiBold,
   },
   progressRow: {
     flexDirection: 'row',
@@ -715,6 +869,17 @@ const styles = StyleSheet.create({
   galleryImage: {
     width: '100%',
     height: '100%',
+  },
+  galleryLoadState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  galleryLoadText: {
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 10,
+    fontFamily: fonts.medium,
   },
   galleryFooter: {
     minHeight: 88,
