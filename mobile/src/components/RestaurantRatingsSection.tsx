@@ -27,6 +27,7 @@ type RestaurantRatingsSectionProps = {
   groupId: string;
   groupRestaurantId: string;
   accessToken: string;
+  onEnsureVisited?: () => Promise<boolean>;
 };
 
 const scores = [1, 2, 3, 4, 5];
@@ -35,6 +36,7 @@ export function RestaurantRatingsSection({
   groupId,
   groupRestaurantId,
   accessToken,
+  onEnsureVisited,
 }: RestaurantRatingsSectionProps) {
   const [summary, setSummary] =
     useState<RestaurantRatingsSummary | null>(null);
@@ -81,6 +83,10 @@ export function RestaurantRatingsSection({
     try {
       setSavingScore(score);
       setErrorMessage(null);
+
+      if (onEnsureVisited && !await onEnsureVisited()) {
+        return;
+      }
 
       const response = await saveRestaurantRating(
         groupId,

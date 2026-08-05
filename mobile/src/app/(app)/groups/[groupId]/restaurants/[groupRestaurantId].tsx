@@ -7,6 +7,7 @@ import {
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -17,6 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RestaurantRatingsSection } from '../../../../../components/RestaurantRatingsSection';
+import { RestaurantPhotosSection } from '../../../../../components/RestaurantPhotosSection';
 import {
   RestaurantStatusSection,
   restaurantStatusPresentation,
@@ -25,7 +27,10 @@ import { useAuth } from '../../../../../contexts/auth-context';
 import { getErrorMessage } from '../../../../../lib/api';
 import { getRestaurantFallbackImage } from '../../../../../lib/restaurant-images';
 import { getGroup } from '../../../../../services/group-service';
-import { getGroupRestaurant } from '../../../../../services/restaurant-service';
+import {
+  getGroupRestaurant,
+  updateGroupRestaurantStatus,
+} from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
 import type { RestaurantGroup } from '../../../../../types/group';
 import type { GroupRestaurant } from '../../../../../types/restaurant';
@@ -93,6 +98,75 @@ export default function RestaurantDetailScreen() {
   const canManageRestaurant =
     group?.currentUserRole === 'OWNER'
     || group?.currentUserRole === 'MEMBER';
+  const isVisited = item
+    ? item.status === 'VISITED'
+      || item.status === 'WANT_TO_REPEAT'
+      || item.status === 'DO_NOT_REPEAT'
+      || item.status === 'FAVORITE'
+    : false;
+
+  const ensureRestaurantVisited = useCallback(async (): Promise<boolean> => {
+    if (!accessToken || !item || !groupId || !groupRestaurantId) {
+      return false;
+    }
+
+    if (
+      item.status === 'VISITED'
+      || item.status === 'WANT_TO_REPEAT'
+      || item.status === 'DO_NOT_REPEAT'
+      || item.status === 'FAVORITE'
+    ) {
+      return true;
+    }
+
+    if (item.status === 'ARCHIVED') {
+      Alert.alert(
+        'Restaurante archivado',
+        'Restáuralo antes de añadir valoraciones o fotos.',
+      );
+      return false;
+    }
+
+    return new Promise(resolve => {
+      Alert.alert(
+        '¿Ya habéis ido?',
+        'Para valorar o guardar fotos, marcaremos el restaurante como visitado.',
+        [
+          {
+            text: 'Todavía no',
+            style: 'cancel',
+            onPress: () => resolve(false),
+          },
+          {
+            text: 'Sí, ya hemos ido',
+            onPress: () => {
+              void (async () => {
+                try {
+                  const updated = await updateGroupRestaurantStatus(
+                    groupId,
+                    groupRestaurantId,
+                    { status: 'VISITED' },
+                    accessToken,
+                  );
+                  setItem(updated);
+                  resolve(true);
+                } catch (requestError) {
+                  Alert.alert(
+                    'No se ha podido actualizar',
+                    getErrorMessage(requestError),
+                  );
+                  resolve(false);
+                }
+              })();
+            },
+          },
+        ],
+        {
+          cancelable: false,
+        },
+      );
+    });
+  }, [accessToken, groupId, groupRestaurantId, item]);
 
   return (
     <SafeAreaView
@@ -273,10 +347,25 @@ export default function RestaurantDetailScreen() {
               </View>
             </View>
 
+            {group.privacy === 'PRIVATE' ? (
+              <RestaurantPhotosSection
+                accessToken={accessToken}
+                canAddPhotos={canManageRestaurant}
+                groupId={groupId}
+                groupRestaurantId={groupRestaurantId}
+                onEnsureVisited={ensureRestaurantVisited}
+              />
+            ) : null}
+
             <RestaurantRatingsSection
               accessToken={accessToken}
               groupId={groupId}
               groupRestaurantId={groupRestaurantId}
+              onEnsureVisited={
+                group.privacy === 'PRIVATE' && canManageRestaurant && !isVisited
+                  ? ensureRestaurantVisited
+                  : undefined
+              }
             />
 
             {canManageRestaurant ? (
