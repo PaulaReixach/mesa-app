@@ -29,6 +29,7 @@ import { getRestaurantFallbackImage } from '../../../../../lib/restaurant-images
 import { getGroup } from '../../../../../services/group-service';
 import {
   getGroupRestaurant,
+  updateGroupRestaurantFavorite,
   updateGroupRestaurantStatus,
 } from '../../../../../services/restaurant-service';
 import { colors } from '../../../../../theme/colors';
@@ -62,6 +63,7 @@ export default function RestaurantDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<RestaurantDetailTab>('summary');
+  const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
 
   const load = useCallback(async () => {
     if (!accessToken || !groupId || !groupRestaurantId) {
@@ -187,6 +189,38 @@ export default function RestaurantDetailScreen() {
     });
   }, [accessToken, groupId, groupRestaurantId, item]);
 
+  async function handleFavoriteChange() {
+    if (
+      !accessToken
+      || !groupId
+      || !groupRestaurantId
+      || !item
+      || isUpdatingFavorite
+    ) {
+      return;
+    }
+
+    try {
+      setIsUpdatingFavorite(true);
+
+      const updated = await updateGroupRestaurantFavorite(
+        groupId,
+        groupRestaurantId,
+        { favorite: !item.favorite },
+        accessToken,
+      );
+
+      setItem(updated);
+    } catch (requestError) {
+      Alert.alert(
+        'No se ha podido actualizar',
+        getErrorMessage(requestError),
+      );
+    } finally {
+      setIsUpdatingFavorite(false);
+    }
+  }
+
   return (
     <SafeAreaView
       edges={['top', 'right', 'bottom', 'left']}
@@ -281,11 +315,68 @@ export default function RestaurantDetailScreen() {
                 style={styles.artwork}
               >
                 <View style={styles.artworkOverlay} />
+                {canManageRestaurant ? (
+                  <Pressable
+                    accessibilityLabel={
+                      item.favorite
+                        ? 'Quitar de favoritos'
+                        : 'Añadir a favoritos'
+                    }
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: item.favorite }}
+                    disabled={isUpdatingFavorite}
+                    hitSlop={8}
+                    onPress={() => void handleFavoriteChange()}
+                    style={({ pressed }) => [
+                      styles.heroFavoriteButton,
+                      item.favorite ? styles.heroFavoriteButtonSelected : null,
+                      pressed ? styles.heroFavoriteButtonPressed : null,
+                    ]}
+                  >
+                    {isUpdatingFavorite ? (
+                      <ActivityIndicator color={colors.white} size="small" />
+                    ) : (
+                      <SymbolView
+                        name={{
+                          ios: item.favorite ? 'heart.fill' : 'heart',
+                          android: item.favorite ? 'favorite' : 'favorite_border',
+                          web: item.favorite ? 'favorite' : 'favorite_border',
+                        }}
+                        size={18}
+                        tintColor={colors.white}
+                      />
+                    )}
+                  </Pressable>
+                ) : item.favorite ? (
+                  <View
+                    accessibilityLabel="Favorito"
+                    style={[
+                      styles.heroFavoriteButton,
+                      styles.heroFavoriteButtonSelected,
+                    ]}
+                  >
+                    <SymbolView
+                      name={{
+                        ios: 'heart.fill',
+                        android: 'favorite',
+                        web: 'favorite',
+                      }}
+                      size={18}
+                      tintColor={colors.white}
+                    />
+                  </View>
+                ) : null}
                 <View style={styles.heroBody}>
                   <Text style={styles.eyebrow}>
                     {restaurant.category?.toUpperCase() ?? 'RESTAURANTE'}
                   </Text>
-                  <Text style={styles.name}>{restaurant.name}</Text>
+                  <Text
+                    ellipsizeMode="tail"
+                    numberOfLines={2}
+                    style={styles.name}
+                  >
+                    {restaurant.name}
+                  </Text>
                   <View style={styles.heroMetaRow}>
                     <View
                       style={[
@@ -297,22 +388,6 @@ export default function RestaurantDetailScreen() {
                         {status.label}
                       </Text>
                     </View>
-                    {item.favorite ? (
-                      <View style={styles.favoriteStatus}>
-                        <SymbolView
-                          name={{
-                            ios: 'heart.fill',
-                            android: 'favorite',
-                            web: 'favorite',
-                          }}
-                          size={11}
-                          tintColor={colors.white}
-                        />
-                        <Text style={styles.favoriteStatusText}>
-                          Favorito
-                        </Text>
-                      </View>
-                    ) : null}
                   </View>
                 </View>
               </ImageBackground>
@@ -371,7 +446,11 @@ export default function RestaurantDetailScreen() {
                         <Text style={styles.infoLabel}>
                           Ubicación
                         </Text>
-                        <Text style={styles.infoValue}>
+                        <Text
+                          ellipsizeMode="tail"
+                          numberOfLines={3}
+                          style={styles.infoValue}
+                        >
                           {location || 'Sin ubicación disponible'}
                         </Text>
                       </View>
@@ -490,6 +569,27 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(31, 22, 18, 0.42)',
   },
+  heroFavoriteButton: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    zIndex: 1,
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: 19,
+    backgroundColor: 'rgba(31, 22, 18, 0.5)',
+  },
+  heroFavoriteButtonSelected: {
+    borderColor: 'rgba(255, 255, 255, 0.55)',
+    backgroundColor: colors.primary,
+  },
+  heroFavoriteButtonPressed: {
+    opacity: 0.72,
+  },
   heroBody: {
     alignItems: 'flex-start',
     gap: 6,
@@ -521,20 +621,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   statusText: {
-    fontSize: 9,
-    fontFamily: fonts.bold,
-  },
-  favoriteStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 999,
-    backgroundColor: 'rgba(35, 30, 27, 0.48)',
-  },
-  favoriteStatusText: {
-    color: colors.white,
     fontSize: 9,
     fontFamily: fonts.bold,
   },

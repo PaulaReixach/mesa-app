@@ -11,7 +11,6 @@ import {
 
 import { getErrorMessage } from '../lib/api';
 import {
-  updateGroupRestaurantFavorite,
   updateGroupRestaurantStatus,
 } from '../services/restaurant-service';
 import { colors } from '../theme/colors';
@@ -93,15 +92,12 @@ export function RestaurantStatusSection({
     setUpdatingStatus,
   ] = useState<GroupRestaurantStatus | null>(null);
 
-  const [isUpdatingFavorite, setIsUpdatingFavorite] =
-    useState(false);
-
   const [updateError, setUpdateError] =
     useState<string | null>(null);
 
   const isArchived = groupRestaurant.status === 'ARCHIVED';
   const isVisited = isVisitedStatus(groupRestaurant.status);
-  const isBusy = updatingStatus !== null || isUpdatingFavorite;
+  const isBusy = updatingStatus !== null;
 
   async function handleStatusChange(
     status: GroupRestaurantStatus,
@@ -127,31 +123,6 @@ export function RestaurantStatusSection({
       setUpdateError(getErrorMessage(error));
     } finally {
       setUpdatingStatus(null);
-    }
-  }
-
-  async function handleFavoriteChange() {
-    if (isBusy) {
-      return;
-    }
-
-    try {
-      setUpdateError(null);
-      setIsUpdatingFavorite(true);
-
-      const updatedRestaurant =
-        await updateGroupRestaurantFavorite(
-          groupId,
-          groupRestaurant.id,
-          { favorite: !groupRestaurant.favorite },
-          accessToken,
-        );
-
-      onUpdated(updatedRestaurant);
-    } catch (error) {
-      setUpdateError(getErrorMessage(error));
-    } finally {
-      setIsUpdatingFavorite(false);
     }
   }
 
@@ -275,51 +246,6 @@ export function RestaurantStatusSection({
         </View>
       ) : (
         <>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: groupRestaurant.favorite }}
-            disabled={isBusy}
-            onPress={() => void handleFavoriteChange()}
-            style={({ pressed }) => [
-              styles.favoriteAction,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <View
-              style={[
-                styles.favoriteIcon,
-                groupRestaurant.favorite
-                  ? styles.favoriteIconSelected
-                  : null,
-              ]}
-            >
-              {isUpdatingFavorite ? (
-                <ActivityIndicator color={colors.primary} size="small" />
-              ) : (
-                <SymbolView
-                  name={{
-                    ios: groupRestaurant.favorite ? 'heart.fill' : 'heart',
-                    android: groupRestaurant.favorite ? 'favorite' : 'favorite_border',
-                    web: groupRestaurant.favorite ? 'favorite' : 'favorite_border',
-                  }}
-                  size={20}
-                  tintColor={colors.primary}
-                />
-              )}
-            </View>
-            <View style={styles.favoriteCopy}>
-              <Text style={styles.favoriteTitle}>Favorito</Text>
-              <Text style={styles.favoriteDescription}>
-                {groupRestaurant.favorite
-                  ? 'Guardado entre los favoritos del grupo.'
-                  : 'Márcalo si es uno de vuestros imprescindibles.'}
-              </Text>
-            </View>
-            <Text style={styles.favoriteState}>
-              {groupRestaurant.favorite ? 'Sí' : 'No'}
-            </Text>
-          </Pressable>
-
           <View style={styles.controlBlock}>
             <View style={styles.controlHeading}>
               <Text style={styles.controlTitle}>Situación</Text>
@@ -447,47 +373,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 16,
-  },
-  favoriteAction: {
-    minHeight: 62,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    paddingVertical: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  favoriteIcon: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 20,
-    backgroundColor: colors.surfaceMuted,
-  },
-  favoriteIconSelected: {
-    backgroundColor: '#FBE9E2',
-  },
-  favoriteCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  favoriteTitle: {
-    color: colors.text,
-    fontSize: 13,
-    fontFamily: fonts.bold,
-  },
-  favoriteDescription: {
-    color: colors.muted,
-    fontSize: 10,
-    lineHeight: 14,
-    fontFamily: fonts.regular,
-  },
-  favoriteState: {
-    color: colors.primary,
-    fontSize: 11,
-    fontFamily: fonts.bold,
   },
   controlBlock: {
     gap: 9,

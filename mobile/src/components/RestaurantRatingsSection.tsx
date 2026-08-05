@@ -180,9 +180,14 @@ export function RestaurantRatingsSection({
                   </Text>
                 </View>
               ) : (
-                <Text style={styles.noRatings}>
-                  Sin valoraciones todavía
-                </Text>
+                <View style={styles.noRatingsCopy}>
+                  <Text style={styles.noRatings}>
+                    Sin valoraciones todavía
+                  </Text>
+                  <Text style={styles.noRatingsHint}>
+                    Sé la primera persona del grupo en puntuarlo.
+                  </Text>
+                </View>
               )}
             </View>
           </View>
@@ -415,6 +420,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: fonts.bold,
   },
+  noRatingsCopy: {
+    gap: 2,
+  },
+  noRatingsHint: {
+    color: colors.muted,
+    fontSize: 9,
+    lineHeight: 13,
+    fontFamily: fonts.regular,
+  },
   myRating: {
     gap: 11,
     padding: 14,
@@ -467,9 +481,9 @@ const styles = StyleSheet.create({
     color: '#E6A72E',
   },
   deleteRatingText: {
-    color: colors.danger,
-    fontSize: 10,
-    fontFamily: fonts.semiBold,
+    color: colors.muted,
+    fontSize: 9,
+    fontFamily: fonts.regular,
     textAlign: 'center',
   },
   memberRatings: {
