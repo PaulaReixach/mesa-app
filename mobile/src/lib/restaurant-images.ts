@@ -1,8 +1,7 @@
 import { restaurantFallbackImages } from '../constants/restaurant-fallback-images';
 
-export function getRestaurantFallbackImage(name: string): string {
+function pickFallbackImage(name: string, images: readonly string[]): string {
   const normalizedName = name.trim() || 'restaurant';
-  const images: readonly string[] = restaurantFallbackImages;
 
   if (images.length === 0) {
     return '';
@@ -14,4 +13,12 @@ export function getRestaurantFallbackImage(name: string): string {
   ) % images.length;
 
   return images[index];
+}
+
+export function getRestaurantFallbackImage(name: string): string {
+  return pickFallbackImage(name, restaurantFallbackImages);
+}
+
+export function getRestaurantInteriorFallbackImage(name: string): string {
+  return pickFallbackImage(name, restaurantFallbackImages.slice(0, 2));
 }

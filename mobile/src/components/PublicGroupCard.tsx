@@ -11,7 +11,6 @@ import { resolveApiUrl } from '../lib/api';
 import { colors } from '../theme/colors';
 import type { PublicGroupSummary } from '../types/group';
 import { fonts } from '../theme/fonts';
-import { radii, shadows } from '../theme/layout';
 
 type PublicGroupCardProps = {
   group: PublicGroupSummary;
@@ -51,24 +50,29 @@ export function PublicGroupCard({
       </View>
 
       <View style={styles.content}>
-        <View style={styles.titleRow}>
-          <Text
-            numberOfLines={2}
-            style={styles.title}
-          >
-            {group.name}
+        <Text
+          numberOfLines={1}
+          style={styles.title}
+        >
+          {group.name}
+        </Text>
+
+        <View style={styles.ownerRow}>
+          <Text numberOfLines={1} style={styles.owner}>
+            por @{group.owner.username}
           </Text>
 
           {group.following ? (
-            <View style={styles.followingBadge}>
+            <View style={styles.followingState}>
+              <View style={styles.metaDot} />
               <SymbolView
                 name={{
                   ios: 'checkmark',
                   android: 'check',
                   web: 'check',
                 }}
-                size={12}
-                tintColor="#607349"
+                size={11}
+                tintColor={colors.olive}
               />
               <Text style={styles.followingText}>
                 Siguiendo
@@ -76,10 +80,6 @@ export function PublicGroupCard({
             </View>
           ) : null}
         </View>
-
-        <Text style={styles.owner}>
-          por @{group.owner.username}
-        </Text>
 
         <View style={styles.metaRow}>
           <Text style={styles.metaText}>
@@ -130,26 +130,22 @@ export function PublicGroupCard({
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 116,
+    minHeight: 100,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 13,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.xl,
-    backgroundColor: colors.surface,
-    ...shadows.card,
+    gap: 12,
+    paddingVertical: 11,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
   cardPressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.995 }],
+    opacity: 0.7,
   },
   imageContainer: {
-    width: 88,
-    height: 88,
+    width: 76,
+    height: 76,
     overflow: 'hidden',
-    borderRadius: radii.lg,
+    borderRadius: 14,
     backgroundColor: colors.primarySoft,
   },
   image: {
@@ -163,28 +159,29 @@ const styles = StyleSheet.create({
   },
   imageInitial: {
     color: colors.primary,
-    fontSize: 30,
+    fontSize: 26,
     fontFamily: fonts.bold,
   },
   content: {
     flex: 1,
-    gap: 5,
+    minWidth: 0,
+    gap: 4,
   },
-  titleRow: {
+  ownerRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 6,
   },
   title: {
-    flex: 1,
     color: colors.text,
     fontSize: 15,
     lineHeight: 19,
     fontFamily: fonts.bold,
   },
   owner: {
+    maxWidth: '66%',
     color: colors.primary,
-    fontSize: 9,
+    fontSize: 10,
     fontFamily: fonts.semiBold,
   },
   metaRow: {
@@ -201,7 +198,7 @@ const styles = StyleSheet.create({
   metaText: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 8,
+    fontSize: 9.5,
   },
   locationRow: {
     flexDirection: 'row',
@@ -211,20 +208,16 @@ const styles = StyleSheet.create({
   locationText: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 8,
+    fontSize: 9.5,
   },
-  followingBadge: {
+  followingState: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: colors.oliveSoft,
   },
   followingText: {
-    color: '#607349',
-    fontSize: 8,
-    fontFamily: fonts.bold,
+    color: colors.olive,
+    fontSize: 9.5,
+    fontFamily: fonts.semiBold,
   },
 });

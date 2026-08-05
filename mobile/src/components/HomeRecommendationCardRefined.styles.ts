@@ -5,21 +5,21 @@ import { fonts } from '../theme/fonts';
 
 export const recommendationStyles = StyleSheet.create({
   card: {
-    height: 84,
+    minHeight: 96,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 13,
-    padding: 8,
+    gap: 11,
+    padding: 9,
     borderWidth: 1,
-    borderColor: '#E2D7D1',
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceElevated,
   },
   artwork: {
-    width: 91,
-    height: 68,
+    width: 76,
+    height: 76,
     overflow: 'hidden',
-    borderRadius: 12,
+    borderRadius: 14,
   },
   image: {
     width: '100%',
@@ -28,45 +28,40 @@ export const recommendationStyles = StyleSheet.create({
   copy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
-  },
-  eyebrow: {
-    color: '#D34A2B',
-    fontFamily: fonts.medium,
-    fontSize: 9,
-    lineHeight: 12,
+    gap: 4,
   },
   title: {
     color: colors.text,
     fontFamily: fonts.bold,
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 17,
+    lineHeight: 21,
   },
-  location: {
-    color: colors.text,
+  meta: {
+    color: colors.mutedStrong,
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  savedLabel: {
+    color: colors.olive,
     fontFamily: fonts.medium,
     fontSize: 10,
-    lineHeight: 13,
+    lineHeight: 14,
   },
-  description: {
-    color: colors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-  trailing: {
-    alignItems: 'flex-end',
-  },
-  statusPill: {
-    paddingHorizontal: 9,
+  scorePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#E8EEDC',
+    backgroundColor: colors.oliveSoft,
   },
-  statusText: {
+  scoreText: {
     color: '#5E714A',
-    fontFamily: fonts.medium,
-    fontSize: 8,
+    fontFamily: fonts.semiBold,
+    fontSize: 10,
+    lineHeight: 13,
   },
   pressed: {
     opacity: 0.8,

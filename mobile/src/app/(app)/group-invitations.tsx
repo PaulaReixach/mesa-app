@@ -260,25 +260,27 @@ export default function GroupInvitationsScreen() {
             </Text>
           </View>
 
-          <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor: presentation.backgroundColor,
-              },
-            ]}
-          >
-            <Text
+          {invitation.status !== 'PENDING' ? (
+            <View
               style={[
-                styles.statusText,
+                styles.statusBadge,
                 {
-                  color: presentation.textColor,
+                  backgroundColor: presentation.backgroundColor,
                 },
               ]}
             >
-              {presentation.label}
-            </Text>
-          </View>
+              <Text
+                style={[
+                  styles.statusText,
+                  {
+                    color: presentation.textColor,
+                  },
+                ]}
+              >
+                {presentation.label}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.cardMeta}>
@@ -402,12 +404,8 @@ export default function GroupInvitationsScreen() {
         </View>
 
         <View style={styles.heading}>
-          <Text style={styles.title}>
-            Invitaciones a grupos
-          </Text>
           <Text style={styles.subtitle}>
-            Acepta para empezar a formar parte del grupo o rechaza
-            las invitaciones que no te interesen.
+            Gestiona las invitaciones a tus grupos.
           </Text>
         </View>
 
@@ -514,12 +512,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   heading: {
-    gap: 7,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 27,
-    fontFamily: fonts.bold,
+    paddingHorizontal: 2,
   },
   subtitle: {
     color: colors.muted,
@@ -543,11 +536,11 @@ const styles = StyleSheet.create({
     gap: 11,
   },
   invitationCard: {
-    gap: 13,
-    padding: 15,
+    gap: 11,
+    padding: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: 18,
     backgroundColor: colors.surface,
   },
   cardHeader: {
@@ -556,11 +549,11 @@ const styles = StyleSheet.create({
     gap: 11,
   },
   groupIcon: {
-    width: 46,
-    height: 46,
+    width: 42,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 15,
+    borderRadius: 14,
     backgroundColor: '#FBE9E2',
   },
   cardTitleContent: {
@@ -609,7 +602,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 42,
+    minHeight: 40,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 14,
@@ -624,7 +617,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 42,
+    minHeight: 40,
     borderRadius: 14,
     backgroundColor: colors.primary,
   },
@@ -634,7 +627,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   openButton: {
-    minHeight: 42,
+    minHeight: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

@@ -29,8 +29,8 @@ type GroupHeroProps = {
   imageUri: string | null;
   fallbackInitial: string;
   onBack: () => void;
-  onShare: () => void;
-  onMenu: () => void;
+  onShare?: () => void;
+  onMenu?: () => void;
 };
 
 export function GroupHero({
@@ -82,26 +82,32 @@ export function GroupHero({
           onPress={onBack}
         />
 
-        <View style={styles.heroNavigationRight}>
-          <RoundHeroButton
-            accessibilityLabel="Compartir grupo"
-            icon={{
-              ios: 'square.and.arrow.up',
-              android: 'share',
-              web: 'share',
-            }}
-            onPress={onShare}
-          />
-          <RoundHeroButton
-            accessibilityLabel="Más opciones"
-            icon={{
-              ios: 'ellipsis',
-              android: 'more_horiz',
-              web: 'more_horiz',
-            }}
-            onPress={onMenu}
-          />
-        </View>
+        {onShare || onMenu ? (
+          <View style={styles.heroNavigationRight}>
+            {onShare ? (
+              <RoundHeroButton
+                accessibilityLabel="Compartir grupo"
+                icon={{
+                  ios: 'square.and.arrow.up',
+                  android: 'share',
+                  web: 'share',
+                }}
+                onPress={onShare}
+              />
+            ) : null}
+            {onMenu ? (
+              <RoundHeroButton
+                accessibilityLabel="Más opciones"
+                icon={{
+                  ios: 'ellipsis',
+                  android: 'more_horiz',
+                  web: 'more_horiz',
+                }}
+                onPress={onMenu}
+              />
+            ) : null}
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -518,6 +524,89 @@ export function GroupRestaurantListCard({
     ? '—'
     : item.averageScore.toFixed(1).replace('.', ',');
 
+  if (mode === 'private') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.privateRestaurantRow,
+          pressed ? styles.pressed : null,
+        ]}
+      >
+        <Image
+          resizeMode="cover"
+          source={{ uri: fallbackImageFor(item.restaurant.name) }}
+          style={styles.privateRestaurantImage}
+        />
+
+        <View style={styles.privateRestaurantContent}>
+          <View style={styles.privateRestaurantTitleRow}>
+            <Text
+              numberOfLines={1}
+              style={styles.privateRestaurantName}
+            >
+              {item.restaurant.name}
+            </Text>
+
+            {item.averageScore == null ? (
+              <Text style={styles.privateUnrated}>Sin valorar</Text>
+            ) : (
+              <View style={styles.privateRating}>
+                <Text style={styles.privateRatingStar}>★</Text>
+                <Text style={styles.privateRatingValue}>{average}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.privateRestaurantMetaRow}>
+            <Text
+              numberOfLines={1}
+              style={styles.privateRestaurantCategory}
+            >
+              {item.restaurant.category ?? 'Restaurante'}
+            </Text>
+            <Text style={styles.privateMetaSeparator}>·</Text>
+            <View style={styles.privateStatus}>
+              <View
+                style={[
+                  styles.privateStatusDot,
+                  { backgroundColor: status.text },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.privateStatusText,
+                  { color: status.text },
+                ]}
+              >
+                {status.label}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.privateRestaurantLocationRow}>
+            <SymbolView
+              name={{
+                ios: 'mappin',
+                android: 'location_on',
+                web: 'location_on',
+              }}
+              size={12}
+              tintColor={colors.muted}
+            />
+            <Text
+              numberOfLines={1}
+              style={styles.privateRestaurantLocation}
+            >
+              {location || 'Sin ubicación'}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -557,30 +646,12 @@ export function GroupRestaurantListCard({
       </View>
 
       <View style={styles.restaurantTrailing}>
-        {mode === 'private' ? (
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: status.background },
-            ]}
-          >
-            <Text
-              style={[
-                styles.statusText,
-                { color: status.text },
-              ]}
-            >
-              {status.label}
-            </Text>
-          </View>
-        ) : null}
-
         <View style={styles.ratingPill}>
           <Text style={styles.ratingStar}>★</Text>
           <Text style={styles.ratingValue}>{average}</Text>
         </View>
 
-        {mode === 'public' && item.ratingsCount > 0 ? (
+        {item.ratingsCount > 0 ? (
           <Text style={styles.ratingCount}>
             {item.ratingsCount} valoraciones
           </Text>
@@ -1026,6 +1097,101 @@ const styles = StyleSheet.create({
   },
   infoActionTextGreen: {
     color: '#617C3A',
+  },
+  privateRestaurantRow: {
+    minHeight: 84,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 9,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  privateRestaurantImage: {
+    width: 64,
+    height: 64,
+    flexShrink: 0,
+    borderRadius: 13,
+    backgroundColor: '#E8DED8',
+  },
+  privateRestaurantContent: {
+    flex: 1,
+    minWidth: 0,
+    gap: 5,
+  },
+  privateRestaurantTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  privateRestaurantName: {
+    flex: 1,
+    minWidth: 0,
+    color: colors.text,
+    fontSize: 12,
+    fontFamily: fonts.bold,
+  },
+  privateRestaurantMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
+    gap: 5,
+  },
+  privateRestaurantCategory: {
+    maxWidth: '55%',
+    color: colors.muted,
+    fontSize: 9,
+    fontFamily: fonts.semiBold,
+  },
+  privateMetaSeparator: {
+    color: colors.border,
+    fontSize: 10,
+    fontFamily: fonts.regular,
+  },
+  privateStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  privateStatusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+  },
+  privateStatusText: {
+    fontSize: 9,
+    fontFamily: fonts.semiBold,
+  },
+  privateRestaurantLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  privateRestaurantLocation: {
+    flex: 1,
+    color: colors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 8,
+  },
+  privateRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  privateRatingStar: {
+    color: '#D99A25',
+    fontSize: 10,
+    fontFamily: fonts.regular,
+  },
+  privateRatingValue: {
+    color: colors.text,
+    fontSize: 9,
+    fontFamily: fonts.bold,
+  },
+  privateUnrated: {
+    color: colors.muted,
+    fontSize: 8,
+    fontFamily: fonts.semiBold,
   },
   restaurantCard: {
     minHeight: 88,

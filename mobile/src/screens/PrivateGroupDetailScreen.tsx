@@ -1,16 +1,17 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
-  Share,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GroupActivityTab } from '../components/GroupActivityTab';
 import {
@@ -21,12 +22,15 @@ import {
   GroupRestaurantListCard,
   GroupStat,
   GroupTabs,
-  MemberPreview,
   PrimaryGroupAction,
 } from '../components/GroupDetailPrimitivesTuned';
 import { GroupMembersTab } from '../components/GroupMembersTab';
 import { useAuth } from '../contexts/auth-context';
 import { getErrorMessage, resolveApiUrl } from '../lib/api';
+import {
+  getGroupRestaurantSectionItems,
+  type GroupRestaurantSectionKey,
+} from '../lib/group-restaurant-list';
 import { getGroupInvitations } from '../services/group-invitation-service';
 import {
   getGroupMembers,
@@ -36,6 +40,7 @@ import { getGroup } from '../services/group-service';
 import { getRestaurantProposalPendingCount } from '../services/restaurant-proposal-service';
 import { getGroupRestaurants } from '../services/restaurant-service';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import type {
   PublicGroupOwner,
   RestaurantGroup,
@@ -52,8 +57,12 @@ const tabs = [
 ];
 
 export default function PrivateGroupDetailScreen() {
-  const { groupId } = useLocalSearchParams<{ groupId: string }>();
-  const { accessToken, user } = useAuth();
+  const { groupId, created } = useLocalSearchParams<{
+    groupId: string;
+    created?: string;
+  }>();
+  const { accessToken } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [group, setGroup] = useState<RestaurantGroup | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -64,6 +73,28 @@ export default function PrivateGroupDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCreatedBanner, setShowCreatedBanner] =
+    useState(created === '1');
+
+  useEffect(() => {
+    if (
+      !showCreatedBanner
+      || loading
+      || !group
+    ) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setShowCreatedBanner(false);
+    }, 3500);
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    group,
+    loading,
+    showCreatedBanner,
+  ]);
 
   const load = useCallback(async (
     isRefresh = false,
@@ -131,11 +162,34 @@ export default function PrivateGroupDetailScreen() {
     router.replace(`/groups/public/${groupId}` as Href);
   }, [group?.currentUserRole, group?.privacy, groupId]);
 
-  const isOwner = Boolean(group && user?.id === group.ownerUserId);
+  const isOwner = group?.currentUserRole === 'OWNER';
+  const canAddRestaurant = Boolean(
+    group
+    && (
+      group.currentUserRole === 'OWNER'
+      || group.currentUserRole === 'MEMBER'
+    ),
+  );
   const groupImageUri = group?.imageUrl
     ? resolveApiUrl(group.imageUrl)
     : null;
-  const previewRestaurants = restaurants.slice(0, 3);
+  const restaurantSections = [
+    {
+      key: 'pending' as const,
+      title: 'Pendientes',
+      items: getGroupRestaurantSectionItems(restaurants, 'pending'),
+    },
+    {
+      key: 'visited' as const,
+      title: 'Visitados',
+      items: getGroupRestaurantSectionItems(restaurants, 'visited'),
+    },
+    {
+      key: 'archived' as const,
+      title: 'Archivados',
+      items: getGroupRestaurantSectionItems(restaurants, 'archived'),
+    },
+  ].filter(section => section.items.length > 0);
   const ownerMember = members.find(member => member.role === 'OWNER');
   const activityOwner: PublicGroupOwner | null = group
     ? {
@@ -145,22 +199,6 @@ export default function PrivateGroupDetailScreen() {
         avatarUrl: ownerMember?.avatarUrl ?? null,
       }
     : null;
-
-  const thirdStat = useMemo(() => {
-    if (isOwner) {
-      return {
-        kind: 'invitations' as const,
-        value: pendingInvitationCount,
-        label: 'invitaciones',
-      };
-    }
-
-    return {
-      kind: 'members' as const,
-      value: members.length,
-      label: 'personas',
-    };
-  }, [isOwner, members.length, pendingInvitationCount]);
 
   function openCreateRestaurant(): void {
     router.push({
@@ -200,18 +238,13 @@ export default function PrivateGroupDetailScreen() {
     });
   }
 
-  async function shareGroup(): Promise<void> {
-    if (!group) {
-      return;
-    }
-
-    try {
-      await Share.share({
-        message: `Descubre “${group.name}” en Mesa.`,
-      });
-    } catch (shareError) {
-      Alert.alert('No se ha podido compartir', getErrorMessage(shareError));
-    }
+  function openRestaurantSection(
+    section: GroupRestaurantSectionKey,
+  ): void {
+    router.push({
+      pathname: '/groups/[groupId]/restaurants',
+      params: { groupId, section },
+    });
   }
 
   function openMenu(): void {
@@ -222,16 +255,11 @@ export default function PrivateGroupDetailScreen() {
     Alert.alert(
       group.name,
       undefined,
-      isOwner
-        ? [
-            { text: 'Editar grupo', onPress: openEdit },
-            { text: 'Invitar personas', onPress: openInvitations },
-            { text: 'Cancelar', style: 'cancel' },
-          ]
-        : [
-            { text: 'Compartir grupo', onPress: () => void shareGroup() },
-            { text: 'Cancelar', style: 'cancel' },
-          ],
+      [
+        { text: 'Editar grupo', onPress: openEdit },
+        { text: 'Invitar personas', onPress: openInvitations },
+        { text: 'Cancelar', style: 'cancel' },
+      ],
     );
   }
 
@@ -299,7 +327,12 @@ export default function PrivateGroupDetailScreen() {
       style={styles.safeArea}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          activeTab === 'activity'
+            ? { paddingBottom: insets.bottom + 28 }
+            : null,
+        ]}
         refreshControl={(
           <RefreshControl
             onRefresh={() => void load(true)}
@@ -321,8 +354,7 @@ export default function PrivateGroupDetailScreen() {
               fallbackInitial={group.name.charAt(0).toUpperCase()}
               imageUri={groupImageUri}
               onBack={() => router.back()}
-              onMenu={openMenu}
-              onShare={() => void shareGroup()}
+              onMenu={isOwner ? openMenu : undefined}
             />
 
             <View style={styles.sheet}>
@@ -338,22 +370,28 @@ export default function PrivateGroupDetailScreen() {
                 <View style={styles.statsRow}>
                   <GroupStat
                     kind="restaurants"
-                    label="restaurantes"
+                    label={restaurants.length === 1
+                      ? 'restaurante'
+                      : 'restaurantes'}
                     value={restaurants.length}
                   />
                   <GroupStat
                     kind="members"
-                    label="miembros"
+                    label={members.length === 1 ? 'miembro' : 'miembros'}
                     value={members.length}
                   />
-                  <GroupStat
-                    kind={thirdStat.kind}
-                    label={thirdStat.label}
-                    value={thirdStat.value}
-                  />
+                  {isOwner ? (
+                    <GroupStat
+                      kind="invitations"
+                      label={pendingInvitationCount === 1
+                        ? 'invitación'
+                        : 'invitaciones'}
+                      value={pendingInvitationCount}
+                    />
+                  ) : null}
                 </View>
 
-                {isOwner ? (
+                {canAddRestaurant ? (
                   <View style={styles.actionsRow}>
                     <View style={styles.mainAction}>
                       <PrimaryGroupAction
@@ -366,19 +404,34 @@ export default function PrivateGroupDetailScreen() {
                         title="Añadir restaurante"
                       />
                     </View>
-                    <View style={styles.secondaryAction}>
-                      <PrimaryGroupAction
-                        icon={{
-                          ios: 'person.badge.plus',
-                          android: 'person_add',
-                          web: 'person_add',
-                        }}
-                        onPress={openInvitations}
-                        outline
-                        title="Invitar"
-                      />
-                    </View>
+                    {isOwner ? (
+                      <View style={styles.secondaryAction}>
+                        <PrimaryGroupAction
+                          icon={{
+                            ios: 'person.badge.plus',
+                            android: 'person_add',
+                            web: 'person_add',
+                          }}
+                          onPress={openInvitations}
+                          outline
+                          title="Invitar"
+                        />
+                      </View>
+                    ) : null}
                   </View>
+                ) : null}
+
+                {showCreatedBanner ? (
+                  <GroupInfoBanner
+                    icon={{
+                      ios: 'checkmark.circle.fill',
+                      android: 'check_circle',
+                      web: 'check_circle',
+                    }}
+                    subtitle="Ya podéis empezar a guardar restaurantes."
+                    title="Grupo creado"
+                    tone="green"
+                  />
                 ) : null}
               </View>
 
@@ -425,7 +478,7 @@ export default function PrivateGroupDetailScreen() {
                       />
                     ) : null}
 
-                    {previewRestaurants.length === 0 ? (
+                    {restaurants.length === 0 ? (
                       <EmptyTab
                         icon={{
                           ios: 'fork.knife',
@@ -436,26 +489,50 @@ export default function PrivateGroupDetailScreen() {
                         title="Todavía no hay restaurantes"
                       />
                     ) : (
-                      <View style={styles.restaurantList}>
-                        {previewRestaurants.map(item => (
-                          <GroupRestaurantListCard
-                            item={item}
-                            key={item.id}
-                            mode="private"
-                            onPress={() => openRestaurant(item)}
-                          />
+                      <View style={styles.restaurantSections}>
+                        {restaurantSections.map(section => (
+                          <View
+                            key={section.key}
+                            style={styles.restaurantSection}
+                          >
+                            <Pressable
+                              accessibilityLabel={`Ver todos los restaurantes ${section.title.toLowerCase()}`}
+                              accessibilityRole="button"
+                              hitSlop={6}
+                              onPress={() => openRestaurantSection(section.key)}
+                              style={({ pressed }) => [
+                                styles.restaurantSectionHeader,
+                                pressed ? styles.restaurantSectionHeaderPressed : null,
+                              ]}
+                            >
+                              <View style={styles.restaurantSectionHeading}>
+                                <Text style={styles.restaurantSectionTitle}>
+                                  {section.title}
+                                </Text>
+                                <Text style={styles.restaurantSectionCount}>
+                                  {section.items.length}
+                                </Text>
+                              </View>
+                              <Text style={styles.restaurantSectionAction}>
+                                Ver todos ›
+                              </Text>
+                            </Pressable>
+
+                            <View style={styles.restaurantList}>
+                              {section.items.slice(0, 3).map(item => (
+                                <GroupRestaurantListCard
+                                  item={item}
+                                  key={item.id}
+                                  mode="private"
+                                  onPress={() => openRestaurant(item)}
+                                />
+                              ))}
+                            </View>
+                          </View>
                         ))}
                       </View>
                     )}
 
-                    {members.length > 0 ? (
-                      <MemberPreview
-                        actionLabel={`Ver todos (${members.length})`}
-                        members={members}
-                        onAction={() => setActiveTab('members')}
-                        title="Miembros del grupo"
-                      />
-                    ) : null}
                   </>
                 ) : null}
 
@@ -466,6 +543,7 @@ export default function PrivateGroupDetailScreen() {
                     onManageInvitations={openInvitations}
                     onMemberPress={openMember}
                     pendingInvitationCount={pendingInvitationCount}
+                    plain
                     privacy={group.privacy}
                   />
                 ) : null}
@@ -475,6 +553,7 @@ export default function PrivateGroupDetailScreen() {
                     groupCreatedAt={group.createdAt}
                     members={members}
                     owner={activityOwner}
+                    plain
                     restaurants={restaurants}
                   />
                 ) : null}
@@ -510,14 +589,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   summary: {
-    gap: 13,
+    gap: 11,
     paddingHorizontal: 18,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingTop: 17,
+    paddingBottom: 10,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 8,
+    paddingVertical: 9,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -530,11 +612,46 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabContent: {
-    gap: 10,
+    gap: 14,
     paddingHorizontal: 18,
-    paddingTop: 12,
+    paddingTop: 14,
   },
   restaurantList: {
     gap: 6,
+  },
+  restaurantSections: {
+    gap: 20,
+  },
+  restaurantSection: {
+    gap: 6,
+  },
+  restaurantSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 24,
+  },
+  restaurantSectionHeaderPressed: {
+    opacity: 0.64,
+  },
+  restaurantSectionHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  restaurantSectionTitle: {
+    color: colors.text,
+    fontSize: 14,
+    fontFamily: fonts.bold,
+  },
+  restaurantSectionCount: {
+    color: colors.muted,
+    fontSize: 11,
+    fontFamily: fonts.medium,
+  },
+  restaurantSectionAction: {
+    color: colors.primary,
+    fontSize: 9,
+    fontFamily: fonts.bold,
   },
 });

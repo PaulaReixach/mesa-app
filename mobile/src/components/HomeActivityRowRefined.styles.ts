@@ -5,23 +5,23 @@ import { fonts } from '../theme/fonts';
 
 export const activityStyles = StyleSheet.create({
   row: {
-    minHeight: 40,
+    minHeight: 54,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,
-    paddingHorizontal: 13,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5DAD4',
-    backgroundColor: '#FFFFFF',
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
   },
   avatar: {
-    width: 28,
-    height: 28,
+    width: 34,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 14,
+    borderRadius: 17,
     backgroundColor: '#F5DDD5',
   },
   avatarImage: {
@@ -30,8 +30,8 @@ export const activityStyles = StyleSheet.create({
   },
   avatarInitial: {
     color: '#C94B2E',
-    fontFamily: fonts.medium,
-    fontSize: 12,
+    fontFamily: fonts.semiBold,
+    fontSize: 13,
   },
   copy: {
     flex: 1,
@@ -40,8 +40,8 @@ export const activityStyles = StyleSheet.create({
   sentence: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: 11,
+    lineHeight: 16,
   },
   actor: {
     color: '#D34A2B',
@@ -59,5 +59,6 @@ export const activityStyles = StyleSheet.create({
     color: colors.muted,
     fontFamily: fonts.regular,
     fontSize: 9,
+    lineHeight: 13,
   },
 });

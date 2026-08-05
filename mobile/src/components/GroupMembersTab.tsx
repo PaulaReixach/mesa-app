@@ -28,6 +28,7 @@ type Props = {
   canManageInvitations?: boolean;
   onManageInvitations?: () => void;
   onMemberPress?: (member: GroupMember) => void;
+  plain?: boolean;
 };
 
 export function GroupMembersTab({
@@ -37,6 +38,7 @@ export function GroupMembersTab({
   canManageInvitations = false,
   onManageInvitations,
   onMemberPress,
+  plain = false,
 }: Props) {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const { accessToken, user } = useAuth();
@@ -98,21 +100,24 @@ export function GroupMembersTab({
         <Text style={styles.headingTitle}>Miembros del grupo</Text>
       </View>
 
-      <View style={styles.list}>
+      <View style={[styles.list, plain ? styles.listPlain : null]}>
         {members.map(member => (
           <GroupMemberRow
             key={member.id}
             member={member}
             onPress={onMemberPress ? () => onMemberPress(member) : undefined}
+            plain={plain}
             privacy={privacy}
           />
         ))}
       </View>
 
-      <GroupMembersSummary
-        participantCount={participantCount}
-        privacy={privacy}
-      />
+      {!plain ? (
+        <GroupMembersSummary
+          participantCount={participantCount}
+          privacy={privacy}
+        />
+      ) : null}
 
       {canLeavePrivateGroup ? (
         <GroupExitAction
@@ -134,4 +139,5 @@ const styles = StyleSheet.create({
   heading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headingTitle: { flex: 1, color: colors.text, fontSize: 12, fontFamily: fonts.bold },
   list: { overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 17, backgroundColor: colors.surface },
+  listPlain: { borderWidth: 0, borderRadius: 0, backgroundColor: 'transparent' },
 });

@@ -1,3 +1,4 @@
+import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,13 +10,15 @@ import {
 } from 'react-native';
 
 import { getErrorMessage } from '../lib/api';
-import { updateGroupRestaurantStatus } from '../services/restaurant-service';
-import { colors } from '../theme/colors';
 import {
+  updateGroupRestaurantStatus,
+} from '../services/restaurant-service';
+import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
+import type {
   GroupRestaurant,
   GroupRestaurantStatus,
 } from '../types/restaurant';
-import { fonts } from '../theme/fonts';
 
 type RestaurantStatusSectionProps = {
   groupId: string;
@@ -26,11 +29,10 @@ type RestaurantStatusSectionProps = {
   ) => void;
 };
 
-type StatusOption = {
-  status: GroupRestaurantStatus;
-  label: string;
-  description: string;
-};
+type ReturnStatus =
+  | 'VISITED'
+  | 'WANT_TO_REPEAT'
+  | 'DO_NOT_REPEAT';
 
 export const restaurantStatusPresentation: Record<
   GroupRestaurantStatus,
@@ -41,64 +43,43 @@ export const restaurantStatusPresentation: Record<
   }
 > = {
   WANT_TO_GO: {
-    label: 'Queremos ir',
-    backgroundColor: '#F7E8D2',
-    textColor: '#8A5B17',
+    label: 'Pendiente',
+    backgroundColor: '#FBE8E0',
+    textColor: '#B95135',
   },
   VISITED: {
     label: 'Visitado',
-    backgroundColor: '#E5EDF7',
-    textColor: '#365F91',
+    backgroundColor: '#F1E7D8',
+    textColor: '#805D34',
   },
   FAVORITE: {
-    label: 'Favorito',
-    backgroundColor: '#FBE4E7',
-    textColor: '#A33B4A',
+    label: 'Visitado',
+    backgroundColor: '#F1E7D8',
+    textColor: '#805D34',
   },
   WANT_TO_REPEAT: {
-    label: 'Queremos repetir',
-    backgroundColor: '#E8F1EB',
-    textColor: colors.success,
+    label: 'Repetir',
+    backgroundColor: '#E8EEDD',
+    textColor: '#52673F',
   },
   DO_NOT_REPEAT: {
     label: 'No repetir',
-    backgroundColor: '#FBE9E5',
-    textColor: colors.danger,
+    backgroundColor: '#F0ECE9',
+    textColor: '#625D59',
   },
   ARCHIVED: {
     label: 'Archivado',
-    backgroundColor: '#ECE8E6',
-    textColor: colors.muted,
+    backgroundColor: '#F0ECE9',
+    textColor: '#625D59',
   },
 };
 
-const statusOptions: StatusOption[] = [
-  {
-    status: 'WANT_TO_GO',
-    label: 'Queremos ir',
-    description: 'El grupo todavía tiene pendiente probarlo.',
-  },
-  {
-    status: 'VISITED',
-    label: 'Visitado',
-    description: 'Ya habéis ido al restaurante.',
-  },
-  {
-    status: 'FAVORITE',
-    label: 'Favorito',
-    description: 'Uno de los favoritos del grupo.',
-  },
-  {
-    status: 'WANT_TO_REPEAT',
-    label: 'Queremos repetir',
-    description: 'Os gustó y queréis volver.',
-  },
-  {
-    status: 'DO_NOT_REPEAT',
-    label: 'No repetir',
-    description: 'No queréis volver a este restaurante.',
-  },
-];
+function isVisitedStatus(status: GroupRestaurantStatus): boolean {
+  return status === 'VISITED'
+    || status === 'WANT_TO_REPEAT'
+    || status === 'DO_NOT_REPEAT'
+    || status === 'FAVORITE';
+}
 
 export function RestaurantStatusSection({
   groupId,
@@ -114,10 +95,14 @@ export function RestaurantStatusSection({
   const [updateError, setUpdateError] =
     useState<string | null>(null);
 
+  const isArchived = groupRestaurant.status === 'ARCHIVED';
+  const isVisited = isVisitedStatus(groupRestaurant.status);
+  const isBusy = updatingStatus !== null;
+
   async function handleStatusChange(
     status: GroupRestaurantStatus,
   ) {
-    if (groupRestaurant.status === status) {
+    if (groupRestaurant.status === status || isBusy) {
       return;
     }
 
@@ -129,9 +114,7 @@ export function RestaurantStatusSection({
         await updateGroupRestaurantStatus(
           groupId,
           groupRestaurant.id,
-          {
-            status,
-          },
+          { status },
           accessToken,
         );
 
@@ -143,10 +126,18 @@ export function RestaurantStatusSection({
     }
   }
 
+  function handleSituationChange(visited: boolean) {
+    if (visited === isVisited) {
+      return;
+    }
+
+    void handleStatusChange(visited ? 'VISITED' : 'WANT_TO_GO');
+  }
+
   function confirmArchive() {
     Alert.alert(
       'Archivar restaurante',
-      'El restaurante seguirá guardado, pero quedará marcado como archivado.',
+      'Seguirá guardado en el grupo y podrás restaurarlo cuando quieras.',
       [
         {
           text: 'Cancelar',
@@ -163,81 +154,196 @@ export function RestaurantStatusSection({
     );
   }
 
+  function renderReturnOption(
+    status: ReturnStatus,
+    label: string,
+  ) {
+    const selected = status === 'VISITED'
+      ? groupRestaurant.status === 'VISITED'
+        || groupRestaurant.status === 'FAVORITE'
+      : groupRestaurant.status === status;
+
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
+        disabled={isBusy}
+        key={status}
+        onPress={() => void handleStatusChange(status)}
+        style={({ pressed }) => [
+          styles.intentOption,
+          selected ? styles.intentOptionSelected : null,
+          pressed ? styles.pressed : null,
+        ]}
+      >
+        {updatingStatus === status ? (
+          <ActivityIndicator
+            color={selected ? colors.white : colors.primary}
+            size="small"
+          />
+        ) : (
+          <Text
+            style={[
+              styles.intentOptionText,
+              selected ? styles.intentOptionTextSelected : null,
+            ]}
+          >
+            {label}
+          </Text>
+        )}
+      </Pressable>
+    );
+  }
+
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
         <Text style={styles.sectionTitle}>
-          Estado
+          En el grupo
         </Text>
-
         <Text style={styles.sectionDescription}>
-          Cualquier miembro del grupo puede cambiarlo.
+          Cualquier miembro puede actualizar esta información.
         </Text>
       </View>
 
-      <View style={styles.statusList}>
-        {statusOptions.map((option) => {
-          const isSelected =
-            groupRestaurant.status === option.status;
-
-          const isUpdating =
-            updatingStatus === option.status;
-
-          return (
-            <Pressable
-              accessibilityRole="button"
-              disabled={updatingStatus !== null}
-              key={option.status}
-              onPress={() => {
-                void handleStatusChange(
-                  option.status,
-                );
+      {isArchived ? (
+        <View style={styles.archivedBlock}>
+          <View style={styles.archivedCopy}>
+            <SymbolView
+              name={{
+                ios: 'archivebox',
+                android: 'archive',
+                web: 'archive',
               }}
-              style={({ pressed }) => [
-                styles.statusOption,
-                isSelected
-                  ? styles.selectedStatusOption
-                  : null,
-                pressed && !isSelected
-                  ? styles.statusOptionPressed
-                  : null,
-              ]}
-            >
-              <View style={styles.statusOptionText}>
-                <Text
-                  style={[
-                    styles.statusOptionTitle,
-                    isSelected
-                      ? styles.selectedStatusOptionTitle
-                      : null,
-                  ]}
-                >
-                  {option.label}
-                </Text>
+              size={19}
+              tintColor={colors.muted}
+            />
+            <View style={styles.archivedText}>
+              <Text style={styles.archivedTitle}>Archivado</Text>
+              <Text style={styles.archivedDescription}>
+                No aparece entre pendientes ni visitados.
+              </Text>
+            </View>
+          </View>
 
-                <Text
-                  style={styles.statusOptionDescription}
-                >
-                  {option.description}
+          <Pressable
+            accessibilityRole="button"
+            disabled={isBusy}
+            onPress={() => void handleStatusChange('WANT_TO_GO')}
+            style={({ pressed }) => [
+              styles.restoreButton,
+              pressed ? styles.pressed : null,
+            ]}
+          >
+            {updatingStatus === 'WANT_TO_GO' ? (
+              <ActivityIndicator color={colors.primary} size="small" />
+            ) : (
+              <Text style={styles.restoreButtonText}>
+                Restaurar en pendientes
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      ) : (
+        <>
+          <View style={styles.controlBlock}>
+            <View style={styles.controlHeading}>
+              <Text style={styles.controlTitle}>Situación</Text>
+              <Text style={styles.controlDescription}>
+                ¿Sigue pendiente o ya habéis ido?
+              </Text>
+            </View>
+
+            <View style={styles.situationControl}>
+              {[
+                { label: 'Pendiente', visited: false },
+                { label: 'Visitado', visited: true },
+              ].map(option => {
+                const selected = option.visited === isVisited;
+                const targetStatus: GroupRestaurantStatus = option.visited
+                  ? 'VISITED'
+                  : 'WANT_TO_GO';
+
+                return (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    disabled={isBusy}
+                    key={option.label}
+                    onPress={() => handleSituationChange(option.visited)}
+                    style={({ pressed }) => [
+                      styles.situationOption,
+                      selected ? styles.situationOptionSelected : null,
+                      pressed ? styles.pressed : null,
+                    ]}
+                  >
+                    {updatingStatus === targetStatus ? (
+                      <ActivityIndicator
+                        color={selected ? colors.white : colors.primary}
+                        size="small"
+                      />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.situationOptionText,
+                          selected ? styles.situationOptionTextSelected : null,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          {isVisited ? (
+            <View style={styles.controlBlock}>
+              <View style={styles.controlHeading}>
+                <Text style={styles.controlTitle}>¿Volveríais?</Text>
+                <Text style={styles.controlDescription}>
+                  Dejad la decisión abierta o marcad si repetiríais.
                 </Text>
               </View>
+              <View style={styles.intentOptions}>
+                {renderReturnOption('VISITED', 'Sin decidir')}
+                {renderReturnOption('WANT_TO_REPEAT', 'Repetir')}
+                {renderReturnOption('DO_NOT_REPEAT', 'No repetir')}
+              </View>
+            </View>
+          ) : null}
 
-              {isUpdating ? (
-                <ActivityIndicator
-                  color={colors.primary}
-                  size="small"
+          <Pressable
+            accessibilityRole="button"
+            disabled={isBusy}
+            onPress={confirmArchive}
+            style={({ pressed }) => [
+              styles.archiveAction,
+              pressed ? styles.pressed : null,
+            ]}
+          >
+            {updatingStatus === 'ARCHIVED' ? (
+              <ActivityIndicator color={colors.muted} size="small" />
+            ) : (
+              <>
+                <SymbolView
+                  name={{
+                    ios: 'archivebox',
+                    android: 'archive',
+                    web: 'archive',
+                  }}
+                  size={16}
+                  tintColor={colors.muted}
                 />
-              ) : null}
-
-              {!isUpdating && isSelected ? (
-                <Text style={styles.checkmark}>
-                  ✓
+                <Text style={styles.archiveActionText}>
+                  Archivar restaurante
                 </Text>
-              ) : null}
-            </Pressable>
-          );
-        })}
-      </View>
+              </>
+            )}
+          </Pressable>
+        </>
+      )}
 
       {updateError ? (
         <View style={styles.updateError}>
@@ -246,56 +352,6 @@ export function RestaurantStatusSection({
           </Text>
         </View>
       ) : null}
-
-      {groupRestaurant.status === 'ARCHIVED' ? (
-        <Pressable
-          accessibilityRole="button"
-          disabled={updatingStatus !== null}
-          onPress={() => {
-            void handleStatusChange('WANT_TO_GO');
-          }}
-          style={({ pressed }) => [
-            styles.restoreButton,
-            pressed
-              ? styles.secondaryButtonPressed
-              : null,
-          ]}
-        >
-          {updatingStatus === 'WANT_TO_GO' ? (
-            <ActivityIndicator
-              color={colors.primary}
-              size="small"
-            />
-          ) : (
-            <Text style={styles.restoreButtonText}>
-              Restaurar como “Queremos ir”
-            </Text>
-          )}
-        </Pressable>
-      ) : (
-        <Pressable
-          accessibilityRole="button"
-          disabled={updatingStatus !== null}
-          onPress={confirmArchive}
-          style={({ pressed }) => [
-            styles.archiveButton,
-            pressed
-              ? styles.secondaryButtonPressed
-              : null,
-          ]}
-        >
-          {updatingStatus === 'ARCHIVED' ? (
-            <ActivityIndicator
-              color={colors.danger}
-              size="small"
-            />
-          ) : (
-            <Text style={styles.archiveButtonText}>
-              Archivar restaurante
-            </Text>
-          )}
-        </Pressable>
-      )}
     </View>
   );
 }
@@ -305,109 +361,156 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   heading: {
-    gap: 5,
+    gap: 3,
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 21,
+    fontSize: 17,
     fontFamily: fonts.bold,
   },
   sectionDescription: {
     color: colors.muted,
     fontFamily: fonts.regular,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  controlBlock: {
+    gap: 9,
+  },
+  controlHeading: {
+    gap: 2,
+  },
+  controlTitle: {
+    color: colors.text,
     fontSize: 13,
-    lineHeight: 19,
+    fontFamily: fonts.bold,
   },
-  statusList: {
-    gap: 10,
+  controlDescription: {
+    color: colors.muted,
+    fontSize: 10,
+    lineHeight: 14,
+    fontFamily: fonts.regular,
   },
-  statusOption: {
-    minHeight: 76,
+  situationControl: {
     flexDirection: 'row',
+    gap: 4,
+    padding: 4,
+    borderRadius: 15,
+    backgroundColor: colors.surfaceMuted,
+  },
+  situationOption: {
+    flex: 1,
+    minHeight: 38,
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'center',
+    borderRadius: 12,
+  },
+  situationOptionSelected: {
+    backgroundColor: colors.primary,
+  },
+  situationOptionText: {
+    color: colors.mutedStrong,
+    fontSize: 11,
+    fontFamily: fonts.bold,
+  },
+  situationOptionTextSelected: {
+    color: colors.white,
+  },
+  intentOptions: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  intentOption: {
+    flex: 1,
+    minHeight: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 18,
+    borderRadius: 12,
     backgroundColor: colors.surface,
-    padding: 15,
+    paddingHorizontal: 6,
   },
-  selectedStatusOption: {
-    borderWidth: 2,
+  intentOptionSelected: {
     borderColor: colors.primary,
-    backgroundColor: '#FFF3EE',
-    padding: 14,
+    backgroundColor: colors.primary,
   },
-  statusOptionPressed: {
-    opacity: 0.72,
-  },
-  statusOptionText: {
-    flex: 1,
-    gap: 4,
-  },
-  statusOptionTitle: {
-    color: colors.text,
-    fontSize: 16,
+  intentOptionText: {
+    color: colors.mutedStrong,
+    fontSize: 10,
     fontFamily: fonts.bold,
+    textAlign: 'center',
   },
-  selectedStatusOptionTitle: {
-    color: colors.primary,
+  intentOptionTextSelected: {
+    color: colors.white,
   },
-  statusOptionDescription: {
+  archiveAction: {
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  archiveActionText: {
     color: colors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 11,
+    fontFamily: fonts.semiBold,
   },
-  checkmark: {
-    color: colors.primary,
-    fontSize: 20,
+  archivedBlock: {
+    gap: 12,
+    paddingVertical: 13,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  archivedCopy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  archivedText: {
+    flex: 1,
+    gap: 2,
+  },
+  archivedTitle: {
+    color: colors.text,
+    fontSize: 13,
     fontFamily: fonts.bold,
+  },
+  archivedDescription: {
+    color: colors.muted,
+    fontSize: 10,
+    fontFamily: fonts.regular,
+  },
+  restoreButton: {
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 13,
+    backgroundColor: colors.surface,
+  },
+  restoreButtonText: {
+    color: colors.primary,
+    fontSize: 11,
+    fontFamily: fonts.bold,
+  },
+  pressed: {
+    opacity: 0.66,
   },
   updateError: {
     borderWidth: 1,
     borderColor: '#F3C5BC',
-    borderRadius: 16,
+    borderRadius: 14,
     backgroundColor: '#FFF1EE',
-    padding: 14,
+    padding: 12,
   },
   updateErrorText: {
     color: colors.danger,
     fontFamily: fonts.regular,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  archiveButton: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2B6AE',
-    borderRadius: 15,
-    backgroundColor: '#FFF1EE',
-    paddingHorizontal: 16,
-  },
-  archiveButtonText: {
-    color: colors.danger,
-    fontSize: 14,
-    fontFamily: fonts.bold,
-  },
-  restoreButton: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: 15,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 16,
-  },
-  restoreButtonText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontFamily: fonts.bold,
-  },
-  secondaryButtonPressed: {
-    opacity: 0.7,
+    fontSize: 11,
+    lineHeight: 16,
   },
 });

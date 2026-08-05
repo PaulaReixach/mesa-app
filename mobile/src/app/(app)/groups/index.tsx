@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import {
   router,
@@ -13,7 +12,6 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -38,7 +36,6 @@ import type {
   RestaurantGroup,
 } from '../../../types/group';
 import { fonts } from '../../../theme/fonts';
-import { radii, shadows } from '../../../theme/layout';
 
 type AddMode = 'SEARCH' | 'MANUAL';
 type GroupFilter = 'ALL' | 'PRIVATE' | 'PUBLIC';
@@ -239,70 +236,58 @@ export default function GroupsScreen() {
           ]}
         >
           <View style={styles.header}>
-            <View style={styles.headerText}>
+            <View style={styles.headerTop}>
               <Text style={styles.title}>
-                {selectingGroup ? '¿Dónde lo guardamos?' : 'Mis grupos'}
+                {selectingGroup ? '¿Dónde lo guardamos?' : 'Grupos'}
               </Text>
-              <Text style={styles.subtitle}>
-                {selectingGroup
-                  ? addMode === 'MANUAL'
-                    ? 'Selecciona el grupo donde quieres crear el restaurante.'
-                    : 'Selecciona el grupo donde quieres añadir el restaurante.'
-                  : 'Tus listas, tu gente y los sitios que queréis probar.'}
-              </Text>
+
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={5}
+                onPress={() => router.push('/groups/create')}
+                style={({ pressed }) => [
+                  styles.createButton,
+                  selectingGroup ? styles.createButtonCompact : null,
+                  !selectingGroup ? styles.createButtonLowered : null,
+                  pressed ? styles.createButtonPressed : null,
+                ]}
+              >
+                <SymbolView
+                  name={{ ios: 'plus', android: 'add', web: 'add' }}
+                  size={17}
+                  tintColor={colors.primary}
+                />
+                {!selectingGroup ? (
+                  <Text style={styles.createButtonText}>Crear grupo</Text>
+                ) : null}
+              </Pressable>
             </View>
 
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={5}
-              onPress={() => router.push('/groups/create')}
-              style={({ pressed }) => [
-                styles.createButton,
-                selectingGroup ? styles.createButtonCompact : null,
-                !selectingGroup ? styles.createButtonLowered : null,
-                pressed ? styles.createButtonPressed : null,
-              ]}
-            >
-              <LinearGradient
-                colors={['#B93825', '#D65339', '#C8442D']}
-                end={{ x: 1, y: 1 }}
-                start={{ x: 0, y: 0 }}
-                style={styles.createButtonFill}
-              >
-                <View style={styles.createButtonIcon}>
-                  <SymbolView
-                    name={{ ios: 'plus', android: 'add', web: 'add' }}
-                    size={18}
-                    tintColor={colors.white}
-                  />
-                </View>
-                {!selectingGroup ? (
-                  <Text style={styles.createButtonText}>Nuevo grupo</Text>
-                ) : null}
-              </LinearGradient>
-            </Pressable>
+            <Text style={styles.subtitle}>
+              {selectingGroup
+                ? addMode === 'MANUAL'
+                  ? 'Selecciona el grupo donde quieres crear el restaurante.'
+                  : 'Selecciona el grupo donde quieres añadir el restaurante.'
+                : 'Tus listas, tu gente y los sitios que queréis probar.'}
+            </Text>
           </View>
-
-          {!selectingGroup ? (
-            <Image
-              resizeMode="contain"
-              source={require('../../../../assets/images/groups-header-illustration.png')}
-              style={styles.heroIllustration}
-            />
-          ) : null}
         </View>
 
         {!selectingGroup ? (
           <View style={styles.tabs}>
             <View style={styles.tab}>
-              <Text style={styles.tabTextActive}>
+              <Text
+                accessibilityRole="text"
+                style={styles.tabTextActive}
+              >
                 Mis grupos
               </Text>
               <View style={styles.tabIndicator} />
             </View>
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.push('/groups/explore')}
+              accessibilityState={{ selected: false }}
+              onPress={() => router.replace('/groups/explore')}
               style={({ pressed }) => [
                 styles.tab,
                 pressed ? styles.tabPressed : null,
@@ -343,7 +328,7 @@ export default function GroupsScreen() {
             <View style={styles.searchBar}>
               <SymbolView
                 name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-                size={23}
+                size={20}
                 tintColor={colors.muted}
               />
               <TextInput
@@ -368,7 +353,6 @@ export default function GroupsScreen() {
                   />
                 </Pressable>
               ) : null}
-              <View style={styles.searchDivider} />
               <Pressable
                 accessibilityLabel="Filtrar grupos"
                 accessibilityRole="button"
@@ -538,9 +522,6 @@ export default function GroupsScreen() {
           <View style={styles.section}>
             {!selectingGroup ? (
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>
-                  Tus grupos
-                </Text>
                 <Text style={styles.sectionCount}>
                   {displayedGroups.length}{' '}
                   {displayedGroups.length === 1 ? 'grupo' : 'grupos'}
@@ -566,16 +547,9 @@ export default function GroupsScreen() {
         && visibleCollaboratingGroups.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleRow}>
-                <Text style={styles.sectionTitle}>
-                  Colaboras en
-                </Text>
-                <View style={styles.collaborationBadge}>
-                  <Text style={styles.collaborationBadgeText}>
-                    Públicos
-                  </Text>
-                </View>
-              </View>
+              <Text style={styles.sectionTitle}>
+                Colaboras en
+              </Text>
               <Text style={styles.sectionCount}>
                 {visibleCollaboratingGroups.length}{' '}
                 {visibleCollaboratingGroups.length === 1 ? 'grupo' : 'grupos'}
@@ -604,16 +578,9 @@ export default function GroupsScreen() {
         && visibleFollowedGroups.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleRow}>
-                <Text style={styles.sectionTitle}>
-                  Siguiendo
-                </Text>
-                <View style={styles.followingBadge}>
-                  <Text style={styles.followingBadgeText}>
-                    Públicos
-                  </Text>
-                </View>
-              </View>
+              <Text style={styles.sectionTitle}>
+                Siguiendo
+              </Text>
               <Text style={styles.sectionCount}>
                 {visibleFollowedGroups.length}{' '}
                 {visibleFollowedGroups.length === 1 ? 'grupo' : 'grupos'}
@@ -647,9 +614,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: 20,
+    gap: 18,
     paddingHorizontal: 20,
-    paddingTop: 28,
+    paddingTop: 22,
     paddingBottom: 128,
   },
   selectionHeader: {
@@ -671,22 +638,20 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   hero: {
-    position: 'relative',
-    minHeight: 142,
+    minHeight: 0,
   },
   selectionHero: {
     minHeight: 0,
   },
   header: {
     zIndex: 1,
+    gap: 6,
+  },
+  headerTop: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-  },
-  headerText: {
-    flex: 1,
-    maxWidth: 224,
   },
   title: {
     color: colors.text,
@@ -696,111 +661,85 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   subtitle: {
-    marginTop: 9,
     color: colors.muted,
     fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
   },
   createButton: {
-    width: 114,
-    height: 40,
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 255, 255, 0.24)',
-    borderRadius: 10,
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 2,
   },
   createButtonCompact: {
     width: 40,
   },
   createButtonLowered: {
-    marginTop: 10,
+    marginTop: 1,
   },
   createButtonPressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.99 }],
-  },
-  createButtonFill: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 7,
-  },
-  createButtonIcon: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    opacity: 0.55,
   },
   createButtonText: {
-    color: colors.white,
+    color: colors.primary,
     fontFamily: fonts.semiBold,
-    fontSize: 11,
-  },
-  heroIllustration: {
-    position: 'absolute',
-    right: -25,
-    bottom: -28,
-    width: 164,
-    height: 115,
+    fontSize: 12,
   },
   tabs: {
-    minHeight: 50,
+    minHeight: 40,
     flexDirection: 'row',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderStrong,
+    alignItems: 'stretch',
+    gap: 28,
   },
   tab: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 1,
   },
   tabPressed: {
     opacity: 0.55,
   },
   tabIndicator: {
     position: 'absolute',
-    bottom: -1,
-    width: 58,
-    height: 3,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    height: 2,
     borderRadius: 2,
-    backgroundColor: '#C64A32',
+    backgroundColor: colors.primary,
   },
   tabText: {
     color: colors.muted,
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: fonts.medium,
   },
   tabTextActive: {
-    color: colors.primary,
-    fontSize: 13,
+    color: colors.text,
+    fontSize: 12.5,
     fontFamily: fonts.semiBold,
   },
   searchBlock: {
     gap: 10,
   },
   searchBar: {
-    minHeight: 52,
+    minHeight: 46,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingLeft: 16,
-    paddingRight: 8,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: 10,
-    backgroundColor: colors.surface,
+    gap: 10,
+    paddingLeft: 14,
+    paddingRight: 5,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceMuted,
   },
   searchInput: {
     flex: 1,
-    minHeight: 50,
+    minHeight: 44,
     color: colors.text,
     fontFamily: fonts.regular,
-    fontSize: 13,
+    fontSize: 12.5,
   },
   clearSearchButton: {
     width: 28,
@@ -808,14 +747,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  searchDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 28,
-    backgroundColor: colors.borderStrong,
-  },
   filterButton: {
-    width: 42,
-    height: 42,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
@@ -828,21 +762,18 @@ const styles = StyleSheet.create({
   },
   filterOptions: {
     flexDirection: 'row',
-    gap: 8,
+    alignSelf: 'flex-start',
+    gap: 20,
+    paddingHorizontal: 4,
   },
   filterOption: {
-    minHeight: 34,
-    flex: 1,
+    minHeight: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 17,
-    backgroundColor: colors.surface,
   },
   filterOptionActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
+    borderBottomWidth: 1.5,
+    borderBottomColor: colors.primary,
   },
   filterOptionText: {
     color: colors.muted,
@@ -873,23 +804,18 @@ const styles = StyleSheet.create({
     paddingVertical: 80,
   },
   section: {
-    gap: 12,
+    gap: 9,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   sectionTitle: {
     color: colors.text,
-    fontSize: 19,
-    fontFamily: fonts.bold,
-    letterSpacing: -0.35,
+    fontSize: 17,
+    fontFamily: fonts.semiBold,
+    letterSpacing: -0.2,
   },
   sectionCount: {
     color: colors.muted,
@@ -900,43 +826,17 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontFamily: fonts.regular,
     maxWidth: 320,
-    fontSize: 10,
-    lineHeight: 15,
-  },
-  followingBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: '#E8EEDD',
-  },
-  followingBadgeText: {
-    color: '#607349',
-    fontSize: 8,
-    fontFamily: fonts.bold,
-  },
-  collaborationBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: '#FBE9E2',
-  },
-  collaborationBadgeText: {
-    color: colors.primary,
-    fontSize: 8,
-    fontFamily: fonts.bold,
+    fontSize: 10.5,
+    lineHeight: 16,
   },
   list: {
-    gap: 10,
+    gap: 0,
   },
   emptyCard: {
     alignItems: 'center',
     gap: 14,
-    padding: 28,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.xl,
-    backgroundColor: colors.surface,
-    ...shadows.card,
+    paddingHorizontal: 24,
+    paddingVertical: 38,
   },
   emptyIcon: {
     width: 64,
@@ -989,12 +889,9 @@ const styles = StyleSheet.create({
   },
   messageCard: {
     gap: 8,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    backgroundColor: colors.surface,
-    ...shadows.card,
+    padding: 18,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceMuted,
   },
   messageTitle: {
     color: colors.text,

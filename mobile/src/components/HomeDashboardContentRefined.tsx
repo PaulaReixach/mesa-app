@@ -1,7 +1,13 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
 import type { Href } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { HomeActivityRow, type HomeActivityEntry } from './HomeActivityRow';
 import { HomeGroupCard } from './HomeGroupCard';
@@ -10,6 +16,12 @@ import { homeStyles as styles } from './HomeDashboardStyles';
 import { colors } from '../theme/colors';
 import type { RestaurantGroup } from '../types/group';
 import type { GroupMember } from '../types/group-member';
+
+export const HOME_GROUP_PREVIEW_LIMIT = 6;
+
+const DASHBOARD_HORIZONTAL_PADDING = 22;
+const GROUP_CARD_GAP = 10;
+const GROUP_CARD_PEEK = 18;
 
 function SectionAction({
   label,
@@ -49,7 +61,13 @@ export function HomeDashboardContentRefined({
   pendingInvitationCount: number;
   recommendation: HomeRecommendation | null;
 }) {
-  const featuredGroup = groups[0] ?? null;
+  const { width: windowWidth } = useWindowDimensions();
+  const visibleGroups = groups.slice(0, HOME_GROUP_PREVIEW_LIMIT);
+  const availableWidth = windowWidth - (DASHBOARD_HORIZONTAL_PADDING * 2);
+  const hasScrollableGroups = visibleGroups.length > 2;
+  const groupCardWidth = hasScrollableGroups
+    ? (availableWidth - (GROUP_CARD_GAP * 2) - GROUP_CARD_PEEK) / 2
+    : (availableWidth - GROUP_CARD_GAP) / 2;
 
   function openGroup(group: RestaurantGroup): void {
     if (group.privacy === 'PUBLIC') {
@@ -80,13 +98,44 @@ export function HomeDashboardContentRefined({
           <SectionAction label="Ver todos" onPress={() => router.push('/groups')} />
         </View>
 
-        {featuredGroup ? (
+        {visibleGroups.length === 1 ? (
           <HomeGroupCard
-            group={featuredGroup}
-            members={membersByGroup[featuredGroup.id] ?? []}
-            onPress={() => openGroup(featuredGroup)}
+            group={visibleGroups[0]}
+            layout="wide"
+            members={membersByGroup[visibleGroups[0].id] ?? []}
+            onPress={() => openGroup(visibleGroups[0])}
           />
-        ) : (
+        ) : null}
+
+        {visibleGroups.length > 1 ? (
+          <ScrollView
+            accessibilityLabel="Tus grupos"
+            contentContainerStyle={styles.groupCarouselContent}
+            decelerationRate="fast"
+            disableIntervalMomentum={hasScrollableGroups}
+            horizontal
+            scrollEnabled={hasScrollableGroups}
+            showsHorizontalScrollIndicator={false}
+            snapToAlignment="start"
+            snapToInterval={hasScrollableGroups
+              ? groupCardWidth + GROUP_CARD_GAP
+              : undefined}
+            style={styles.groupCarousel}
+          >
+            {visibleGroups.map(group => (
+              <HomeGroupCard
+                cardWidth={groupCardWidth}
+                group={group}
+                key={group.id}
+                layout="grid"
+                members={membersByGroup[group.id] ?? []}
+                onPress={() => openGroup(group)}
+              />
+            ))}
+          </ScrollView>
+        ) : null}
+
+        {visibleGroups.length === 0 ? (
           <Pressable
             onPress={() => router.push('/groups/create')}
             style={({ pressed }) => [
@@ -113,13 +162,18 @@ export function HomeDashboardContentRefined({
               tintColor={colors.muted}
             />
           </Pressable>
-        )}
+        ) : null}
       </View>
 
       {recommendation ? (
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text allowFontScaling={false} style={styles.sectionTitle}>Una buena opción</Text>
+          <View style={styles.sectionIntro}>
+            <Text allowFontScaling={false} style={styles.sectionTitle}>
+              Para vuestro próximo plan
+            </Text>
+            <Text allowFontScaling={false} style={styles.sectionSubtitle}>
+              Uno de vuestros restaurantes pendientes
+            </Text>
           </View>
           <HomeRecommendationCard
             onPress={openRecommendation}
@@ -131,7 +185,7 @@ export function HomeDashboardContentRefined({
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text allowFontScaling={false} style={styles.sectionTitle}>Actividad reciente</Text>
-          <SectionAction label="Ver toda" onPress={() => router.push('/notifications')} />
+          <SectionAction label="Ver todo" onPress={() => router.push('/notifications')} />
         </View>
 
         {activity.length > 0 ? (

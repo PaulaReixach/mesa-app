@@ -2,7 +2,7 @@ import { SymbolView } from 'expo-symbols';
 import { Image, Pressable, Text, View } from 'react-native';
 
 import { recommendationStyles as styles } from './HomeRecommendationCardRefined.styles';
-import { getRestaurantFallbackImage } from '../lib/restaurant-images';
+import { getRestaurantInteriorFallbackImage } from '../lib/restaurant-images';
 import type { RestaurantGroup } from '../types/group';
 import type { GroupRestaurant } from '../types/restaurant';
 
@@ -20,11 +20,18 @@ export function HomeRecommendationCardRefined({
 }) {
   const { group, restaurant: groupRestaurant } = recommendation;
   const restaurant = groupRestaurant.restaurant;
-  const imageUri = getRestaurantFallbackImage(restaurant.name);
-  const location = restaurant.city ?? group.city ?? 'Sin ciudad';
+  const imageUri = getRestaurantInteriorFallbackImage(restaurant.name);
+  const location = restaurant.city?.trim() || 'Sin ciudad';
+  const category = restaurant.category?.trim();
+  const score = groupRestaurant.averageScore;
+  const detailLabel = [location, category]
+    .filter((detail): detail is string => Boolean(detail))
+    .join(' · ');
+  const savedLabel = `Guardado en ${group.name}`;
 
   return (
     <Pressable
+      accessibilityLabel={`Abrir ${restaurant.name}, pendiente en ${group.name}`}
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
@@ -34,25 +41,29 @@ export function HomeRecommendationCardRefined({
       </View>
 
       <View style={styles.copy}>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.eyebrow}>
-          Recomendación para ti
-        </Text>
         <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
           {restaurant.name}
         </Text>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.location}>
-          {location}
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.meta}>
+          {detailLabel}
         </Text>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.description}>
-          La mejor valorada en {group.name}
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.savedLabel}>
+          {savedLabel}
         </Text>
       </View>
 
-      <View style={styles.trailing}>
-        <View style={styles.statusPill}>
-          <Text allowFontScaling={false} style={styles.statusText}>Para descubrir</Text>
+      {score != null ? (
+        <View style={styles.scorePill}>
+          <SymbolView
+            name={{ ios: 'star.fill', android: 'star', web: 'star' }}
+            size={12}
+            tintColor="#5E714A"
+          />
+          <Text allowFontScaling={false} style={styles.scoreText}>
+            {score.toFixed(1).replace('.', ',')}
+          </Text>
         </View>
-      </View>
+      ) : null}
 
       <SymbolView
         name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}

@@ -1,6 +1,5 @@
 import { SymbolView } from 'expo-symbols';
 import { useFocusEffect } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,7 +12,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { HomeActivityEntry } from '../components/HomeActivityRow';
-import { HomeDashboardContentRefined } from '../components/HomeDashboardContentRefined';
+import {
+  HOME_GROUP_PREVIEW_LIMIT,
+  HomeDashboardContentRefined,
+} from '../components/HomeDashboardContentRefined';
 import { HomeHeader } from '../components/HomeHeader';
 import { homeStyles as styles } from '../components/HomeDashboardStyles';
 import type { HomeRecommendation } from '../components/HomeRecommendationCard';
@@ -37,6 +39,11 @@ type GroupDashboardData = {
   restaurants: GroupRestaurant[];
 };
 
+const RECOMMENDATION_STATUSES = new Set<GroupRestaurant['status']>([
+  'WANT_TO_GO',
+  'WANT_TO_REPEAT',
+]);
+
 function sortGroups(groups: RestaurantGroup[]): RestaurantGroup[] {
   return [...groups].sort((left, right) => (
     new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
@@ -45,19 +52,22 @@ function sortGroups(groups: RestaurantGroup[]): RestaurantGroup[] {
 
 function pickRecommendation(data: GroupDashboardData[]): HomeRecommendation | null {
   const candidates = data.flatMap(({ group, restaurants }) => (
-    restaurants.map(restaurant => ({ group, restaurant }))
+    restaurants
+      .filter(restaurant => RECOMMENDATION_STATUSES.has(restaurant.status))
+      .map(restaurant => ({ group, restaurant }))
   ));
 
   if (candidates.length === 0) return null;
 
   return [...candidates].sort((left, right) => {
-    const leftScore = left.restaurant.averageScore ?? -1;
-    const rightScore = right.restaurant.averageScore ?? -1;
-
-    if (rightScore !== leftScore) return rightScore - leftScore;
-    if (right.restaurant.ratingsCount !== left.restaurant.ratingsCount) {
-      return right.restaurant.ratingsCount - left.restaurant.ratingsCount;
+    if (left.restaurant.favorite !== right.restaurant.favorite) {
+      return left.restaurant.favorite ? -1 : 1;
     }
+
+    const createdAtDifference = new Date(right.restaurant.createdAt).getTime()
+      - new Date(left.restaurant.createdAt).getTime();
+
+    if (createdAtDifference !== 0) return createdAtDifference;
 
     return new Date(right.restaurant.updatedAt).getTime()
       - new Date(left.restaurant.updatedAt).getTime();
@@ -92,7 +102,7 @@ export default function HomeScreenRefined() {
       ]);
 
       const orderedGroups = sortGroups(groupsResponse);
-      const groupsToEnrich = orderedGroups.slice(0, 4);
+      const groupsToEnrich = orderedGroups.slice(0, HOME_GROUP_PREVIEW_LIMIT);
       const dashboardData = await Promise.all(
         groupsToEnrich.map(async group => {
           const [members, groupActivity, restaurants] = await Promise.all([
@@ -147,13 +157,11 @@ export default function HomeScreenRefined() {
 
   return (
     <View style={styles.safeArea}>
-      <StatusBar style="light" />
-
       <ScrollView
         contentContainerStyle={[
           styles.content,
           {
-            paddingBottom: Math.max(insets.bottom, 18) + 78,
+            paddingBottom: Math.max(insets.bottom, 14) + 72,
           },
         ]}
         refreshControl={(
