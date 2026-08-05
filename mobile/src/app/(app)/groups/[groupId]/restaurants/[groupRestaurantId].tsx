@@ -91,7 +91,8 @@ export default function RestaurantDetailScreen() {
         .join(' · ')
     : '';
   const canManageRestaurant =
-    group?.currentUserRole !== 'CONTRIBUTOR';
+    group?.currentUserRole === 'OWNER'
+    || group?.currentUserRole === 'MEMBER';
 
   return (
     <SafeAreaView
@@ -192,7 +193,7 @@ export default function RestaurantDetailScreen() {
                     {restaurant.category?.toUpperCase() ?? 'RESTAURANTE'}
                   </Text>
                   <Text style={styles.name}>{restaurant.name}</Text>
-                  {canManageRestaurant ? (
+                  <View style={styles.heroMetaRow}>
                     <View
                       style={[
                         styles.status,
@@ -203,7 +204,23 @@ export default function RestaurantDetailScreen() {
                         {status.label}
                       </Text>
                     </View>
-                  ) : null}
+                    {item.favorite ? (
+                      <View style={styles.favoriteStatus}>
+                        <SymbolView
+                          name={{
+                            ios: 'heart.fill',
+                            android: 'favorite',
+                            web: 'favorite',
+                          }}
+                          size={11}
+                          tintColor={colors.white}
+                        />
+                        <Text style={styles.favoriteStatusText}>
+                          Favorito
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
                 </View>
               </ImageBackground>
             </View>
@@ -212,7 +229,7 @@ export default function RestaurantDetailScreen() {
               <Text style={styles.sectionTitle}>
                 Información
               </Text>
-              <View style={styles.infoCard}>
+              <View style={styles.infoList}>
                 <View style={styles.infoRow}>
                   <SymbolView
                     name={{
@@ -249,7 +266,7 @@ export default function RestaurantDetailScreen() {
                     </Text>
                     <Text style={styles.infoValue}>
                       {item.groupNotes
-                        || 'Todavía no habéis añadido notas.'}
+                        || 'Sin notas todavía.'}
                     </Text>
                   </View>
                 </View>
@@ -284,13 +301,13 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: 22,
+    gap: 18,
     paddingHorizontal: 18,
-    paddingTop: 8,
-    paddingBottom: 36,
+    paddingTop: 4,
+    paddingBottom: 32,
   },
   header: {
-    minHeight: 48,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -313,16 +330,16 @@ const styles = StyleSheet.create({
   },
   hero: {
     overflow: 'hidden',
-    minHeight: 278,
-    borderRadius: 28,
+    minHeight: 236,
+    borderRadius: 24,
     backgroundColor: colors.surface,
   },
   artwork: {
-    minHeight: 278,
+    minHeight: 236,
     justifyContent: 'flex-end',
   },
   artworkImage: {
-    borderRadius: 28,
+    borderRadius: 24,
   },
   artworkOverlay: {
     ...StyleSheet.absoluteFill,
@@ -330,8 +347,8 @@ const styles = StyleSheet.create({
   },
   heroBody: {
     alignItems: 'flex-start',
-    gap: 8,
-    padding: 20,
+    gap: 6,
+    padding: 18,
   },
   eyebrow: {
     color: colors.white,
@@ -342,40 +359,58 @@ const styles = StyleSheet.create({
   name: {
     maxWidth: 310,
     color: colors.white,
-    fontSize: 29,
-    lineHeight: 34,
+    fontSize: 27,
+    lineHeight: 32,
     fontFamily: fonts.bold,
     letterSpacing: -0.75,
   },
+  heroMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 7,
+  },
   status: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     borderRadius: 999,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: 9,
+    fontFamily: fonts.bold,
+  },
+  favoriteStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(35, 30, 27, 0.48)',
+  },
+  favoriteStatusText: {
+    color: colors.white,
+    fontSize: 9,
     fontFamily: fonts.bold,
   },
   section: {
-    gap: 10,
+    gap: 8,
   },
   sectionTitle: {
     color: colors.text,
     fontSize: 17,
     fontFamily: fonts.bold,
   },
-  infoCard: {
-    overflow: 'hidden',
-    borderWidth: 1,
+  infoList: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
-    padding: 15,
+    gap: 10,
+    paddingVertical: 11,
   },
   infoText: {
     flex: 1,
@@ -383,19 +418,19 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     color: colors.muted,
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: fonts.bold,
     textTransform: 'uppercase',
   },
   infoValue: {
     color: colors.text,
     fontFamily: fonts.regular,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 11,
+    lineHeight: 16,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    marginLeft: 46,
+    marginLeft: 29,
     backgroundColor: colors.border,
   },
   errorCard: {

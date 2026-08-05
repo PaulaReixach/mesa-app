@@ -6,21 +6,22 @@ import {
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
-import { getErrorMessage } from '../lib/api';
+import { getErrorMessage, resolveApiUrl } from '../lib/api';
 import {
   deleteRestaurantRating,
   getRestaurantRatings,
   saveRestaurantRating,
 } from '../services/restaurant-rating-service';
 import { colors } from '../theme/colors';
-import { RestaurantRatingsSummary } from '../types/restaurant-rating';
 import { fonts } from '../theme/fonts';
+import type { RestaurantRatingsSummary } from '../types/restaurant-rating';
 
 type RestaurantRatingsSectionProps = {
   groupId: string;
@@ -39,13 +40,9 @@ export function RestaurantRatingsSection({
     useState<RestaurantRatingsSummary | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-
   const [savingScore, setSavingScore] =
     useState<number | null>(null);
-
-  const [isDeleting, setIsDeleting] =
-    useState(false);
-
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
 
@@ -88,9 +85,7 @@ export function RestaurantRatingsSection({
       const response = await saveRestaurantRating(
         groupId,
         groupRestaurantId,
-        {
-          score,
-        },
+        { score },
         accessToken,
       );
 
@@ -141,35 +136,20 @@ export function RestaurantRatingsSection({
     );
   }
 
-  const currentUserScore =
-    summary?.currentUserScore ?? null;
-
-  const formattedAverage =
-    summary?.averageScore == null
-      ? null
-      : summary.averageScore
-          .toFixed(1)
-          .replace('.', ',');
+  const currentUserScore = summary?.currentUserScore ?? null;
+  const formattedAverage = summary?.averageScore == null
+    ? null
+    : summary.averageScore.toFixed(1).replace('.', ',');
 
   return (
     <View style={styles.section}>
-      <View style={styles.heading}>
-        <Text style={styles.sectionTitle}>
-          Valoraciones
-        </Text>
-
-        <Text style={styles.sectionDescription}>
-          Cada miembro puede añadir su propia puntuación.
-        </Text>
-      </View>
+      <Text style={styles.sectionTitle}>
+        Valoraciones
+      </Text>
 
       {isLoading ? (
-        <View style={styles.loadingCard}>
-          <ActivityIndicator
-            color={colors.primary}
-            size="small"
-          />
-
+        <View style={styles.loadingRow}>
+          <ActivityIndicator color={colors.primary} size="small" />
           <Text style={styles.loadingText}>
             Cargando valoraciones...
           </Text>
@@ -178,104 +158,67 @@ export function RestaurantRatingsSection({
 
       {!isLoading && summary ? (
         <>
-          <View style={styles.averageCard}>
-            <View style={styles.averageIcon}>
-              <Text style={styles.averageIconText}>
-                ★
-              </Text>
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryIcon}>
+              <Text style={styles.summaryIconText}>★</Text>
             </View>
-
-            <View style={styles.averageContent}>
-              <Text style={styles.averageLabel}>
-                Media del grupo
-              </Text>
-
+            <View style={styles.summaryCopy}>
+              <Text style={styles.summaryLabel}>Media del grupo</Text>
               {formattedAverage ? (
-                <View style={styles.averageRow}>
-                  <Text style={styles.averageScore}>
-                    {formattedAverage}
-                  </Text>
-
-                  <Text style={styles.averageMaximum}>
-                    / 5
+                <View style={styles.summaryScoreRow}>
+                  <Text style={styles.summaryScore}>{formattedAverage}</Text>
+                  <Text style={styles.summaryMaximum}>/ 5</Text>
+                  <Text style={styles.summaryCount}>
+                    · {summary.ratingsCount}{' '}
+                    {summary.ratingsCount === 1 ? 'valoración' : 'valoraciones'}
                   </Text>
                 </View>
               ) : (
                 <Text style={styles.noRatings}>
-                  Todavía no hay valoraciones
+                  Sin valoraciones todavía
                 </Text>
               )}
-
-              {summary.ratingsCount > 0 ? (
-                <Text style={styles.ratingsCount}>
-                  {summary.ratingsCount}{' '}
-                  {summary.ratingsCount === 1
-                    ? 'valoración'
-                    : 'valoraciones'}
-                </Text>
-              ) : null}
             </View>
           </View>
 
-          <View style={styles.myRatingCard}>
+          <View style={styles.myRating}>
             <View style={styles.myRatingHeading}>
-              <View style={styles.myRatingTitleContainer}>
-                <Text style={styles.myRatingTitle}>
-                  Tu valoración
-                </Text>
-
+              <View style={styles.myRatingCopy}>
+                <Text style={styles.myRatingTitle}>Tu valoración</Text>
                 <Text style={styles.myRatingDescription}>
                   Pulsa una estrella para guardar.
                 </Text>
               </View>
-
               {currentUserScore !== null ? (
-                <Text style={styles.myScore}>
-                  {currentUserScore}/5
-                </Text>
+                <Text style={styles.myScore}>{currentUserScore}/5</Text>
               ) : null}
             </View>
 
             <View style={styles.stars}>
-              {scores.map((score) => {
-                const selected =
-                  currentUserScore !== null
+              {scores.map(score => {
+                const selected = currentUserScore !== null
                   && score <= currentUserScore;
-
-                const isSaving =
-                  savingScore === score;
+                const isSaving = savingScore === score;
 
                 return (
                   <Pressable
                     accessibilityLabel={`Valorar con ${score} estrellas`}
                     accessibilityRole="button"
-                    disabled={
-                      savingScore !== null
-                      || isDeleting
-                    }
+                    disabled={savingScore !== null || isDeleting}
                     key={score}
-                    onPress={() => {
-                      void handleSaveScore(score);
-                    }}
+                    onPress={() => void handleSaveScore(score)}
                     style={({ pressed }) => [
                       styles.starButton,
-                      pressed
-                        ? styles.starButtonPressed
-                        : null,
+                      pressed ? styles.pressed : null,
                     ]}
                   >
                     {isSaving ? (
-                      <ActivityIndicator
-                        color={colors.primary}
-                        size="small"
-                      />
+                      <ActivityIndicator color={colors.primary} size="small" />
                     ) : (
                       <Text
                         style={[
                           styles.star,
-                          selected
-                            ? styles.selectedStar
-                            : null,
+                          selected ? styles.selectedStar : null,
                         ]}
                       >
                         {selected ? '★' : '☆'}
@@ -291,15 +234,13 @@ export function RestaurantRatingsSection({
                 accessibilityRole="button"
                 disabled={isDeleting}
                 onPress={confirmDeleteRating}
+                style={({ pressed }) => pressed ? styles.pressed : null}
               >
                 {isDeleting ? (
-                  <ActivityIndicator
-                    color={colors.danger}
-                    size="small"
-                  />
+                  <ActivityIndicator color={colors.danger} size="small" />
                 ) : (
                   <Text style={styles.deleteRatingText}>
-                    Eliminar mi valoración
+                    Quitar mi valoración
                   </Text>
                 )}
               </Pressable>
@@ -309,54 +250,59 @@ export function RestaurantRatingsSection({
           {summary.ratings.length > 0 ? (
             <View style={styles.memberRatings}>
               <Text style={styles.memberRatingsTitle}>
-                Valoraciones del grupo
+                Opiniones del grupo
               </Text>
 
               <View style={styles.memberRatingsList}>
-                {summary.ratings.map((rating) => (
-                  <View
-                    key={rating.id}
-                    style={styles.memberRating}
-                  >
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarText}>
-                        {rating.name
-                          .charAt(0)
-                          .toUpperCase()}
-                      </Text>
-                    </View>
+                {summary.ratings.map((rating, index) => {
+                  const avatarUri = rating.avatarUrl
+                    ? resolveApiUrl(rating.avatarUrl)
+                    : null;
 
-                    <View style={styles.memberContent}>
-                      <View style={styles.memberNameRow}>
-                        <Text style={styles.memberName}>
-                          {rating.name}
-                        </Text>
-
-                        {rating.currentUser ? (
-                          <View style={styles.youBadge}>
-                            <Text style={styles.youBadgeText}>
-                              Tú
+                  return (
+                    <View key={rating.id}>
+                      <View style={styles.memberRating}>
+                        <View style={styles.avatar}>
+                          {avatarUri ? (
+                            <Image
+                              source={{ uri: avatarUri }}
+                              style={styles.avatarImage}
+                            />
+                          ) : (
+                            <Text style={styles.avatarText}>
+                              {rating.name.charAt(0).toUpperCase()}
                             </Text>
+                          )}
+                        </View>
+
+                        <View style={styles.memberContent}>
+                          <View style={styles.memberNameRow}>
+                            <Text style={styles.memberName}>
+                              {rating.name}
+                            </Text>
+                            {rating.currentUser ? (
+                              <Text style={styles.youText}>Tú</Text>
+                            ) : null}
                           </View>
-                        ) : null}
+                          <Text style={styles.username}>
+                            @{rating.username}
+                          </Text>
+                        </View>
+
+                        <View style={styles.memberScore}>
+                          <Text style={styles.memberScoreStar}>★</Text>
+                          <Text style={styles.memberScoreText}>
+                            {rating.score}
+                          </Text>
+                        </View>
                       </View>
 
-                      <Text style={styles.username}>
-                        @{rating.username}
-                      </Text>
+                      {index < summary.ratings.length - 1 ? (
+                        <View style={styles.memberDivider} />
+                      ) : null}
                     </View>
-
-                    <View style={styles.memberScore}>
-                      <Text style={styles.memberScoreStar}>
-                        ★
-                      </Text>
-
-                      <Text style={styles.memberScoreText}>
-                        {rating.score}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             </View>
           ) : null}
@@ -365,20 +311,13 @@ export function RestaurantRatingsSection({
 
       {errorMessage ? (
         <View style={styles.errorCard}>
-          <Text style={styles.errorText}>
-            {errorMessage}
-          </Text>
-
+          <Text style={styles.errorText}>{errorMessage}</Text>
           {!summary ? (
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                void loadRatings();
-              }}
+              onPress={() => void loadRatings()}
             >
-              <Text style={styles.retryText}>
-                Volver a intentar
-              </Text>
+              <Text style={styles.retryText}>Volver a intentar</Text>
             </Pressable>
           ) : null}
         </View>
@@ -389,255 +328,246 @@ export function RestaurantRatingsSection({
 
 const styles = StyleSheet.create({
   section: {
-    gap: 14,
-  },
-  heading: {
-    gap: 5,
+    gap: 12,
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 21,
+    fontSize: 17,
     fontFamily: fonts.bold,
   },
-  sectionDescription: {
-    color: colors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  loadingCard: {
+  loadingRow: {
+    minHeight: 54,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    borderWidth: 1,
+    gap: 9,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-    padding: 20,
   },
   loadingText: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 14,
+    fontSize: 11,
   },
-  averageCard: {
+  summaryRow: {
+    minHeight: 58,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
-    borderWidth: 1,
+    gap: 11,
+    paddingVertical: 9,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    padding: 18,
   },
-  averageIcon: {
-    width: 58,
-    height: 58,
+  summaryIcon: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 19,
+    borderRadius: 20,
     backgroundColor: '#F7E8D2',
   },
-  averageIconText: {
+  summaryIconText: {
     color: '#C6841C',
     fontFamily: fonts.regular,
-    fontSize: 29,
+    fontSize: 21,
   },
-  averageContent: {
+  summaryCopy: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
-  averageLabel: {
+  summaryLabel: {
     color: colors.muted,
-    fontSize: 12,
+    fontSize: 9,
     fontFamily: fonts.bold,
     textTransform: 'uppercase',
   },
-  averageRow: {
+  summaryScoreRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 4,
+    flexWrap: 'wrap',
+    gap: 3,
   },
-  averageScore: {
+  summaryScore: {
     color: colors.text,
-    fontSize: 29,
+    fontSize: 21,
     fontFamily: fonts.bold,
   },
-  averageMaximum: {
+  summaryMaximum: {
     color: colors.muted,
-    fontSize: 15,
+    fontSize: 11,
     fontFamily: fonts.bold,
+  },
+  summaryCount: {
+    color: colors.muted,
+    fontSize: 10,
+    fontFamily: fonts.regular,
   },
   noRatings: {
     color: colors.text,
-    fontSize: 16,
-    fontFamily: fonts.bold,
-    lineHeight: 22,
-  },
-  ratingsCount: {
-    color: colors.muted,
-    fontFamily: fonts.regular,
     fontSize: 13,
+    fontFamily: fonts.bold,
   },
-  myRatingCard: {
-    gap: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    padding: 18,
+  myRating: {
+    gap: 11,
+    padding: 14,
+    borderRadius: 17,
+    backgroundColor: '#FFF3EE',
   },
   myRatingHeading: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
   },
-  myRatingTitleContainer: {
+  myRatingCopy: {
     flex: 1,
-    gap: 4,
+    gap: 2,
   },
   myRatingTitle: {
     color: colors.text,
-    fontSize: 17,
+    fontSize: 13,
     fontFamily: fonts.bold,
   },
   myRatingDescription: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 12,
+    fontSize: 10,
   },
   myScore: {
     color: colors.primary,
-    fontSize: 15,
+    fontSize: 12,
     fontFamily: fonts.bold,
   },
   stars: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 5,
+    gap: 3,
   },
   starButton: {
     flex: 1,
-    minHeight: 50,
+    minHeight: 40,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  starButtonPressed: {
-    opacity: 0.65,
   },
   star: {
     color: '#C9BEB8',
     fontFamily: fonts.regular,
-    fontSize: 36,
-    lineHeight: 42,
+    fontSize: 30,
+    lineHeight: 34,
   },
   selectedStar: {
     color: '#E6A72E',
   },
   deleteRatingText: {
     color: colors.danger,
-    fontSize: 13,
-    fontFamily: fonts.bold,
+    fontSize: 10,
+    fontFamily: fonts.semiBold,
     textAlign: 'center',
   },
   memberRatings: {
-    gap: 11,
+    gap: 7,
   },
   memberRatingsTitle: {
     color: colors.text,
-    fontSize: 17,
+    fontSize: 13,
     fontFamily: fonts.bold,
   },
   memberRatingsList: {
-    gap: 9,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   memberRating: {
+    minHeight: 55,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 17,
-    backgroundColor: colors.surface,
-    padding: 13,
+    gap: 10,
+    paddingVertical: 8,
   },
   avatar: {
-    width: 42,
-    height: 42,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14,
+    overflow: 'hidden',
+    borderRadius: 18,
     backgroundColor: '#F7D9CF',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarText: {
     color: colors.primary,
-    fontSize: 17,
+    fontSize: 13,
     fontFamily: fonts.bold,
   },
   memberContent: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
   memberNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 6,
   },
   memberName: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: 12,
     fontFamily: fonts.bold,
   },
   username: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 12,
-  },
-  youBadge: {
-    borderRadius: 999,
-    backgroundColor: '#F7D9CF',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  youBadgeText: {
-    color: colors.primary,
     fontSize: 10,
+  },
+  youText: {
+    color: colors.primary,
+    fontSize: 9,
     fontFamily: fonts.bold,
   },
   memberScore: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
   memberScoreStar: {
     color: '#E6A72E',
     fontFamily: fonts.regular,
-    fontSize: 18,
+    fontSize: 15,
   },
   memberScoreText: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 13,
     fontFamily: fonts.bold,
   },
+  memberDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 46,
+    backgroundColor: colors.border,
+  },
+  pressed: {
+    opacity: 0.64,
+  },
   errorCard: {
-    gap: 8,
+    gap: 7,
     borderWidth: 1,
     borderColor: '#F3C5BC',
-    borderRadius: 16,
+    borderRadius: 14,
     backgroundColor: '#FFF1EE',
-    padding: 14,
+    padding: 12,
   },
   errorText: {
     color: colors.danger,
     fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 11,
+    lineHeight: 16,
   },
   retryText: {
     color: colors.primary,
-    fontSize: 13,
+    fontSize: 11,
     fontFamily: fonts.bold,
   },
 });
