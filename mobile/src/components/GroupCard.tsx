@@ -80,41 +80,6 @@ export function GroupCard({
         </View>
 
         <View style={styles.content}>
-          <View style={styles.badgeRow}>
-            <View
-              style={[
-                styles.badge,
-                group.privacy === 'PUBLIC' ? styles.publicBadge : null,
-                collaborating ? styles.collaborationBadge : null,
-              ]}
-            >
-              <SymbolView
-                name={{
-                  ios: collaborating ? 'person.2' : group.privacy === 'PRIVATE' ? 'lock' : 'globe',
-                  android: collaborating ? 'group' : group.privacy === 'PRIVATE' ? 'lock' : 'public',
-                  web: collaborating ? 'group' : group.privacy === 'PRIVATE' ? 'lock' : 'public',
-                }}
-                size={12}
-                tintColor={
-                  collaborating
-                    ? '#9A6A2C'
-                    : group.privacy === 'PUBLIC'
-                      ? '#607349'
-                      : colors.primaryPressed
-                }
-              />
-              <Text
-                style={[
-                  styles.badgeText,
-                  group.privacy === 'PUBLIC' ? styles.publicBadgeText : null,
-                  collaborating ? styles.collaborationBadgeText : null,
-                ]}
-              >
-                {collaborating ? 'Colaboras' : privacyLabel}
-              </Text>
-            </View>
-          </View>
-
           <Text
             numberOfLines={1}
             style={styles.title}
@@ -131,15 +96,34 @@ export function GroupCard({
             </Text>
           ) : null}
 
-          <View style={styles.locationRow}>
-            <SymbolView
-              name={{ ios: 'mappin', android: 'location_on', web: 'location_on' }}
-              size={13}
-              tintColor={colors.muted}
-            />
-            <Text numberOfLines={1} style={styles.location}>
-              {group.city ?? 'Sin ubicación'}
-            </Text>
+          <View style={styles.metaRow}>
+            <View style={styles.metaItem}>
+              <SymbolView
+                name={{
+                  ios: collaborating ? 'person.2' : group.privacy === 'PRIVATE' ? 'lock' : 'globe',
+                  android: collaborating ? 'group' : group.privacy === 'PRIVATE' ? 'lock' : 'public',
+                  web: collaborating ? 'group' : group.privacy === 'PRIVATE' ? 'lock' : 'public',
+                }}
+                size={12}
+                tintColor={colors.mutedStrong}
+              />
+              <Text style={styles.metaText}>
+                {collaborating ? 'Colaboras' : privacyLabel}
+              </Text>
+            </View>
+
+            <View style={styles.metaDot} />
+
+            <View style={[styles.metaItem, styles.locationItem]}>
+              <SymbolView
+                name={{ ios: 'mappin', android: 'location_on', web: 'location_on' }}
+                size={12}
+                tintColor={colors.muted}
+              />
+              <Text numberOfLines={1} style={styles.location}>
+                {group.city ?? 'Sin ubicación'}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -171,7 +155,6 @@ export function GroupCard({
           <Text style={styles.manageButtonText}>
             Gestionar colaboración
           </Text>
-          <Text style={styles.manageArrow}>›</Text>
         </Pressable>
       ) : null}
     </View>
@@ -180,29 +163,26 @@ export function GroupCard({
 
 const styles = StyleSheet.create({
   wrapper: {
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: 10,
-    backgroundColor: colors.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
   card: {
-    minHeight: 98,
+    minHeight: 96,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
-    padding: 8,
+    gap: 12,
+    paddingVertical: 11,
   },
   cardPressed: {
     opacity: 0.72,
   },
   icon: {
-    width: 68,
-    height: 82,
+    width: 72,
+    height: 72,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 7,
+    borderRadius: 14,
     backgroundColor: colors.primarySoft,
   },
   image: {
@@ -211,92 +191,73 @@ const styles = StyleSheet.create({
   },
   iconText: {
     color: colors.primary,
-    fontSize: 24,
+    fontSize: 25,
     fontFamily: fonts.bold,
   },
   content: {
     flex: 1,
-    alignSelf: 'stretch',
     justifyContent: 'center',
-    gap: 3,
-    paddingVertical: 1,
-  },
-  badgeRow: {
-    minHeight: 22,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    minWidth: 0,
+    gap: 5,
   },
   title: {
     color: colors.text,
-    fontSize: 14,
+    fontSize: 15,
+    lineHeight: 19,
     fontFamily: fonts.bold,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: colors.primarySoft,
-  },
-  badgeText: {
-    color: colors.primaryPressed,
-    fontSize: 8,
-    fontFamily: fonts.medium,
-  },
-  publicBadge: {
-    backgroundColor: colors.oliveSoft,
-  },
-  publicBadgeText: {
-    color: '#607349',
-  },
-  collaborationBadge: {
-    backgroundColor: colors.amberSoft,
-  },
-  collaborationBadgeText: {
-    color: '#9A6A2C',
   },
   description: {
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 9,
-    lineHeight: 13,
+    fontSize: 10.5,
+    lineHeight: 15,
   },
-  locationRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 7,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  locationItem: {
+    flex: 1,
+    minWidth: 0,
+  },
+  metaDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.borderStrong,
+  },
+  metaText: {
+    color: colors.mutedStrong,
+    fontFamily: fonts.medium,
+    fontSize: 9.5,
   },
   location: {
     flex: 1,
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 9,
+    fontSize: 9.5,
   },
   manageButton: {
-    minHeight: 32,
+    minHeight: 30,
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
-    paddingHorizontal: 13,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    backgroundColor: colors.surfaceMuted,
+    gap: 6,
+    marginLeft: 84,
+    marginBottom: 8,
   },
   manageButtonPressed: {
     opacity: 0.72,
   },
   manageButtonText: {
-    flex: 1,
     color: colors.primary,
-    fontSize: 10,
-    fontFamily: fonts.bold,
-  },
-  manageArrow: {
-    color: colors.primary,
-    fontSize: 17,
-    fontFamily: fonts.regular,
+    fontSize: 10.5,
+    fontFamily: fonts.semiBold,
   },
 });
