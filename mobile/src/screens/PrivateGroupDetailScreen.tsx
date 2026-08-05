@@ -7,6 +7,7 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,6 +35,7 @@ import { getGroup } from '../services/group-service';
 import { getRestaurantProposalPendingCount } from '../services/restaurant-proposal-service';
 import { getGroupRestaurants } from '../services/restaurant-service';
 import { colors } from '../theme/colors';
+import { fonts } from '../theme/fonts';
 import type {
   PublicGroupOwner,
   RestaurantGroup,
@@ -49,12 +51,63 @@ const tabs = [
   { key: 'activity' as const, label: 'Actividad' },
 ];
 
+const visitedRestaurantStatuses = new Set<GroupRestaurant['status']>([
+  'VISITED',
+  'FAVORITE',
+  'WANT_TO_REPEAT',
+  'DO_NOT_REPEAT',
+]);
+
+function sortFavoriteFirst(
+  first: GroupRestaurant,
+  second: GroupRestaurant,
+): number {
+  if (first.favorite !== second.favorite) {
+    return first.favorite ? -1 : 1;
+  }
+
+  return 0;
+}
+
+function sortPendingRestaurants(
+  first: GroupRestaurant,
+  second: GroupRestaurant,
+): number {
+  const favoriteOrder = sortFavoriteFirst(first, second);
+
+  if (favoriteOrder !== 0) {
+    return favoriteOrder;
+  }
+
+  return second.createdAt.localeCompare(first.createdAt);
+}
+
+function sortVisitedRestaurants(
+  first: GroupRestaurant,
+  second: GroupRestaurant,
+): number {
+  const favoriteOrder = sortFavoriteFirst(first, second);
+
+  if (favoriteOrder !== 0) {
+    return favoriteOrder;
+  }
+
+  const firstScore = first.averageScore ?? -1;
+  const secondScore = second.averageScore ?? -1;
+
+  if (firstScore !== secondScore) {
+    return secondScore - firstScore;
+  }
+
+  return second.updatedAt.localeCompare(first.updatedAt);
+}
+
 export default function PrivateGroupDetailScreen() {
   const { groupId, created } = useLocalSearchParams<{
     groupId: string;
     created?: string;
   }>();
-  const { accessToken, user } = useAuth();
+  const { accessToken } = useAuth();
 
   const [group, setGroup] = useState<RestaurantGroup | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -154,11 +207,45 @@ export default function PrivateGroupDetailScreen() {
     router.replace(`/groups/public/${groupId}` as Href);
   }, [group?.currentUserRole, group?.privacy, groupId]);
 
-  const isOwner = Boolean(group && user?.id === group.ownerUserId);
+  const isOwner = group?.currentUserRole === 'OWNER';
+  const canAddRestaurant = Boolean(
+    group
+    && (
+      group.currentUserRole === 'OWNER'
+      || group.currentUserRole === 'MEMBER'
+    ),
+  );
   const groupImageUri = group?.imageUrl
     ? resolveApiUrl(group.imageUrl)
     : null;
-  const previewRestaurants = restaurants.slice(0, 3);
+  const pendingRestaurants = restaurants
+    .filter(item => item.status === 'WANT_TO_GO')
+    .sort(sortPendingRestaurants);
+  const visitedRestaurants = restaurants
+    .filter(item => visitedRestaurantStatuses.has(item.status))
+    .sort(sortVisitedRestaurants);
+  const archivedRestaurants = restaurants
+    .filter(item => item.status === 'ARCHIVED')
+    .sort((first, second) =>
+      second.updatedAt.localeCompare(first.updatedAt)
+    );
+  const restaurantSections = [
+    {
+      key: 'pending',
+      title: 'Pendientes',
+      items: pendingRestaurants,
+    },
+    {
+      key: 'visited',
+      title: 'Visitados',
+      items: visitedRestaurants,
+    },
+    {
+      key: 'archived',
+      title: 'Archivados',
+      items: archivedRestaurants,
+    },
+  ].filter(section => section.items.length > 0);
   const ownerMember = members.find(member => member.role === 'OWNER');
   const activityOwner: PublicGroupOwner | null = group
     ? {
@@ -346,7 +433,7 @@ export default function PrivateGroupDetailScreen() {
                   ) : null}
                 </View>
 
-                {isOwner ? (
+                {canAddRestaurant ? (
                   <View style={styles.actionsRow}>
                     <View style={styles.mainAction}>
                       <PrimaryGroupAction
@@ -359,18 +446,20 @@ export default function PrivateGroupDetailScreen() {
                         title="Añadir restaurante"
                       />
                     </View>
-                    <View style={styles.secondaryAction}>
-                      <PrimaryGroupAction
-                        icon={{
-                          ios: 'person.badge.plus',
-                          android: 'person_add',
-                          web: 'person_add',
-                        }}
-                        onPress={openInvitations}
-                        outline
-                        title="Invitar"
-                      />
-                    </View>
+                    {isOwner ? (
+                      <View style={styles.secondaryAction}>
+                        <PrimaryGroupAction
+                          icon={{
+                            ios: 'person.badge.plus',
+                            android: 'person_add',
+                            web: 'person_add',
+                          }}
+                          onPress={openInvitations}
+                          outline
+                          title="Invitar"
+                        />
+                      </View>
+                    ) : null}
                   </View>
                 ) : null}
 
@@ -431,7 +520,7 @@ export default function PrivateGroupDetailScreen() {
                       />
                     ) : null}
 
-                    {previewRestaurants.length === 0 ? (
+                    {restaurants.length === 0 ? (
                       <EmptyTab
                         icon={{
                           ios: 'fork.knife',
@@ -442,14 +531,32 @@ export default function PrivateGroupDetailScreen() {
                         title="Todavía no hay restaurantes"
                       />
                     ) : (
-                      <View style={styles.restaurantList}>
-                        {previewRestaurants.map(item => (
-                          <GroupRestaurantListCard
-                            item={item}
-                            key={item.id}
-                            mode="private"
-                            onPress={() => openRestaurant(item)}
-                          />
+                      <View style={styles.restaurantSections}>
+                        {restaurantSections.map(section => (
+                          <View
+                            key={section.key}
+                            style={styles.restaurantSection}
+                          >
+                            <View style={styles.restaurantSectionHeader}>
+                              <Text style={styles.restaurantSectionTitle}>
+                                {section.title}
+                              </Text>
+                              <Text style={styles.restaurantSectionCount}>
+                                {section.items.length}
+                              </Text>
+                            </View>
+
+                            <View style={styles.restaurantList}>
+                              {section.items.map(item => (
+                                <GroupRestaurantListCard
+                                  item={item}
+                                  key={item.id}
+                                  mode="private"
+                                  onPress={() => openRestaurant(item)}
+                                />
+                              ))}
+                            </View>
+                          </View>
                         ))}
                       </View>
                     )}
@@ -539,5 +646,27 @@ const styles = StyleSheet.create({
   },
   restaurantList: {
     gap: 6,
+  },
+  restaurantSections: {
+    gap: 20,
+  },
+  restaurantSection: {
+    gap: 6,
+  },
+  restaurantSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 24,
+  },
+  restaurantSectionTitle: {
+    color: colors.text,
+    fontSize: 14,
+    fontFamily: fonts.bold,
+  },
+  restaurantSectionCount: {
+    color: colors.muted,
+    fontSize: 11,
+    fontFamily: fonts.medium,
   },
 });
