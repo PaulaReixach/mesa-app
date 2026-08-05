@@ -11,7 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GroupActivityTab } from '../components/GroupActivityTab';
 import {
@@ -62,6 +62,7 @@ export default function PrivateGroupDetailScreen() {
     created?: string;
   }>();
   const { accessToken } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [group, setGroup] = useState<RestaurantGroup | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -326,7 +327,12 @@ export default function PrivateGroupDetailScreen() {
       style={styles.safeArea}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          activeTab === 'activity'
+            ? { paddingBottom: insets.bottom + 28 }
+            : null,
+        ]}
         refreshControl={(
           <RefreshControl
             onRefresh={() => void load(true)}
