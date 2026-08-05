@@ -8,7 +8,7 @@ import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  ImageBackground,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -250,30 +250,79 @@ export default function RestaurantDetailScreen() {
             Restaurante
           </Text>
 
-          {canManageRestaurant ? (
-            <Pressable
-              accessibilityLabel="Editar restaurante"
-              accessibilityRole="button"
-              disabled={!item}
-              onPress={() => router.push({
-                pathname: '/groups/[groupId]/restaurants/edit',
-                params: { groupId, groupRestaurantId },
-              })}
-              style={styles.iconButton}
-            >
-              <SymbolView
-                name={{
-                  ios: 'pencil',
-                  android: 'edit',
-                  web: 'edit',
-                }}
-                size={19}
-                tintColor={colors.primary}
-              />
-            </Pressable>
-          ) : (
-            <View style={styles.iconButton} />
-          )}
+          <View style={styles.headerActions}>
+            {item && canManageRestaurant ? (
+              <Pressable
+                accessibilityLabel={
+                  item.favorite
+                    ? 'Quitar de favoritos'
+                    : 'Añadir a favoritos'
+                }
+                accessibilityRole="button"
+                accessibilityState={{ selected: item.favorite }}
+                disabled={isUpdatingFavorite}
+                hitSlop={6}
+                onPress={() => void handleFavoriteChange()}
+                style={({ pressed }) => [
+                  styles.iconButton,
+                  pressed ? styles.headerActionPressed : null,
+                ]}
+              >
+                {isUpdatingFavorite ? (
+                  <ActivityIndicator color={colors.primary} size="small" />
+                ) : (
+                  <SymbolView
+                    name={{
+                      ios: item.favorite ? 'heart.fill' : 'heart',
+                      android: item.favorite ? 'favorite' : 'favorite_border',
+                      web: item.favorite ? 'favorite' : 'favorite_border',
+                    }}
+                    size={19}
+                    tintColor={item.favorite ? colors.primary : colors.mutedStrong}
+                  />
+                )}
+              </Pressable>
+            ) : item?.favorite ? (
+              <View accessibilityLabel="Favorito" style={styles.iconButton}>
+                <SymbolView
+                  name={{
+                    ios: 'heart.fill',
+                    android: 'favorite',
+                    web: 'favorite',
+                  }}
+                  size={19}
+                  tintColor={colors.primary}
+                />
+              </View>
+            ) : null}
+
+            {canManageRestaurant ? (
+              <Pressable
+                accessibilityLabel="Editar restaurante"
+                accessibilityRole="button"
+                disabled={!item}
+                hitSlop={6}
+                onPress={() => router.push({
+                  pathname: '/groups/[groupId]/restaurants/edit',
+                  params: { groupId, groupRestaurantId },
+                })}
+                style={({ pressed }) => [
+                  styles.iconButton,
+                  pressed ? styles.headerActionPressed : null,
+                ]}
+              >
+                <SymbolView
+                  name={{
+                    ios: 'pencil',
+                    android: 'edit',
+                    web: 'edit',
+                  }}
+                  size={19}
+                  tintColor={colors.primary}
+                />
+              </Pressable>
+            ) : null}
+          </View>
         </View>
 
         {loading ? (
@@ -308,89 +357,37 @@ export default function RestaurantDetailScreen() {
         && group ? (
           <>
             <View style={styles.hero}>
-              <ImageBackground
-                imageStyle={styles.artworkImage}
+              <Image
+                accessibilityIgnoresInvertColors
                 resizeMode="cover"
                 source={{ uri: getRestaurantFallbackImage(restaurant.name) }}
                 style={styles.artwork}
-              >
-                <View style={styles.artworkOverlay} />
-                {canManageRestaurant ? (
-                  <Pressable
-                    accessibilityLabel={
-                      item.favorite
-                        ? 'Quitar de favoritos'
-                        : 'Añadir a favoritos'
-                    }
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: item.favorite }}
-                    disabled={isUpdatingFavorite}
-                    hitSlop={8}
-                    onPress={() => void handleFavoriteChange()}
-                    style={({ pressed }) => [
-                      styles.heroFavoriteButton,
-                      item.favorite ? styles.heroFavoriteButtonSelected : null,
-                      pressed ? styles.heroFavoriteButtonPressed : null,
-                    ]}
-                  >
-                    {isUpdatingFavorite ? (
-                      <ActivityIndicator color={colors.white} size="small" />
-                    ) : (
-                      <SymbolView
-                        name={{
-                          ios: item.favorite ? 'heart.fill' : 'heart',
-                          android: item.favorite ? 'favorite' : 'favorite_border',
-                          web: item.favorite ? 'favorite' : 'favorite_border',
-                        }}
-                        size={18}
-                        tintColor={colors.white}
-                      />
-                    )}
-                  </Pressable>
-                ) : item.favorite ? (
-                  <View
-                    accessibilityLabel="Favorito"
-                    style={[
-                      styles.heroFavoriteButton,
-                      styles.heroFavoriteButtonSelected,
-                    ]}
-                  >
-                    <SymbolView
-                      name={{
-                        ios: 'heart.fill',
-                        android: 'favorite',
-                        web: 'favorite',
-                      }}
-                      size={18}
-                      tintColor={colors.white}
-                    />
-                  </View>
-                ) : null}
-                <View style={styles.heroBody}>
+              />
+
+              <View style={styles.heroBody}>
+                <View style={styles.heroMetaRow}>
                   <Text style={styles.eyebrow}>
                     {restaurant.category?.toUpperCase() ?? 'RESTAURANTE'}
                   </Text>
-                  <Text
-                    ellipsizeMode="tail"
-                    numberOfLines={2}
-                    style={styles.name}
+                  <View
+                    style={[
+                      styles.status,
+                      { backgroundColor: status.backgroundColor },
+                    ]}
                   >
-                    {restaurant.name}
-                  </Text>
-                  <View style={styles.heroMetaRow}>
-                    <View
-                      style={[
-                        styles.status,
-                        { backgroundColor: status.backgroundColor },
-                      ]}
-                    >
-                      <Text style={[styles.statusText, { color: status.textColor }]}>
-                        {status.label}
-                      </Text>
-                    </View>
+                    <Text style={[styles.statusText, { color: status.textColor }]}>
+                      {status.label}
+                    </Text>
                   </View>
                 </View>
-              </ImageBackground>
+                <Text
+                  ellipsizeMode="tail"
+                  numberOfLines={2}
+                  style={styles.name}
+                >
+                  {restaurant.name}
+                </Text>
+              </View>
             </View>
 
             <View
@@ -535,6 +532,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    position: 'relative',
   },
   iconButton: {
     width: 38,
@@ -544,9 +542,23 @@ const styles = StyleSheet.create({
     borderRadius: 19,
   },
   headerTitle: {
+    position: 'absolute',
+    right: 80,
+    left: 80,
     color: colors.text,
     fontSize: 15,
     fontFamily: fonts.bold,
+    textAlign: 'center',
+  },
+  headerActions: {
+    minWidth: 38,
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  headerActionPressed: {
+    opacity: 0.58,
   },
   loading: {
     alignItems: 'center',
@@ -554,60 +566,33 @@ const styles = StyleSheet.create({
   },
   hero: {
     overflow: 'hidden',
-    minHeight: 236,
-    borderRadius: 24,
-    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceElevated,
   },
   artwork: {
-    minHeight: 236,
-    justifyContent: 'flex-end',
-  },
-  artworkImage: {
-    borderRadius: 24,
-  },
-  artworkOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(31, 22, 18, 0.42)',
-  },
-  heroFavoriteButton: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    zIndex: 1,
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-    borderRadius: 19,
-    backgroundColor: 'rgba(31, 22, 18, 0.5)',
-  },
-  heroFavoriteButtonSelected: {
-    borderColor: 'rgba(255, 255, 255, 0.55)',
-    backgroundColor: colors.primary,
-  },
-  heroFavoriteButtonPressed: {
-    opacity: 0.72,
+    width: '100%',
+    height: 158,
   },
   heroBody: {
     alignItems: 'flex-start',
-    gap: 6,
-    padding: 18,
+    gap: 7,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
   },
   eyebrow: {
-    color: colors.white,
+    color: colors.muted,
     fontSize: 9,
     fontFamily: fonts.bold,
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
   name: {
-    maxWidth: 310,
-    color: colors.white,
-    fontSize: 27,
-    lineHeight: 32,
+    color: colors.text,
+    fontSize: 22,
+    lineHeight: 27,
     fontFamily: fonts.bold,
-    letterSpacing: -0.75,
+    letterSpacing: -0.45,
   },
   heroMetaRow: {
     flexDirection: 'row',

@@ -430,10 +430,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
   },
   myRating: {
-    gap: 11,
-    padding: 14,
-    borderRadius: 17,
-    backgroundColor: '#FFF3EE',
+    gap: 10,
+    paddingVertical: 13,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   myRatingHeading: {
     flexDirection: 'row',
@@ -456,7 +457,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   myScore: {
-    color: colors.primary,
+    color: colors.text,
     fontSize: 12,
     fontFamily: fonts.bold,
   },
@@ -513,14 +514,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     borderRadius: 18,
-    backgroundColor: '#F7D9CF',
+    backgroundColor: colors.surfaceMuted,
   },
   avatarImage: {
     width: '100%',
     height: '100%',
   },
   avatarText: {
-    color: colors.primary,
+    color: colors.mutedStrong,
     fontSize: 13,
     fontFamily: fonts.bold,
   },
