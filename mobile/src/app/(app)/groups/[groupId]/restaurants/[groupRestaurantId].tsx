@@ -36,6 +36,7 @@ import { colors } from '../../../../../theme/colors';
 import type { RestaurantGroup } from '../../../../../types/group';
 import type { GroupRestaurant } from '../../../../../types/restaurant';
 import { fonts } from '../../../../../theme/fonts';
+import { shadows } from '../../../../../theme/layout';
 
 type RestaurantDetailTab = 'summary' | 'photos' | 'ratings';
 
@@ -357,36 +358,35 @@ export default function RestaurantDetailScreen() {
         && group ? (
           <>
             <View style={styles.hero}>
-              <Image
-                accessibilityIgnoresInvertColors
-                resizeMode="cover"
-                source={{ uri: getRestaurantFallbackImage(restaurant.name) }}
-                style={styles.artwork}
-              />
-
+              <View style={styles.artworkFrame}>
+                <Image
+                  accessibilityIgnoresInvertColors
+                  resizeMode="cover"
+                  source={{ uri: getRestaurantFallbackImage(restaurant.name) }}
+                  style={styles.artwork}
+                />
+              </View>
               <View style={styles.heroBody}>
-                <View style={styles.heroMetaRow}>
-                  <Text style={styles.eyebrow}>
-                    {restaurant.category?.toUpperCase() ?? 'RESTAURANTE'}
-                  </Text>
-                  <View
-                    style={[
-                      styles.status,
-                      { backgroundColor: status.backgroundColor },
-                    ]}
-                  >
-                    <Text style={[styles.statusText, { color: status.textColor }]}>
-                      {status.label}
-                    </Text>
-                  </View>
-                </View>
+                <Text style={styles.eyebrow}>
+                  {restaurant.category?.toUpperCase() ?? 'RESTAURANTE'}
+                </Text>
                 <Text
                   ellipsizeMode="tail"
-                  numberOfLines={2}
+                  numberOfLines={3}
                   style={styles.name}
                 >
                   {restaurant.name}
                 </Text>
+                <View
+                  style={[
+                    styles.status,
+                    { backgroundColor: status.backgroundColor },
+                  ]}
+                >
+                  <Text style={[styles.statusText, { color: status.textColor }]}>
+                    {status.label}
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -565,21 +565,36 @@ const styles = StyleSheet.create({
     paddingVertical: 100,
   },
   hero: {
-    overflow: 'hidden',
+    minHeight: 142,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+    padding: 10,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: 22,
     backgroundColor: colors.surfaceElevated,
+    ...shadows.card,
+  },
+  artworkFrame: {
+    width: 122,
+    height: 122,
+    overflow: 'hidden',
+    borderRadius: 16,
+    backgroundColor: colors.surfaceMuted,
   },
   artwork: {
     width: '100%',
-    height: 158,
+    height: '100%',
   },
   heroBody: {
+    flex: 1,
     alignItems: 'flex-start',
-    gap: 7,
-    paddingHorizontal: 15,
-    paddingVertical: 13,
+    justifyContent: 'center',
+    gap: 8,
+    paddingTop: 5,
+    paddingRight: 6,
+    paddingBottom: 5,
   },
   eyebrow: {
     color: colors.muted,
@@ -589,19 +604,14 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 22,
-    lineHeight: 27,
+    fontSize: 20,
+    lineHeight: 24,
     fontFamily: fonts.bold,
-    letterSpacing: -0.45,
-  },
-  heroMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 7,
+    letterSpacing: -0.4,
   },
   status: {
-    paddingHorizontal: 9,
+    marginTop: 1,
+    paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
   },
