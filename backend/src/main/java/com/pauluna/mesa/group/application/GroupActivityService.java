@@ -43,7 +43,7 @@ public class GroupActivityService {
         }
 
         return activityRepository
-                .findTop50ByGroupIdOrderByCreatedAtDescIdDesc(groupId)
+                .findTop10ByGroupIdOrderByCreatedAtDescIdDesc(groupId)
                 .stream()
                 .map(GroupActivityResponse::from)
                 .toList();

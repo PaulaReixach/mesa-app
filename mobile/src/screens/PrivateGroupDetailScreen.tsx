@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -26,6 +27,10 @@ import {
 import { GroupMembersTab } from '../components/GroupMembersTab';
 import { useAuth } from '../contexts/auth-context';
 import { getErrorMessage, resolveApiUrl } from '../lib/api';
+import {
+  getGroupRestaurantSectionItems,
+  type GroupRestaurantSectionKey,
+} from '../lib/group-restaurant-list';
 import { getGroupInvitations } from '../services/group-invitation-service';
 import {
   getGroupMembers,
@@ -50,57 +55,6 @@ const tabs = [
   { key: 'members' as const, label: 'Miembros' },
   { key: 'activity' as const, label: 'Actividad' },
 ];
-
-const visitedRestaurantStatuses = new Set<GroupRestaurant['status']>([
-  'VISITED',
-  'FAVORITE',
-  'WANT_TO_REPEAT',
-  'DO_NOT_REPEAT',
-]);
-
-function sortFavoriteFirst(
-  first: GroupRestaurant,
-  second: GroupRestaurant,
-): number {
-  if (first.favorite !== second.favorite) {
-    return first.favorite ? -1 : 1;
-  }
-
-  return 0;
-}
-
-function sortPendingRestaurants(
-  first: GroupRestaurant,
-  second: GroupRestaurant,
-): number {
-  const favoriteOrder = sortFavoriteFirst(first, second);
-
-  if (favoriteOrder !== 0) {
-    return favoriteOrder;
-  }
-
-  return second.createdAt.localeCompare(first.createdAt);
-}
-
-function sortVisitedRestaurants(
-  first: GroupRestaurant,
-  second: GroupRestaurant,
-): number {
-  const favoriteOrder = sortFavoriteFirst(first, second);
-
-  if (favoriteOrder !== 0) {
-    return favoriteOrder;
-  }
-
-  const firstScore = first.averageScore ?? -1;
-  const secondScore = second.averageScore ?? -1;
-
-  if (firstScore !== secondScore) {
-    return secondScore - firstScore;
-  }
-
-  return second.updatedAt.localeCompare(first.updatedAt);
-}
 
 export default function PrivateGroupDetailScreen() {
   const { groupId, created } = useLocalSearchParams<{
@@ -218,32 +172,21 @@ export default function PrivateGroupDetailScreen() {
   const groupImageUri = group?.imageUrl
     ? resolveApiUrl(group.imageUrl)
     : null;
-  const pendingRestaurants = restaurants
-    .filter(item => item.status === 'WANT_TO_GO')
-    .sort(sortPendingRestaurants);
-  const visitedRestaurants = restaurants
-    .filter(item => visitedRestaurantStatuses.has(item.status))
-    .sort(sortVisitedRestaurants);
-  const archivedRestaurants = restaurants
-    .filter(item => item.status === 'ARCHIVED')
-    .sort((first, second) =>
-      second.updatedAt.localeCompare(first.updatedAt)
-    );
   const restaurantSections = [
     {
-      key: 'pending',
+      key: 'pending' as const,
       title: 'Pendientes',
-      items: pendingRestaurants,
+      items: getGroupRestaurantSectionItems(restaurants, 'pending'),
     },
     {
-      key: 'visited',
+      key: 'visited' as const,
       title: 'Visitados',
-      items: visitedRestaurants,
+      items: getGroupRestaurantSectionItems(restaurants, 'visited'),
     },
     {
-      key: 'archived',
+      key: 'archived' as const,
       title: 'Archivados',
-      items: archivedRestaurants,
+      items: getGroupRestaurantSectionItems(restaurants, 'archived'),
     },
   ].filter(section => section.items.length > 0);
   const ownerMember = members.find(member => member.role === 'OWNER');
@@ -291,6 +234,15 @@ export default function PrivateGroupDetailScreen() {
         groupId,
         groupRestaurantId: item.id,
       },
+    });
+  }
+
+  function openRestaurantSection(
+    section: GroupRestaurantSectionKey,
+  ): void {
+    router.push({
+      pathname: '/groups/[groupId]/restaurants',
+      params: { groupId, section },
     });
   }
 
@@ -537,17 +489,31 @@ export default function PrivateGroupDetailScreen() {
                             key={section.key}
                             style={styles.restaurantSection}
                           >
-                            <View style={styles.restaurantSectionHeader}>
-                              <Text style={styles.restaurantSectionTitle}>
-                                {section.title}
+                            <Pressable
+                              accessibilityLabel={`Ver todos los restaurantes ${section.title.toLowerCase()}`}
+                              accessibilityRole="button"
+                              hitSlop={6}
+                              onPress={() => openRestaurantSection(section.key)}
+                              style={({ pressed }) => [
+                                styles.restaurantSectionHeader,
+                                pressed ? styles.restaurantSectionHeaderPressed : null,
+                              ]}
+                            >
+                              <View style={styles.restaurantSectionHeading}>
+                                <Text style={styles.restaurantSectionTitle}>
+                                  {section.title}
+                                </Text>
+                                <Text style={styles.restaurantSectionCount}>
+                                  {section.items.length}
+                                </Text>
+                              </View>
+                              <Text style={styles.restaurantSectionAction}>
+                                Ver todos ›
                               </Text>
-                              <Text style={styles.restaurantSectionCount}>
-                                {section.items.length}
-                              </Text>
-                            </View>
+                            </Pressable>
 
                             <View style={styles.restaurantList}>
-                              {section.items.map(item => (
+                              {section.items.slice(0, 3).map(item => (
                                 <GroupRestaurantListCard
                                   item={item}
                                   key={item.id}
@@ -659,6 +625,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 24,
   },
+  restaurantSectionHeaderPressed: {
+    opacity: 0.64,
+  },
+  restaurantSectionHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
   restaurantSectionTitle: {
     color: colors.text,
     fontSize: 14,
@@ -668,5 +642,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 11,
     fontFamily: fonts.medium,
+  },
+  restaurantSectionAction: {
+    color: colors.primary,
+    fontSize: 9,
+    fontFamily: fonts.bold,
   },
 });

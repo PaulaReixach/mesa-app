@@ -10,7 +10,7 @@ import com.pauluna.mesa.group.domain.GroupActivityEvent;
 public interface GroupActivityEventRepository
         extends JpaRepository<GroupActivityEvent, Long> {
 
-    List<GroupActivityEvent> findTop50ByGroupIdOrderByCreatedAtDescIdDesc(
+    List<GroupActivityEvent> findTop10ByGroupIdOrderByCreatedAtDescIdDesc(
             UUID groupId
     );
 }

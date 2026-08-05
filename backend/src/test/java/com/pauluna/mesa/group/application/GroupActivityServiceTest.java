@@ -52,7 +52,7 @@ class GroupActivityServiceTest {
         RestaurantGroup group = group(GroupPrivacy.PRIVATE);
 
         when(groupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
-        when(activityRepository.findTop50ByGroupIdOrderByCreatedAtDescIdDesc(GROUP_ID))
+        when(activityRepository.findTop10ByGroupIdOrderByCreatedAtDescIdDesc(GROUP_ID))
                 .thenReturn(List.of());
 
         assertTrue(service.getActivity(GROUP_ID, USER_ID).isEmpty());
@@ -65,7 +65,7 @@ class GroupActivityServiceTest {
         RestaurantGroup group = group(GroupPrivacy.PUBLIC);
 
         when(groupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
-        when(activityRepository.findTop50ByGroupIdOrderByCreatedAtDescIdDesc(GROUP_ID))
+        when(activityRepository.findTop10ByGroupIdOrderByCreatedAtDescIdDesc(GROUP_ID))
                 .thenReturn(List.of());
 
         assertTrue(service.getActivity(GROUP_ID, USER_ID).isEmpty());
