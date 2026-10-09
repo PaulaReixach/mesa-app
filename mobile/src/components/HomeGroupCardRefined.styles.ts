@@ -1,85 +1,76 @@
 import { StyleSheet } from 'react-native';
-
-import { colors } from '../theme/colors';
+import { colors, loginColors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
+import { radii, spacing } from '../theme/layout';
 
 export const groupCardStyles = StyleSheet.create({
   card: {
     width: '100%',
-    height: 124,
-    overflow: 'hidden',
-    borderRadius: 21,
-    backgroundColor: '#D7CEC8',
+    borderRadius: radii.lg,
+    backgroundColor: loginColors.primaryPressed
   },
   image: {
-    flex: 1,
+    minHeight: 152,
+    padding: spacing.md,
+    gap: spacing.xl,
+    justifyContent: 'space-between',
     overflow: 'hidden',
-    borderRadius: 21,
+    borderRadius: radii.lg
   },
-  imageRadius: {
-    borderRadius: 21,
-  },
+  imageRadius: { borderRadius: radii.lg },
   overlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(30, 22, 18, 0.35)',
+    backgroundColor: 'rgba(30, 22, 18, 0.58)'
   },
   privacyPill: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    gap: spacing.xxs,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
+    borderRadius: radii.sm,
+    backgroundColor: loginColors.cream
   },
   privacyText: {
-    color: '#617C4A',
+    color: colors.olivePressed,
     fontFamily: fonts.medium,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm
   },
   bottomContent: {
-    position: 'absolute',
-    right: 56,
-    bottom: 16,
-    left: 14,
-    gap: 2,
+    flex: 1,
+    minWidth: 0,
+    gap: spacing.xxs
   },
   title: {
     color: colors.white,
     fontFamily: fonts.bold,
-    fontSize: 21,
-    lineHeight: 26,
-    letterSpacing: -0.35,
+    fontSize: 22,
+    lineHeight: 28
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.xxs
   },
   locationText: {
     flex: 1,
     color: colors.white,
     fontFamily: fonts.medium,
     fontSize: 14,
-    lineHeight: 18,
+    lineHeight: 20
   },
   openButton: {
-    position: 'absolute',
-    right: 13,
-    bottom: 35,
-    width: 34,
-    height: 34,
+    width: 32,
+    height: 32,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 17,
-    backgroundColor: 'rgba(34, 26, 22, 0.50)',
+    justifyContent: 'center'
   },
-  pressed: {
-    opacity: 0.84,
-    transform: [{ scale: 0.992 }],
-  },
+  pressed: { opacity: 0.85 },
 });

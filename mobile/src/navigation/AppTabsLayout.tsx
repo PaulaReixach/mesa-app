@@ -1,9 +1,8 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { router, Tabs, usePathname } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { useRef } from 'react';
-import { Animated, Pressable, View } from 'react-native';
+import { Animated, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import type { ColorValue, StyleProp, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -99,6 +98,8 @@ function PrimaryTabIcon({
 export default function AppTabsLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
+  const { fontScale } = useWindowDimensions();
+  const labelExtraHeight = Math.ceil(14 * (Math.min(fontScale, 1.3) - 1));
   const bottomInset = Math.max(insets.bottom, 12);
   const showPrimaryNavigation = [
     '/home',
@@ -117,7 +118,10 @@ export default function AppTabsLayout() {
         tabBarActiveTintColor: navigationColors.active,
         tabBarInactiveTintColor: navigationColors.inactive,
         tabBarHideOnKeyboard: true,
-        tabBarAllowFontScaling: false,
+        tabBarAllowFontScaling: true,
+        tabBarLabel: ({ children, color }) => (
+          <Text maxFontSizeMultiplier={1.3} style={[styles.tabLabel, { color }]}>{children}</Text>
+        ),
         tabBarLabelPosition: 'below-icon',
         tabBarButton: ({
           accessibilityLabel,
@@ -141,7 +145,7 @@ export default function AppTabsLayout() {
           </PrimaryTabButton>
         ),
         tabBarItemStyle: {
-          height: 60,
+          height: 60 + labelExtraHeight,
           justifyContent: 'center',
           paddingTop: 4,
         },
@@ -161,7 +165,7 @@ export default function AppTabsLayout() {
           right: 0,
           bottom: 0,
           left: 0,
-          height: 66 + bottomInset,
+          height: 66 + bottomInset + labelExtraHeight,
           paddingHorizontal: 8,
           paddingTop: 6,
           paddingBottom: bottomInset,
@@ -226,7 +230,6 @@ export default function AppTabsLayout() {
         options={{
           title: 'Añadir',
           tabBarAccessibilityLabel: 'Añadir',
-          tabBarLabel: () => null,
           tabBarButton: ({
             accessibilityState,
             accessibilityLabel,
@@ -241,32 +244,19 @@ export default function AppTabsLayout() {
               onLongPress={onLongPress}
               onPress={onPress}
               testID={testID}
-              style={styles.addTabButton}
+              style={[styles.addTabButton, { height: 60 + labelExtraHeight }]}
             >
               {({ pressed }) => (
-                <View
-                  style={[
-                    styles.addCircleFrame,
-                    pressed ? styles.addCircleFramePressed : null,
-                  ]}
-                >
-                  <LinearGradient
-                    colors={
-                      pressed
-                        ? ['#A9321F', '#C74329', '#B73822']
-                        : ['#B93620', '#DD4D2C', '#C43E24']
-                    }
-                    end={{ x: 1, y: 1 }}
-                    start={{ x: 0, y: 0 }}
-                    style={styles.addCircle}
-                  >
+                <>
+                  <View style={[styles.addCircle, pressed && styles.addCircleFramePressed]}>
                     <SymbolView
                       name={{ ios: 'plus', android: 'add', web: 'add' }}
-                      size={31}
+                      size={24}
                       tintColor={colors.white}
                     />
-                  </LinearGradient>
-                </View>
+                  </View>
+                  <Text maxFontSizeMultiplier={1.3} style={[styles.tabLabel, { color: navigationColors.active }]}>Añadir</Text>
+                </>
               )}
             </Pressable>
           ),

@@ -51,6 +51,15 @@ Read `PROJECT_CONTEXT_MESA.md` before making architectural or product changes.
 - Use `EXPO_PUBLIC_API_URL`.
 - Run TypeScript checks after mobile changes.
 
+## Efficient work on the existing application
+
+- Treat Mesa as an existing React Native/Expo application with a Java/Spring backend. Start from its current implementation and requested problem.
+- For mobile UI, prioritize mesa-ui (project design rules) and vercel-react-native-skills when available. Read only rules relevant to the task; web-specific Next.js, DOM, Tailwind and shadcn guidance does not apply automatically to native screens.
+- Reuse the current theme, components and accepted visual direction. If documentation and current implementation disagree, establish the current behavior before changing it.
+- Use targeted searches and diffs. The nested mesa-app-build-88394e folder is a separate copy; use the root mobile/ and backend/ unless the user specifies otherwise.
+- Preserve local uncommitted changes. Work on one clearly scoped screen or flow at a time and verify that result before expanding the scope.
+- Existing UX reviews and HTML prototypes provide context, but do not prove current native behavior. Validate visual changes in the native app when the environment permits; report the specific limitation when it does not.
+
 ## Completion requirements
 
 Before finishing:

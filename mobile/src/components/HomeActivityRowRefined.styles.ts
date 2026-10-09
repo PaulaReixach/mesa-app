@@ -1,63 +1,64 @@
 import { StyleSheet } from 'react-native';
-
-import { colors } from '../theme/colors';
+import { colors, loginColors as homeColors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
+import { spacing } from '../theme/layout';
 
 export const activityStyles = StyleSheet.create({
   row: {
-    minHeight: 40,
+    minHeight: 72,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    paddingHorizontal: 13,
-    paddingVertical: 4,
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    padding: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5DAD4',
-    backgroundColor: '#FFFFFF',
+    borderBottomColor: colors.border,
+    backgroundColor: colors.white
   },
   avatar: {
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 14,
-    backgroundColor: '#F5DDD5',
+    borderRadius: 16,
+    backgroundColor: colors.primarySoft
   },
   avatarImage: {
     width: '100%',
-    height: '100%',
+    height: '100%'
   },
   avatarInitial: {
-    color: '#C94B2E',
+    color: homeColors.primary,
     fontFamily: fonts.medium,
-    fontSize: 12,
+    fontSize: 14
   },
   copy: {
     flex: 1,
     minWidth: 0,
+    gap: spacing.xxs
   },
   sentence: {
-    color: colors.muted,
+    color: homeColors.muted,
     fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: 14,
+    lineHeight: 21
   },
   actor: {
-    color: '#D34A2B',
-    fontFamily: fonts.bold,
+    color: homeColors.primary,
+    fontFamily: fonts.semiBold
   },
   strong: {
-    color: colors.text,
-    fontFamily: fonts.bold,
+    color: homeColors.text,
+    fontFamily: fonts.semiBold
   },
   group: {
-    color: colors.olive,
-    fontFamily: fonts.semiBold,
+    color: colors.olivePressed,
+    fontFamily: fonts.semiBold
   },
   time: {
-    color: colors.muted,
+    color: homeColors.muted,
     fontFamily: fonts.regular,
-    fontSize: 9,
+    fontSize: 13,
+    lineHeight: 19
   },
 });

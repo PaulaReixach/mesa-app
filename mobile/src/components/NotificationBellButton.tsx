@@ -1,9 +1,10 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useNotifications } from '../contexts/notification-context';
-import { colors } from '../theme/colors';
+import { colors, loginColors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
 
 export function NotificationBellButton({
@@ -14,6 +15,7 @@ export function NotificationBellButton({
   const { unreadCount } = useNotifications();
   const badgeText = unreadCount > 9 ? '9+' : String(unreadCount);
   const hero = variant === 'hero';
+  const [focused, setFocused] = useState(false);
 
   return (
     <Pressable
@@ -23,10 +25,13 @@ export function NotificationBellButton({
           : 'Notificaciones'
       }
       accessibilityRole="button"
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       onPress={() => router.push('/notifications')}
       style={({ pressed }) => [
         styles.button,
         hero ? styles.heroButton : null,
+        focused && hero ? styles.heroFocus : null,
         pressed ? styles.buttonPressed : null,
       ]}
     >
@@ -36,8 +41,8 @@ export function NotificationBellButton({
           android: 'notifications',
           web: 'notifications',
         }}
-        size={hero ? 27 : 20}
-        tintColor={hero ? '#FFF8F2' : colors.text}
+        size={hero ? 24 : 20}
+        tintColor={hero ? loginColors.cream : colors.text}
       />
 
       {unreadCount > 0 ? (
@@ -62,12 +67,13 @@ const styles = StyleSheet.create({
   },
   buttonPressed: { opacity: 0.7 },
   heroButton: {
-    width: 36,
-    height: 36,
+    width: 48,
+    height: 48,
     borderWidth: 0,
     borderRadius: 18,
     backgroundColor: 'transparent',
   },
+  heroFocus: { outlineWidth: 2, outlineOffset: 2, outlineColor: loginColors.cream },
   badge: {
     position: 'absolute',
     top: -3,
@@ -88,8 +94,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   heroBadge: {
-    top: 1,
-    right: 0,
+    top: 8,
+    right: 8,
     minWidth: 7,
     width: 7,
     height: 7,

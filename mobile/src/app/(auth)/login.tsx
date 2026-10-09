@@ -1,15 +1,11 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SymbolView } from 'expo-symbols';
+import { useEffect, useRef, useState } from 'react';
 import {
-  useRef,
-  useState,
-} from 'react';
-import {
-  ActivityIndicator,
   Alert,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,93 +16,87 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { loginHeroImage } from '../../assets/LoginHeroImage';
+import { FormField } from '../../components/FormField';
+import { PrimaryButton } from '../../components/PrimaryButton';
 import { useAuth } from '../../contexts/auth-context';
 import { getErrorMessage } from '../../lib/api';
-import { colors } from '../../theme/colors';
+import { colors, loginColors } from '../../theme/colors';
 import { fonts } from '../../theme/fonts';
+import { radii } from '../../theme/layout';
 
-const HERO_SOURCE_WIDTH = 852;
-const HERO_SOURCE_HEIGHT = 830;
-const HERO_SOURCE_TOP_INSET = 70;
-const HERO_CARD_TOP = 789;
 const MAX_SCREEN_WIDTH = 430;
-
-const loginColors = {
-  background: '#C65336',
-  cardTop: '#F9F5F2',
-  cardMiddle: '#FFFCF9',
-  cardBottom: '#FFFFFF',
-  primary: '#C64A2E',
-  primaryPressed: '#A93B25',
-  buttonStart: '#C94E30',
-  buttonEnd: '#BE4028',
-  inputBorder: '#BEB5AF',
-  inputBorderFocused: '#C9684E',
-  inputBackground: 'rgba(255, 255, 255, 0.62)',
-  text: '#222222',
-  muted: '#67615E',
-  errorBackground: colors.dangerSoft,
-  errorBorder: '#E7B7AE',
-};
-
-type FocusedField = 'identifier' | 'password' | null;
+const serifFont = Platform.select({
+  ios: 'Georgia',
+  android: 'serif',
+  default: 'Georgia',
+});
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
   const insets = useSafeAreaInsets();
-  const {
-    height: windowHeight,
-    width: windowWidth,
-  } = useWindowDimensions();
+  const { width, height, fontScale } = useWindowDimensions();
+  const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
-
+  const scrollRef = useRef<ScrollView>(null);
+  const requestInFlight = useRef(false);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [rememberSession, setRememberSession] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<FocusedField>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [identifierError, setIdentifierError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const contentWidth = Math.min(windowWidth, MAX_SCREEN_WIDTH);
-  const heroScale = contentWidth / HERO_SOURCE_WIDTH;
-  const heroTop = Math.max(
-    insets.top,
-    HERO_SOURCE_TOP_INSET * heroScale,
-  );
-  const cardTop = heroTop
-    + (HERO_CARD_TOP - HERO_SOURCE_TOP_INSET) * heroScale;
-  const cardRadius = 96 * heroScale;
-  const horizontalPadding = contentWidth < 360 ? 24 : 32;
-  const cardMinHeight = Math.max(windowHeight - cardTop, 484);
-  const cardBottomPadding = Math.max(insets.bottom + 10, 34);
+  const contentWidth = Math.min(width - insets.left - insets.right, MAX_SCREEN_WIDTH);
+  const compact = height - insets.top - insets.bottom < 700;
+  const horizontalPadding = contentWidth < 360 ? 20 : 24;
+  const showIllustration = !keyboardVisible && fontScale <= 1.2 && contentWidth >= 350;
+
+  useEffect(() => {
+    const show = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => setKeyboardVisible(true),
+    );
+    const hide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardVisible(false),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   async function handleLogin() {
+    // A ref also prevents simultaneous keyboard and button submissions.
+    if (requestInFlight.current) return;
+
     setRequestError(null);
+    setIdentifierError(identifier.trim() ? null : 'Introduce tu email.');
+    setPasswordError(password ? null : 'Introduce tu contraseña.');
 
     if (!identifier.trim() || !password) {
-      setRequestError('Introduce tu email y la contraseña.');
+      if (!identifier.trim()) {
+        emailInputRef.current?.focus();
+      } else {
+        passwordInputRef.current?.focus();
+      }
       return;
     }
 
+    requestInFlight.current = true;
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-
-      await signIn(
-        {
-          identifier: identifier.trim(),
-          password,
-        },
-        rememberSession,
-      );
-
+      await signIn({ identifier: identifier.trim(), password }, rememberSession);
       router.replace('/home');
     } catch (error) {
       setRequestError(getErrorMessage(error));
     } finally {
+      requestInFlight.current = false;
       setIsSubmitting(false);
     }
   }
@@ -115,232 +105,130 @@ export default function LoginScreen() {
     Alert.alert(
       'Recuperar contraseña',
       'La recuperación de contraseña estará disponible próximamente.',
-      [
-        {
-          text: 'Entendido',
-        },
-      ],
+      [{ text: 'Entendido' }],
     );
   }
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.screen}>
       <StatusBar style="light" />
-
-      <View
-        pointerEvents="none"
-        style={[
-          styles.heroCanvas,
-          {
-            left: (windowWidth - contentWidth) / 2,
-            width: contentWidth,
-          },
-        ]}
-      >
-        <Image
-          accessible={false}
-          resizeMode="contain"
-          source={loginHeroImage}
-          style={[
-            styles.heroImage,
-            {
-              height: HERO_SOURCE_HEIGHT * heroScale,
-              top: heroTop,
-              width: contentWidth,
-            },
-          ]}
-        />
-      </View>
-
+      <View style={[styles.statusBarInset, { height: insets.top }]} />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView
+          ref={scrollRef}
           bounces={false}
-          contentContainerStyle={[
-            styles.scrollContent,
-            {
-              paddingTop: cardTop,
-            },
-          ]}
+          contentContainerStyle={styles.scrollContent}
+          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            // Keep the error and retry action visible when feedback expands the form.
+            if (requestError) scrollRef.current?.scrollToEnd({ animated: false });
+          }}
         >
-          <View
-            style={[
-              styles.card,
+          <View style={styles.content}>
+            <View style={[
+              styles.hero,
               {
-                borderTopLeftRadius: cardRadius,
-                borderTopRightRadius: cardRadius,
-                minHeight: cardMinHeight,
-                width: contentWidth,
+                paddingTop: keyboardVisible ? 12 : compact ? 16 : 20,
+                paddingHorizontal: horizontalPadding,
               },
-            ]}
-          >
-            <LinearGradient
-              colors={[
-                loginColors.cardTop,
-                loginColors.cardMiddle,
-                loginColors.cardBottom,
-              ]}
-              end={{
-                x: 0.72,
-                y: 1,
-              }}
-              pointerEvents="none"
-              start={{
-                x: 0.18,
-                y: 0,
-              }}
-              style={StyleSheet.absoluteFill}
-            />
+              compact && styles.compactHero,
+              keyboardVisible && styles.keyboardHero,
+            ]}>
+              {showIllustration && (
+                <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                  <Image
+                    accessible={false}
+                    importantForAccessibility="no"
+                    resizeMode="contain"
+                    source={require('../../../assets/images/login-header-table.png')}
+                    style={[styles.heroImage, {
+                      width: contentWidth,
+                      height: contentWidth / 2,
+                      right: -contentWidth * 0.1,
+                    }]}
+                  />
+                </View>
+              )}
+              <View accessible accessibilityLabel="Mesa" style={styles.brand}>
+                <View style={styles.logo}>
+                  <Text maxFontSizeMultiplier={1} style={styles.logoLetter}>M</Text>
+                </View>
+                <Text maxFontSizeMultiplier={1.2} style={styles.brandName}>Mesa</Text>
+              </View>
+              {!keyboardVisible && (
+                <Text style={[
+                  styles.tagline,
+                  showIllustration && styles.taglineWithIllustration,
+                  showIllustration && { width: 180 * fontScale },
+                ]}>
+                  Los mejores planes empiezan alrededor de una mesa.
+                </Text>
+              )}
+            </View>
 
-            <View
-              style={[
-                styles.formContent,
-                {
-                  paddingBottom: cardBottomPadding,
-                  paddingHorizontal: horizontalPadding,
-                },
-              ]}
-            >
+            <View style={[styles.card, { paddingHorizontal: horizontalPadding }]}>
               <View style={styles.heading}>
-                <Text
-                  allowFontScaling={false}
-                  style={styles.title}
-                >
-                  Qué bien verte
-                </Text>
-
-                <Text
-                  allowFontScaling={false}
-                  style={styles.subtitle}
-                >
-                  Entra y vuelve a compartir buenos planes.
-                </Text>
+                <Text accessibilityRole="header" style={styles.title}>Qué bien verte</Text>
+                <Text style={styles.subtitle}>Tus planes te esperan.</Text>
               </View>
 
               <View style={styles.fields}>
-                <View style={styles.field}>
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.label}
-                  >
-                    Email
-                  </Text>
-
-                  <View
-                    style={[
-                      styles.inputContainer,
-                      focusedField === 'identifier'
-                        ? styles.inputContainerFocused
-                        : null,
-                    ]}
-                  >
-                    <View style={styles.leadingIcon}>
-                      <SymbolView
-                        name={{
-                          android: 'mail',
-                          ios: 'envelope',
-                          web: 'mail',
-                        }}
-                        size={22}
-                        tintColor={loginColors.text}
-                      />
-                    </View>
-
-                    <TextInput
-                      allowFontScaling={false}
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      autoCorrect={false}
-                      keyboardType="email-address"
-                      onBlur={() => {
-                        setFocusedField(null);
-                      }}
-                      onChangeText={setIdentifier}
-                      onFocus={() => {
-                        setFocusedField('identifier');
-                      }}
-                      onSubmitEditing={() => {
-                        passwordInputRef.current?.focus();
-                      }}
-                      placeholder="tu@email.com"
-                      placeholderTextColor={loginColors.muted}
-                      returnKeyType="next"
-                      style={styles.input}
-                      value={identifier}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.field}>
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.label}
-                  >
-                    Contraseña
-                  </Text>
-
-                  <View
-                    style={[
-                      styles.inputContainer,
-                      focusedField === 'password'
-                        ? styles.inputContainerFocused
-                        : null,
-                    ]}
-                  >
-                    <View style={styles.leadingIcon}>
-                      <SymbolView
-                        name={{
-                          android: 'lock',
-                          ios: 'lock',
-                          web: 'lock',
-                        }}
-                        size={22}
-                        tintColor={loginColors.text}
-                      />
-                    </View>
-
-                    <TextInput
-                      ref={passwordInputRef}
-                      allowFontScaling={false}
-                      autoCapitalize="none"
-                      autoComplete="password"
-                      onBlur={() => {
-                        setFocusedField(null);
-                      }}
-                      onChangeText={setPassword}
-                      onFocus={() => {
-                        setFocusedField('password');
-                      }}
-                      onSubmitEditing={() => {
-                        void handleLogin();
-                      }}
-                      placeholder="••••••••"
-                      placeholderTextColor={loginColors.muted}
-                      returnKeyType="done"
-                      secureTextEntry={!showPassword}
-                      style={styles.input}
-                      value={password}
-                    />
-
+                <FormField
+                  variant="login"
+                  label="Email"
+                  inputRef={emailInputRef}
+                  error={identifierError}
+                  value={identifier}
+                  placeholder="tu@email.com"
+                  editable={!isSubmitting}
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  autoCorrect={false}
+                  importantForAutofill="yes"
+                  keyboardType="email-address"
+                  returnKeyType="next"
+                  submitBehavior="submit"
+                  onChangeText={value => {
+                    setIdentifier(value);
+                    setIdentifierError(null);
+                    setRequestError(null);
+                  }}
+                  onSubmitEditing={() => passwordInputRef.current?.focus()}
+                />
+                <FormField
+                  variant="login"
+                  label="Contraseña"
+                  inputRef={passwordInputRef}
+                  error={passwordError}
+                  value={password}
+                  placeholder="Tu contraseña"
+                  editable={!isSubmitting}
+                  autoCapitalize="none"
+                  autoComplete="current-password"
+                  autoCorrect={false}
+                  importantForAutofill="yes"
+                  secureTextEntry={!showPassword}
+                  returnKeyType="go"
+                  submitBehavior="submit"
+                  onChangeText={value => {
+                    setPassword(value);
+                    setPasswordError(null);
+                    setRequestError(null);
+                  }}
+                  onSubmitEditing={() => void handleLogin()}
+                  rightAccessory={(
                     <Pressable
-                      accessibilityLabel={
-                        showPassword
-                          ? 'Ocultar contraseña'
-                          : 'Mostrar contraseña'
-                      }
                       accessibilityRole="button"
-                      hitSlop={8}
-                      onPress={() => {
-                        setShowPassword((currentValue) => !currentValue);
-                      }}
-                      style={({ pressed }) => [
-                        styles.eyeButton,
-                        pressed ? styles.controlPressed : null,
-                      ]}
+                      accessibilityLabel={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      accessibilityState={{ disabled: isSubmitting }}
+                      disabled={isSubmitting}
+                      onPress={() => setShowPassword(value => !value)}
+                      style={({ pressed }) => [styles.eyeButton, pressed && styles.pressed]}
                     >
                       <SymbolView
                         name={{
@@ -352,355 +240,132 @@ export default function LoginScreen() {
                         tintColor={loginColors.text}
                       />
                     </Pressable>
-                  </View>
-                </View>
+                  )}
+                />
               </View>
-
-              <View style={styles.optionsRow}>
-                <Pressable
-                  accessibilityRole="checkbox"
-                  accessibilityState={{
-                    checked: rememberSession,
-                  }}
-                  hitSlop={8}
-                  onPress={() => {
-                    setRememberSession((currentValue) => !currentValue);
-                  }}
-                  style={({ pressed }) => [
-                    styles.rememberButton,
-                    pressed ? styles.controlPressed : null,
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.checkbox,
-                      rememberSession ? styles.checkboxSelected : null,
-                    ]}
-                  >
-                    {rememberSession ? (
-                      <Text
-                        allowFontScaling={false}
-                        style={styles.checkmark}
-                      >
-                        ✓
-                      </Text>
-                    ) : null}
-                  </View>
-
-                  <Text
-                    allowFontScaling={false}
-                    numberOfLines={1}
-                    style={styles.rememberText}
-                  >
-                    Recordarme
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  accessibilityRole="button"
-                  hitSlop={8}
-                  onPress={handleForgotPassword}
-                  style={({ pressed }) => [
-                    styles.forgotButton,
-                    pressed ? styles.controlPressed : null,
-                  ]}
-                >
-                  <Text
-                    adjustsFontSizeToFit
-                    allowFontScaling={false}
-                    minimumFontScale={0.86}
-                    numberOfLines={1}
-                    style={styles.forgotText}
-                  >
-                    ¿Has olvidado tu contraseña?
-                  </Text>
-                </Pressable>
-              </View>
-
-              {requestError ? (
-                <View
-                  accessibilityLiveRegion="polite"
-                  style={styles.errorContainer}
-                >
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.errorText}
-                  >
-                    {requestError}
-                  </Text>
-                </View>
-              ) : null}
 
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel="Recuperar contraseña"
+                accessibilityState={{ disabled: isSubmitting }}
                 disabled={isSubmitting}
-                onPress={() => {
-                  void handleLogin();
-                }}
-                style={({ pressed }) => [
-                  styles.loginButton,
-                  pressed && !isSubmitting ? styles.loginButtonPressed : null,
-                  isSubmitting ? styles.loginButtonDisabled : null,
-                ]}
+                onPress={handleForgotPassword}
+                style={({ pressed }) => [styles.forgotButton, pressed && styles.pressed]}
               >
-                <LinearGradient
-                  colors={[
-                    loginColors.buttonStart,
-                    loginColors.buttonEnd,
-                  ]}
-                  end={{
-                    x: 1,
-                    y: 0.8,
-                  }}
-                  pointerEvents="none"
-                  start={{
-                    x: 0,
-                    y: 0.2,
-                  }}
-                  style={StyleSheet.absoluteFill}
-                />
-
-                {isSubmitting ? (
-                  <ActivityIndicator
-                    color={colors.white}
-                    size="small"
-                  />
-                ) : (
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.loginButtonText}
-                  >
-                    Entrar
-                  </Text>
-                )}
+                <Text style={styles.forgotText}>¿Has olvidado tu contraseña?</Text>
               </Pressable>
 
               <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  router.push('/register');
-                }}
-                style={({ pressed }) => [
-                  styles.registerButton,
-                  pressed ? styles.controlPressed : null,
-                ]}
+                accessibilityRole="checkbox"
+                accessibilityLabel="Mantener sesión"
+                accessibilityState={{ checked: rememberSession, disabled: isSubmitting }}
+                aria-checked={rememberSession}
+                aria-disabled={isSubmitting}
+                disabled={isSubmitting}
+                onPress={() => setRememberSession(value => !value)}
+                style={({ pressed }) => [styles.rememberButton, pressed && styles.pressed]}
               >
-                <Text
-                  allowFontScaling={false}
-                  style={styles.registerText}
-                >
-                  ¿Aún no tienes cuenta?{' '}
-                  <Text style={styles.registerStrong}>
-                    Crear cuenta
+                <View style={[styles.checkbox, rememberSession && styles.checkboxSelected]}>
+                  {rememberSession && (
+                    <SymbolView
+                      name={{ android: 'check', ios: 'checkmark', web: 'check' }}
+                      size={18}
+                      tintColor={colors.white}
+                    />
+                  )}
+                </View>
+                <Text style={styles.rememberText}>Mantener sesión</Text>
+              </Pressable>
+
+              {requestError && (
+                <View style={styles.errorContainer}>
+                  <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.errorText}>
+                    {requestError}
                   </Text>
+                </View>
+              )}
+
+              <View style={styles.loginButton}>
+                <PrimaryButton
+                  variant="login"
+                  title="Entrar"
+                  loading={isSubmitting}
+                  onPress={() => void handleLogin()}
+                />
+              </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="¿Aún no tienes cuenta? Crear cuenta"
+                accessibilityState={{ disabled: isSubmitting }}
+                disabled={isSubmitting}
+                onPress={() => router.push('/register')}
+                style={({ pressed }) => [styles.registerButton, pressed && styles.pressed]}
+              >
+                <Text style={styles.registerText}>
+                  ¿Aún no tienes cuenta?{' '}
+                  <Text style={styles.registerStrong}>Crear cuenta</Text>
                 </Text>
               </Pressable>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    overflow: 'hidden',
-    backgroundColor: loginColors.background,
+  screen: { flex: 1, backgroundColor: loginColors.surface },
+  statusBarInset: { backgroundColor: loginColors.hero },
+  keyboardView: { flex: 1 },
+  scrollContent: { flexGrow: 1, alignItems: 'center' },
+  content: { flexGrow: 1, width: '100%', maxWidth: MAX_SCREEN_WIDTH },
+  hero: { paddingBottom: 48, backgroundColor: loginColors.hero, overflow: 'hidden' },
+  heroImage: { position: 'absolute', bottom: 12 },
+  compactHero: { paddingBottom: 40 },
+  keyboardHero: { paddingBottom: 36 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'flex-start' },
+  logo: {
+    width: 40, height: 40, borderRadius: 12, backgroundColor: loginColors.cream,
+    alignItems: 'center', justifyContent: 'center',
   },
-  heroCanvas: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
+  logoLetter: {
+    fontFamily: serifFont, fontStyle: 'italic', fontSize: 32, lineHeight: 38,
+    color: loginColors.primary, includeFontPadding: false,
   },
-  heroImage: {
-    position: 'absolute',
-    left: 0,
+  brandName: { fontFamily: serifFont, fontSize: 32, color: loginColors.cream },
+  tagline: {
+    marginTop: 16, fontFamily: serifFont, fontSize: 18, lineHeight: 24,
+    color: loginColors.cream,
   },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    alignItems: 'center',
-  },
+  taglineWithIllustration: { maxWidth: '64%' },
   card: {
-    position: 'relative',
-    overflow: 'hidden',
+    flexGrow: 1, marginTop: -24, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl,
+    paddingTop: 24, paddingBottom: 24, backgroundColor: loginColors.surface,
   },
-  formContent: {
-    paddingTop: 54,
-  },
-  heading: {
-    width: '100%',
-  },
-  title: {
-    color: loginColors.text,
-    fontFamily: fonts.bold,
-    fontSize: 30,
-    letterSpacing: -0.7,
-    lineHeight: 38,
-  },
-  subtitle: {
-    marginTop: 5,
-    color: loginColors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 14.5,
-    letterSpacing: 0.05,
-    lineHeight: 21,
-  },
-  fields: {
-    gap: 15,
-    marginTop: 14,
-  },
-  field: {
-    gap: 7,
-  },
-  label: {
-    color: loginColors.text,
-    fontFamily: fonts.semiBold,
-    fontSize: 14.5,
-    lineHeight: 18,
-  },
-  inputContainer: {
-    height: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: loginColors.inputBorder,
-    borderRadius: 10,
-    backgroundColor: loginColors.inputBackground,
-  },
-  inputContainerFocused: {
-    borderWidth: 1.4,
-    borderColor: loginColors.inputBorderFocused,
-  },
-  leadingIcon: {
-    width: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  input: {
-    flex: 1,
-    height: 50,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    color: loginColors.text,
-    fontFamily: fonts.regular,
-    fontSize: 14.5,
-  },
-  eyeButton: {
-    width: 52,
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  optionsRow: {
-    minHeight: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 17,
-  },
-  rememberButton: {
-    minHeight: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
+  heading: { gap: 8 },
+  title: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34, letterSpacing: -0.5, color: loginColors.text },
+  subtitle: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: loginColors.muted },
+  fields: { marginTop: 24, gap: 20 },
+  forgotButton: { minHeight: 48, paddingVertical: 12, alignSelf: 'flex-end', justifyContent: 'center', maxWidth: '100%' },
+  forgotText: { fontFamily: fonts.medium, fontSize: 14, lineHeight: 20, color: loginColors.primary, textAlign: 'right' },
+  eyeButton: { width: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  rememberButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12 },
   checkbox: {
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.2,
-    borderColor: loginColors.inputBorder,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    width: 24, height: 24, borderWidth: 1, borderColor: loginColors.inputBorder,
+    borderRadius: 6, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center',
   },
-  checkboxSelected: {
-    borderColor: loginColors.primary,
-    backgroundColor: loginColors.primary,
-  },
-  checkmark: {
-    marginTop: -1,
-    color: colors.white,
-    fontFamily: fonts.semiBold,
-    fontSize: 15,
-    lineHeight: 17,
-  },
-  rememberText: {
-    color: loginColors.text,
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  forgotButton: {
-    minHeight: 20,
-    maxWidth: '62%',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  forgotText: {
-    color: loginColors.primary,
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 18,
-    textAlign: 'right',
-  },
-  controlPressed: {
-    opacity: 0.58,
-  },
+  checkboxSelected: { borderColor: loginColors.primary, backgroundColor: loginColors.primary },
+  rememberText: { flexShrink: 1, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: loginColors.muted },
   errorContainer: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: loginColors.errorBorder,
-    borderRadius: 9,
-    backgroundColor: loginColors.errorBackground,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    marginTop: 12, padding: 12, borderRadius: radii.sm, borderWidth: 1,
+    borderColor: colors.danger, backgroundColor: colors.dangerSoft,
   },
-  errorText: {
-    color: colors.danger,
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  loginButton: {
-    height: 46,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 18,
-    overflow: 'hidden',
-    borderRadius: 9,
-  },
-  loginButtonPressed: {
-    opacity: 0.86,
-  },
-  loginButtonDisabled: {
-    opacity: 0.64,
-  },
-  loginButtonText: {
-    color: colors.white,
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  registerButton: {
-    alignItems: 'center',
-    marginTop: 23,
-    paddingVertical: 1,
-  },
-  registerText: {
-    color: loginColors.text,
-    fontFamily: fonts.regular,
-    fontSize: 13.5,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  registerStrong: {
-    color: loginColors.primary,
-    fontFamily: fonts.semiBold,
-  },
+  errorText: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 21, color: colors.danger },
+  loginButton: { marginTop: 12 },
+  registerButton: { minHeight: 48, justifyContent: 'center', marginTop: 12, paddingVertical: 12 },
+  registerText: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 22, color: loginColors.muted, textAlign: 'center' },
+  registerStrong: { fontFamily: fonts.semiBold, color: loginColors.primary },
+  pressed: { opacity: 0.7 },
 });

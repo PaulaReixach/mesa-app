@@ -1,60 +1,32 @@
 import { SymbolView } from 'expo-symbols';
-import type { ComponentProps } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { quickActionStyles as styles } from './HomeQuickActionCardRefined.styles';
-import { colors } from '../theme/colors';
-
-type SymbolName = ComponentProps<typeof SymbolView>['name'];
+import { homeFocusStyle } from './HomeDashboardStyles';
+import { colors, loginColors } from '../theme/colors';
 
 type Props = {
-  badge?: number;
-  icon: SymbolName;
+  icon: ComponentProps<typeof SymbolView>['name'];
   onPress: () => void;
   subtitle: string;
   title: string;
   tone?: 'terracotta' | 'sage';
+  stacked?: boolean;
 };
 
-export function HomeQuickActionCardRefined({
-  badge,
-  icon,
-  onPress,
-  subtitle,
-  title,
-  tone = 'terracotta',
-}: Props) {
-  const sage = tone === 'sage';
-
+export function HomeQuickActionCardRefined({ icon, onPress, subtitle, title, tone = 'terracotta', stacked = false }: Props) {
+  const [focused, setFocused] = useState(false);
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
-    >
-      <View style={[styles.iconWrap, sage ? styles.iconWrapSage : null]}>
-        <SymbolView
-          name={icon}
-          size={29}
-          tintColor={sage ? '#5B7740' : colors.primary}
-        />
+    <Pressable accessibilityRole="button" accessibilityLabel={`${title}, ${subtitle}`}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress}
+      style={({ pressed }) => [styles.card, stacked && styles.stacked, pressed && styles.pressed, focused && homeFocusStyle]}>
+      <View style={styles.iconWrap} accessible={false} importantForAccessibility="no-hide-descendants">
+        <SymbolView name={icon} size={24} tintColor={tone === 'sage' ? colors.olivePressed : loginColors.primary} />
       </View>
-
-      {badge != null && badge > 0 ? (
-        <View style={styles.badge}>
-          <Text allowFontScaling={false} style={styles.badgeText}>
-            {badge > 9 ? '9+' : badge}
-          </Text>
-        </View>
-      ) : null}
-
       <View style={styles.copy}>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
-          {title}
-        </Text>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.subtitle}>
-          {subtitle}
-        </Text>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
       </View>
     </Pressable>
   );

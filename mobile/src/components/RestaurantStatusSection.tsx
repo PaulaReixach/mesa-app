@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 import { getErrorMessage } from '../lib/api';
-import { updateGroupRestaurantStatus } from '../services/restaurant-service';
+import { updateGroupRestaurantFavorite, updateGroupRestaurantStatus } from '../services/restaurant-service';
 import { colors } from '../theme/colors';
 import {
   GroupRestaurant,
@@ -84,11 +84,6 @@ const statusOptions: StatusOption[] = [
     description: 'Ya habéis ido al restaurante.',
   },
   {
-    status: 'FAVORITE',
-    label: 'Favorito',
-    description: 'Uno de los favoritos del grupo.',
-  },
-  {
     status: 'WANT_TO_REPEAT',
     label: 'Queremos repetir',
     description: 'Os gustó y queréis volver.',
@@ -113,6 +108,25 @@ export function RestaurantStatusSection({
 
   const [updateError, setUpdateError] =
     useState<string | null>(null);
+  const [updatingFavorite, setUpdatingFavorite] = useState(false);
+  const updating = updatingStatus !== null || updatingFavorite;
+
+  async function handleFavoriteChange(): Promise<void> {
+    try {
+      setUpdateError(null);
+      setUpdatingFavorite(true);
+      onUpdated(await updateGroupRestaurantFavorite(
+        groupId,
+        groupRestaurant.id,
+        { favorite: !groupRestaurant.favorite },
+        accessToken,
+      ));
+    } catch (error) {
+      setUpdateError(getErrorMessage(error));
+    } finally {
+      setUpdatingFavorite(false);
+    }
+  }
 
   async function handleStatusChange(
     status: GroupRestaurantStatus,
@@ -165,13 +179,29 @@ export function RestaurantStatusSection({
 
   return (
     <View style={styles.section}>
+      <Pressable
+        accessibilityRole="switch"
+        accessibilityLabel="Favorito del grupo"
+        accessibilityState={{ checked: groupRestaurant.favorite, disabled: updating, busy: updatingFavorite }}
+        disabled={updating}
+        onPress={() => void handleFavoriteChange()}
+        style={({ pressed }) => [styles.statusOption, groupRestaurant.favorite && styles.selectedStatusOption, pressed && styles.statusOptionPressed]}
+      >
+        <View style={styles.statusOptionText}>
+          <Text style={styles.statusOptionTitle}>Favorito del grupo</Text>
+          <Text style={styles.statusOptionDescription}>Guarda esta marca sin cambiar si queréis ir o ya lo habéis visitado.</Text>
+        </View>
+        {updatingFavorite ? <ActivityIndicator color={colors.primary} /> : (
+          <Text style={styles.checkmark}>{groupRestaurant.favorite ? '♥' : '♡'}</Text>
+        )}
+      </Pressable>
       <View style={styles.heading}>
         <Text style={styles.sectionTitle}>
           Estado
         </Text>
 
         <Text style={styles.sectionDescription}>
-          Cualquier miembro del grupo puede cambiarlo.
+          El estado y el favorito se comparten en este grupo.
         </Text>
       </View>
 
@@ -186,7 +216,8 @@ export function RestaurantStatusSection({
           return (
             <Pressable
               accessibilityRole="button"
-              disabled={updatingStatus !== null}
+              accessibilityState={{ selected: isSelected, disabled: updating, busy: isUpdating }}
+              disabled={updating}
               key={option.status}
               onPress={() => {
                 void handleStatusChange(
@@ -250,7 +281,7 @@ export function RestaurantStatusSection({
       {groupRestaurant.status === 'ARCHIVED' ? (
         <Pressable
           accessibilityRole="button"
-          disabled={updatingStatus !== null}
+          disabled={updating}
           onPress={() => {
             void handleStatusChange('WANT_TO_GO');
           }}
@@ -275,7 +306,7 @@ export function RestaurantStatusSection({
       ) : (
         <Pressable
           accessibilityRole="button"
-          disabled={updatingStatus !== null}
+          disabled={updating}
           onPress={confirmArchive}
           style={({ pressed }) => [
             styles.archiveButton,

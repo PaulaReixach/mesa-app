@@ -8,9 +8,8 @@ import {
   View,
 } from 'react-native';
 
-import { restaurantFallbackImages } from '../constants/restaurant-fallback-images';
 import { resolveApiUrl } from '../lib/api';
-import { colors } from '../theme/colors';
+import { colors, loginColors } from '../theme/colors';
 import type { GroupMember } from '../types/group-member';
 import type {
   GroupRestaurant,
@@ -317,7 +316,6 @@ export function PrimaryGroupAction({
         tintColor={outline ? colors.primary : colors.white}
       />
       <Text
-        numberOfLines={1}
         style={[
           styles.primaryActionText,
           outline ? styles.primaryActionTextOutline : null,
@@ -489,15 +487,6 @@ const statusPresentation: Record<
   },
 };
 
-function fallbackImageFor(name: string): string {
-  const index = Array.from(name).reduce(
-    (total, character) => total + character.charCodeAt(0),
-    0,
-  ) % restaurantFallbackImages.length;
-
-  return restaurantFallbackImages[index];
-}
-
 export function GroupRestaurantListCard({
   item,
   mode,
@@ -521,20 +510,19 @@ export function GroupRestaurantListCard({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={`${item.restaurant.name}. ${location || 'Sin ubicación'}. ${mode === 'private' ? status.label + '. ' : ''}${item.favorite ? 'Favorito del grupo. ' : ''}${item.averageScore == null ? 'Aún no hay valoraciones' : `Media ${average} de 5, ${item.ratingsCount} valoraciones`}`}
       onPress={onPress}
       style={({ pressed }) => [
         styles.restaurantCard,
         pressed ? styles.pressed : null,
       ]}
     >
-      <Image
-        resizeMode="cover"
-        source={{ uri: fallbackImageFor(item.restaurant.name) }}
-        style={styles.restaurantImage}
-      />
+      <View style={[styles.restaurantImage, styles.restaurantMonogram]} accessible={false}>
+        <Text style={styles.restaurantInitial}>{item.restaurant.name.trim().charAt(0).toUpperCase()}</Text>
+      </View>
 
       <View style={styles.restaurantContent}>
-        <Text numberOfLines={1} style={styles.restaurantName}>
+        <Text numberOfLines={2} style={styles.restaurantName}>
           {item.restaurant.name}
         </Text>
         <Text numberOfLines={1} style={styles.restaurantCategory}>
@@ -554,37 +542,37 @@ export function GroupRestaurantListCard({
             {location || 'Sin ubicación'}
           </Text>
         </View>
-      </View>
-
-      <View style={styles.restaurantTrailing}>
-        {mode === 'private' ? (
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: status.background },
-            ]}
-          >
-            <Text
+        <View style={styles.restaurantTrailing}>
+          {item.favorite ? <Text style={styles.ratingStar}>♥</Text> : null}
+          {mode === 'private' ? (
+            <View
               style={[
-                styles.statusText,
-                { color: status.text },
+                styles.statusBadge,
+                { backgroundColor: status.background },
               ]}
             >
-              {status.label}
-            </Text>
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: status.text },
+                ]}
+              >
+                {status.label}
+              </Text>
+            </View>
+          ) : null}
+
+          <View style={styles.ratingPill}>
+            <Text style={styles.ratingStar}>★</Text>
+            <Text style={styles.ratingValue}>{average}</Text>
           </View>
-        ) : null}
 
-        <View style={styles.ratingPill}>
-          <Text style={styles.ratingStar}>★</Text>
-          <Text style={styles.ratingValue}>{average}</Text>
+          {mode === 'public' && item.ratingsCount > 0 ? (
+            <Text style={styles.ratingCount}>
+              {item.ratingsCount} valoraciones
+            </Text>
+          ) : null}
         </View>
-
-        {mode === 'public' && item.ratingsCount > 0 ? (
-          <Text style={styles.ratingCount}>
-            {item.ratingsCount} valoraciones
-          </Text>
-        ) : null}
       </View>
 
       <SymbolView
@@ -770,6 +758,16 @@ export function EmptyTab({
 }
 
 const styles = StyleSheet.create({
+  restaurantMonogram: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.oliveSoft,
+  },
+  restaurantInitial: {
+    color: colors.text,
+    fontSize: 26,
+    fontFamily: fonts.bold,
+  },
   hero: {
     height: 154,
     overflow: 'hidden',
@@ -922,23 +920,26 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
   },
   primaryAction: {
-    minHeight: 44,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 7,
     paddingHorizontal: 11,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: 14,
-    backgroundColor: colors.primary,
+    backgroundColor: loginColors.primary,
   },
   primaryActionOutline: {
     backgroundColor: colors.surface,
   },
   primaryActionText: {
     color: colors.white,
-    fontSize: 11,
+    fontSize: 14,
+    flexShrink: 1,
+    textAlign: 'center',
     fontFamily: fonts.bold,
   },
   primaryActionTextOutline: {
@@ -1039,8 +1040,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   restaurantImage: {
-    width: 72,
-    height: 72,
+    width: 56,
+    height: 56,
     borderRadius: 13,
     backgroundColor: '#E8DED8',
   },
@@ -1051,12 +1052,12 @@ const styles = StyleSheet.create({
   },
   restaurantName: {
     color: colors.text,
-    fontSize: 12,
+    fontSize: 16,
     fontFamily: fonts.bold,
   },
   restaurantCategory: {
     color: colors.text,
-    fontSize: 9,
+    fontSize: 12,
     fontFamily: fonts.semiBold,
   },
   restaurantLocationRow: {
@@ -1068,10 +1069,12 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 8,
+    fontSize: 12,
   },
   restaurantTrailing: {
-    alignItems: 'flex-end',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 5,
   },
   statusBadge: {
@@ -1080,7 +1083,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   statusText: {
-    fontSize: 7,
+    fontSize: 12,
     fontFamily: fonts.bold,
   },
   ratingPill: {
@@ -1099,15 +1102,13 @@ const styles = StyleSheet.create({
   },
   ratingValue: {
     color: colors.text,
-    fontSize: 9,
+    fontSize: 14,
     fontFamily: fonts.bold,
   },
   ratingCount: {
-    maxWidth: 62,
     color: colors.muted,
     fontFamily: fonts.regular,
-    fontSize: 7,
-    textAlign: 'right',
+    fontSize: 12,
   },
   memberPreview: {
     gap: 10,
