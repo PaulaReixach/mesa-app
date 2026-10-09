@@ -1,16 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { createThemedStyles, fonts, typography } from '../theme';
 
-import { colors, loginColors } from '../theme/colors';
-import { fonts } from '../theme/fonts';
-
-export const tabNavigationColors = {
-  active: loginColors.primary,
-  inactive: '#6F6864',
-  border: colors.border,
-  background: '#FFFDFC',
-} as const;
-
-export const appTabsStyles = StyleSheet.create({
+// MESA tab bar (DESIGN.md › Components): olive on a sage pill when selected; terracotta "Añadir".
+export const useAppTabsStyles = createThemedStyles(({ colors }) => ({
   primaryTabButton: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -20,10 +11,10 @@ export const appTabsStyles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
+    borderRadius: 10,
   },
   primaryTabIconActive: {
-    backgroundColor: '#F9E4DC',
+    backgroundColor: colors.secondarySoft,
   },
   addTabButton: {
     flex: 1,
@@ -34,7 +25,7 @@ export const appTabsStyles = StyleSheet.create({
     overflow: 'visible',
   },
   addCircleFramePressed: {
-    backgroundColor: loginColors.primaryPressed,
+    backgroundColor: colors.accentPressed,
   },
   addCircle: {
     width: 36,
@@ -43,7 +34,8 @@ export const appTabsStyles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     borderRadius: 18,
-    backgroundColor: loginColors.primary,
+    backgroundColor: colors.accent,
   },
-  tabLabel: { fontSize: 11, lineHeight: 14, fontFamily: fonts.medium, textAlign: 'center' },
-});
+  tabLabel: { ...typography.tab, textAlign: 'center' },
+  tabLabelSelected: { fontFamily: fonts.semiBold },
+}));

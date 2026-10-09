@@ -1,72 +1,74 @@
 # Mesa — Repository Instructions
 
-## Project
+Mesa is a collaborative mobile app for saving, organizing and rating restaurants within
+private or public groups. Product context: `PRODUCT.md`. Visual system: `DESIGN.md`.
 
-Mesa is a collaborative mobile application for saving, organizing and
-rating restaurants within private or public groups.
+## Where things are
 
-Read `PROJECT_CONTEXT_MESA.md` before making architectural or product changes.
+Before exploring code, read `docs/CODEMAP.md` (routes → screens, theme migration status,
+large files, controllers). Keep it current when you move or migrate screens.
 
-## Repository
+- `backend/`: Java 21, Spring Boot 4, Maven, PostgreSQL, Flyway. Modular monolith under
+  `com.pauluna.mesa`: `auth`, `user`, `group`, `restaurant`, `notification`, `support`,
+  `shared`, each split into `api`, `application`, `domain`, `infrastructure`. No global
+  `controller/service/repository` folders. Migrations in
+  `src/main/resources/db/migration` (`V<n>__*.sql`; check the highest number first:
+  they sort numerically, not alphabetically).
+- `mobile/src/` (Expo + React Native + TypeScript):
+  - `app/`: Expo Router routes. `(auth)/` login, register, onboarding. `(app)/` tabs
+    `home`, `groups/`, `add`, `map`, `profile` plus settings screens. Group detail and
+    restaurants live under `groups/[groupId]/…`; public groups under `groups/public/`.
+  - `screens/`: large screens used by routes (`HomeScreen`, `MapScreen`,
+    `PrivateGroupDetailScreen`, `PublicGroupDetailScreen`…).
+  - `components/ui/`: design-system base components. `components/`: feature components
+    (`Home*`, `Group*`, `Restaurant*`…).
+  - `theme/`: tokens and `useTheme()` (`colors.ts`, `layout.ts` are deprecated).
+  - `services/*-service.ts`: one API client per domain, on top of `lib/api.ts`.
+    `types/`: API types. `contexts/`: auth and notifications. `lib/`: helpers.
+- `docs/designs/prototipo/`: approved HTML prototype and brand (`node server.cjs`,
+  http://127.0.0.1:8770; identity in `brand.html`, logos in `brand/`).
+- `docs/archive/`: superseded reviews, the dropped «Sobremesa» direction and the old
+  project context. History only: do not read or follow it unless asked.
 
-- `backend/`: Java 21, Spring Boot 4, Maven, PostgreSQL and Flyway.
-- `mobile/`: React Native, TypeScript, Expo and Expo Router.
+## Domain rules
+
+- A restaurant can belong to many groups; its status, notes and reviews depend on the
+  group. Removing it from a group never deletes it globally.
+- Duplicates are avoided with the provider's external id. Manual entry is the fallback
+  when search finds nothing. Show OpenStreetMap attribution.
+- One review per user, restaurant and group; only its author can edit it. The group
+  average counts only existing reviews («sin valorar» is not a low score).
+- Only members see a private group and add restaurants to it.
+- A restaurant may have no photo. Never copy photos from Google, Instagram or Tripadvisor.
 
 ## General rules
 
-- Work only on the requested scope.
-- Inspect existing code before creating new abstractions.
-- Do not rewrite unrelated files.
+- Work only on the requested scope; inspect existing code before adding abstractions.
+- Do not rewrite unrelated files. Preserve local uncommitted changes.
 - Do not create branches, commits, pushes or pull requests.
-- Never modify or commit `.env` files.
-- Never include real credentials or secrets.
-- Prefer maintainable, explicit code over clever abstractions.
-- Preserve existing naming and package conventions.
-- Explain all relevant changes after implementation.
+- Never modify or commit `.env` files, keystores or service-account files; never
+  include real credentials or secrets.
+- Prefer maintainable, explicit code; preserve naming and package conventions.
 
 ## Backend rules
 
-- Use the existing modular organization:
-  - api
-  - application
-  - domain
-  - infrastructure
-- Database changes must use new Flyway migrations.
-- Never edit a migration that may already have been executed.
-- Hibernate uses `ddl-auto: validate`.
-- Do not expose password hashes.
-- Obtain the current user from the authenticated JWT.
-- Add or update tests for business logic when appropriate.
-- Run Maven compilation or tests after backend changes.
+- Database changes use new Flyway migrations; never edit one that may have run.
+- Hibernate uses `ddl-auto: validate`. Do not expose password hashes.
+- Get the current user from the authenticated JWT.
+- Add or update tests for business logic; run Maven compile or tests after changes.
 
 ## Mobile rules
 
-- Use TypeScript without `any`.
-- Use Expo Router for navigation.
-- Use `react-native-safe-area-context`.
-- Reuse the existing authentication context, API client, components and theme.
-- Keep the UI mobile-first and follow `docs/DESIGN_SYSTEM.md` once it exists.
+- TypeScript without `any`. Expo Router for navigation. `react-native-safe-area-context`.
+- Reuse the auth context, API client, theme and `components/ui`. Follow `DESIGN.md`;
+  `theme/colors.ts` and `theme/layout.ts` are deprecated.
 - Handle loading, empty, success and error states.
-- Do not hardcode the backend IP.
-- Use `EXPO_PUBLIC_API_URL`.
-- Run TypeScript checks after mobile changes.
+- Never hardcode the backend IP; use `EXPO_PUBLIC_API_URL`.
+- Run `npx tsc --noEmit` in `mobile/` after changes.
 
-## Efficient work on the existing application
+## Completion
 
-- Treat Mesa as an existing React Native/Expo application with a Java/Spring backend. Start from its current implementation and requested problem.
-- For mobile UI, use the design skills listed in CLAUDE.md. Read only rules relevant to the task; web-specific Next.js, DOM, Tailwind and shadcn guidance does not apply automatically to native screens.
-- Reuse the current theme and components. The previous "Sobremesa" visual direction was dropped; the new one will be documented in `docs/DESIGN_SYSTEM.md`. If documentation and current implementation disagree, establish the current behavior before changing it.
-- Use targeted searches and diffs. The nested mesa-app-build-88394e folder is a separate copy; use the root mobile/ and backend/ unless the user specifies otherwise.
-- Preserve local uncommitted changes. Work on one clearly scoped screen or flow at a time and verify that result before expanding the scope.
-- Existing UX reviews and HTML prototypes provide context, but do not prove current native behavior. Validate visual changes in the native app when the environment permits; report the specific limitation when it does not.
-
-## Completion requirements
-
-Before finishing:
-
-1. Check the changed files.
-2. Run the relevant compilation, tests or type checks.
-3. Fix errors caused by the task.
-4. Summarize changed files and commands.
-5. Provide manual testing instructions.
-6. Report anything that could not be verified.
+1. Review the changed files.
+2. Run the relevant compile, tests or type checks and fix what the task broke.
+3. Summarize changed files and commands, give manual test steps, and report anything
+   that could not be verified.

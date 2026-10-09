@@ -1,6 +1,6 @@
 ---
 name: android-design-guidelines
-description: Material Design 3 and Android platform guidelines. Use when building Android apps with Jetpack Compose or XML layouts, implementing Material You, navigation, or accessibility. Triggers on tasks involving Android UI, Compose components, dynamic color, or Material Design compliance.
+description: "Material Design 3 rules (examples in Compose). Consult only for a specific Android platform question that impeccable and expo-native-ui do not answer; it is long."
 license: MIT
 metadata:
   author: platform-design-skills

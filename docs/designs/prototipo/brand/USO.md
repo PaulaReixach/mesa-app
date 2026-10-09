@@ -1,0 +1,3 @@
+# Identidad de MESA
+
+Símbolo y letras dibujados como curvas SVG. El símbolo representa una m de dos arcos y una mesa sugerida por la curva inferior. Usar logo-primary sobre fondo claro; logo-white sobre fondo oliva o terracota; logo-dark para monocromo. No estirar, rotar ni añadir sombras al logo. Mantener un margen libre mínimo equivalente a un arco del símbolo. Marca completa: mínimo 110 px de ancho. Símbolo: mínimo 24 px, o favicon.svg a 16 px. app-icon.svg proporciona la superficie terracota; la máscara final del icono se adapta a cada plataforma al implementar. Archivos independientes del código de la aplicación.

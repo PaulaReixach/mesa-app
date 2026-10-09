@@ -1,3 +1,4 @@
+// @deprecated Use useTheme() from ./index (DESIGN.md). Kept until every screen is migrated.
 export const colors = {
   background: '#FBF6F3',
   surface: '#FFFDFC',

@@ -1,107 +1,49 @@
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 
 import { useNotifications } from '../contexts/notification-context';
-import { colors, loginColors } from '../theme/colors';
-import { fonts } from '../theme/fonts';
+import { createThemedStyles, iconSize, touchTarget, useTheme } from '../theme';
 
-export function NotificationBellButton({
-  variant = 'default',
-}: {
-  variant?: 'default' | 'hero';
-}) {
+/** Bell with a terracotta dot when there is something unread (prototype header). */
+export function NotificationBellButton() {
   const { unreadCount } = useNotifications();
-  const badgeText = unreadCount > 9 ? '9+' : String(unreadCount);
-  const hero = variant === 'hero';
-  const [focused, setFocused] = useState(false);
+  const { colors } = useTheme();
+  const styles = useStyles();
 
   return (
     <Pressable
-      accessibilityLabel={
-        unreadCount > 0
-          ? `${unreadCount} notificaciones sin leer`
-          : 'Notificaciones'
-      }
+      accessibilityLabel={unreadCount > 0 ? `Notificaciones, ${unreadCount} sin leer` : 'Notificaciones'}
       accessibilityRole="button"
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
       onPress={() => router.push('/notifications')}
-      style={({ pressed }) => [
-        styles.button,
-        hero ? styles.heroButton : null,
-        focused && hero ? styles.heroFocus : null,
-        pressed ? styles.buttonPressed : null,
-      ]}
+      android_ripple={{ color: colors.overlay, borderless: true, radius: touchTarget / 2 }}
+      style={({ pressed }) => [styles.button, pressed && Platform.OS === 'ios' && styles.pressed]}
     >
-      <SymbolView
-        name={{
-          ios: unreadCount > 0 ? 'bell.fill' : 'bell',
-          android: 'notifications',
-          web: 'notifications',
-        }}
-        size={hero ? 24 : 20}
-        tintColor={hero ? loginColors.cream : colors.text}
-      />
-
-      {unreadCount > 0 ? (
-        <View style={[styles.badge, hero ? styles.heroBadge : null]}>
-          {hero ? null : <Text style={styles.badgeText}>{badgeText}</Text>}
-        </View>
-      ) : null}
+      <SymbolView accessible={false} name={{ ios: 'bell', android: 'notifications', web: 'notifications' }}
+        size={iconSize.nav} tintColor={colors.textPrimary} />
+      {unreadCount > 0 && <View style={styles.dot} />}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(({ colors }) => ({
   button: {
-    width: 42,
-    height: 42,
+    width: touchTarget,
+    height: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E4D8D0',
-    borderRadius: 21,
-    backgroundColor: '#FDF9F8',
+    borderRadius: touchTarget / 2,
   },
-  buttonPressed: { opacity: 0.7 },
-  heroButton: {
-    width: 48,
-    height: 48,
-    borderWidth: 0,
-    borderRadius: 18,
-    backgroundColor: 'transparent',
-  },
-  heroFocus: { outlineWidth: 2, outlineOffset: 2, outlineColor: loginColors.cream },
-  badge: {
+  pressed: { opacity: 0.6 },
+  dot: {
     position: 'absolute',
-    top: -3,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FBF6F3',
-    borderRadius: 9,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    color: colors.white,
-    fontSize: 8,
-    fontFamily: fonts.bold,
-  },
-  heroBadge: {
-    top: 8,
-    right: 8,
-    minWidth: 7,
+    top: 10,
+    right: 11,
     width: 7,
     height: 7,
-    paddingHorizontal: 0,
-    borderWidth: 0,
-    borderRadius: 4,
-    backgroundColor: '#FFE5D1',
+    borderRadius: 3.5,
+    borderWidth: 1,
+    borderColor: colors.background,
+    backgroundColor: colors.accent,
   },
-});
+}));

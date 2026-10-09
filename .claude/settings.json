@@ -1,6 +1,26 @@
 {
   "enabledPlugins": {
-    "expo@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true
+    "impeccable@impeccable": true,
+    "frontend-design@claude-plugins-official": true,
+    "expo@claude-plugins-official": false,
+    "ui-design@claude-code-workflows": false,
+    "building-react-native-apps@callstack-agent-skills": false
+  },
+  "permissions": {
+    "deny": [
+      "Read(./**/package-lock.json)",
+      "Read(./**/node_modules/**)",
+      "Read(./mobile/android/**)",
+      "Read(./mobile/ios/**)",
+      "Read(./mobile/.expo/**)",
+      "Read(./backend/target/**)",
+      "Read(./**/*.jks)",
+      "Read(./**/*service-account*.json)",
+      "Read(./mobile/.env*)",
+      "Read(./docs/designs/prototipo/inter.ttf)",
+      "Read(./docs/designs/prototipo/brand/*.zip)",
+      "Read(./.claude/skills/**/images/**)",
+      "Read(./.ui-design/**)"
+    ]
   }
 }

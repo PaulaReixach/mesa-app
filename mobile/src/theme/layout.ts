@@ -1,3 +1,4 @@
+// @deprecated Use space, radius and elevation from ./index (DESIGN.md). Kept until every screen is migrated.
 import { Platform } from 'react-native';
 
 import { colors } from './colors';

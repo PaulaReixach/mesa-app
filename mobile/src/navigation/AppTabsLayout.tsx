@@ -2,13 +2,12 @@ import { SymbolView } from 'expo-symbols';
 import { router, Tabs, usePathname } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { useRef } from 'react';
-import { Animated, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { ColorValue, StyleProp, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { appTabsStyles as styles, tabNavigationColors as navigationColors } from './AppTabsLayout.styles';
-import { colors } from '../theme/colors';
-import { fonts } from '../theme/fonts';
+import { useAppTabsStyles } from './AppTabsLayout.styles';
+import { fonts, useTheme } from '../theme';
 
 const hiddenScreenOptions = {
   href: null,
@@ -28,6 +27,7 @@ function PrimaryTabButton({
   style,
   ...props
 }: PrimaryTabButtonProps) {
+  const styles = useAppTabsStyles();
   const pressProgress = useRef(new Animated.Value(0)).current;
 
   const animatePress = (toValue: number, duration: number) => {
@@ -83,6 +83,7 @@ function PrimaryTabIcon({
   name: SymbolName;
   size: number;
 }) {
+  const styles = useAppTabsStyles();
   return (
     <View
       style={[
@@ -96,6 +97,8 @@ function PrimaryTabIcon({
 }
 
 export default function AppTabsLayout() {
+  const { colors } = useTheme();
+  const styles = useAppTabsStyles();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const { fontScale } = useWindowDimensions();
@@ -115,12 +118,12 @@ export default function AppTabsLayout() {
       initialRouteName="home"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: navigationColors.active,
-        tabBarInactiveTintColor: navigationColors.inactive,
+        tabBarActiveTintColor: colors.secondary,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarHideOnKeyboard: true,
         tabBarAllowFontScaling: true,
-        tabBarLabel: ({ children, color }) => (
-          <Text maxFontSizeMultiplier={1.3} style={[styles.tabLabel, { color }]}>{children}</Text>
+        tabBarLabel: ({ children, color, focused }) => (
+          <Text maxFontSizeMultiplier={1.3} style={[styles.tabLabel, focused && styles.tabLabelSelected, { color }]}>{children}</Text>
         ),
         tabBarLabelPosition: 'below-icon',
         tabBarButton: ({
@@ -170,15 +173,10 @@ export default function AppTabsLayout() {
           paddingTop: 6,
           paddingBottom: bottomInset,
           overflow: 'visible',
-          borderTopWidth: 0,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          backgroundColor: navigationColors.background,
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: -5 },
-          shadowOpacity: 0.09,
-          shadowRadius: 18,
-          elevation: 14,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colors.separator,
+          backgroundColor: colors.surface,
+          elevation: 0,
         } : { display: 'none' },
       }}
     >
@@ -252,10 +250,10 @@ export default function AppTabsLayout() {
                     <SymbolView
                       name={{ ios: 'plus', android: 'add', web: 'add' }}
                       size={24}
-                      tintColor={colors.white}
+                      tintColor={colors.onAccent}
                     />
                   </View>
-                  <Text maxFontSizeMultiplier={1.3} style={[styles.tabLabel, { color: navigationColors.active }]}>Añadir</Text>
+                  <Text maxFontSizeMultiplier={1.3} style={[styles.tabLabel, { color: colors.textTertiary }]}>Añadir</Text>
                 </>
               )}
             </Pressable>

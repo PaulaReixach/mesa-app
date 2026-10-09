@@ -25,3 +25,8 @@ hs_err_pid*
 replay_pid*
 
 mobile/.env
+
+# Local tool state (Impeccable live sessions, ui-design reviews, old local copies)
+.impeccable/live/
+.ui-design/
+mesa-app-build-*/

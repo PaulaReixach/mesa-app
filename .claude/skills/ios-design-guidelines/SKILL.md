@@ -1,6 +1,6 @@
 ---
 name: ios-design-guidelines
-description: Apple Human Interface Guidelines for iPhone. Use when building, reviewing, or refactoring SwiftUI/UIKit interfaces for iOS. Triggers on tasks involving iPhone UI, iOS components, accessibility, Dynamic Type, Dark Mode, or HIG compliance.
+description: "Apple HIG rules for iPhone (examples in SwiftUI). Consult only for a specific iOS platform question that impeccable and expo-native-ui do not answer; it is long."
 license: MIT
 metadata:
   author: platform-design-skills
