@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="390" height="844" viewBox="0 0 390 844" aria-label="grupo-vacio"><title>grupo-vacio · MESA Sobremesa</title><rect x="0" y="0" width="390" height="844" rx="28" fill="#FAF7F0" stroke="none"/><text x="26" y="28" fill="#2D3025" font-family="Inter" font-size="13" font-weight="600">9:41</text><g fill="#2D3025"><rect x="310" y="17" width="3" height="4" rx="1"/><rect x="315" y="14" width="3" height="7" rx="1"/><rect x="320" y="11" width="3" height="10" rx="1"/><rect x="349" y="13" width="19" height="9" rx="2"/><rect x="370" y="15" width="2" height="5" rx="1"/></g><g role="button" tabindex="0" aria-label="Volver a Inicio" data-action="home" style="cursor:pointer"><g transform="translate(24 59) scale(1)">
+  <path fill="none" stroke="#2D3025" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m12 19-7-7 7-7" />
+  <path fill="none" stroke="#2D3025" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5" />
+
+</g></g><text x="195" y="77" text-anchor="middle" font-family="Inter" font-size="14" fill="#6B6D60">Tus grupos</text><g role="button" tabindex="0" aria-label="Más opciones" data-action="options" style="cursor:pointer"><g transform="translate(334 59) scale(1)">
+  <circle fill="none" stroke="#2D3025" stroke-width="1.8" cx="12" cy="12" r="1" />
+  <circle fill="none" stroke="#2D3025" stroke-width="1.8" cx="19" cy="12" r="1" />
+  <circle fill="none" stroke="#2D3025" stroke-width="1.8" cx="5" cy="12" r="1" />
+
+</g></g><g transform="translate(24 118) scale(0.5833333333333334)">
+  <circle fill="none" stroke="#526043" stroke-width="1.8" cx="12" cy="16" r="1" />
+  <rect fill="none" stroke="#526043" stroke-width="1.8" x="3" y="10" width="18" height="12" rx="2" />
+  <path fill="none" stroke="#526043" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M7 10V7a5 5 0 0 1 10 0v3" />
+
+</g><text x="44" y="130" fill="#526043" font-family="Inter" font-size="12" font-weight="400">Grupo privado</text><text x="24" y="176" fill="#2D3025" font-family="Fraunces" font-size="32" font-weight="400">Los de siempre</text><text x="24" y="207" fill="#6B6D60" font-family="Inter" font-size="14" font-weight="400">Los sitios que queremos compartir.</text><rect x="24" y="229" width="30" height="30" rx="15" fill="#E9EDDF" stroke="none"/><text x="34" y="249" fill="#526043" font-family="Inter" font-size="12" font-weight="600">P</text><rect x="48" y="229" width="30" height="30" rx="15" fill="#F3E1D5" stroke="none"/><text x="58" y="249" fill="#526043" font-family="Inter" font-size="12" font-weight="600">M</text><rect x="72" y="229" width="30" height="30" rx="15" fill="#E9EDDF" stroke="none"/><text x="82" y="249" fill="#526043" font-family="Inter" font-size="12" font-weight="600">L</text><text x="117" y="249" fill="#6B6D60" font-family="Inter" font-size="12" font-weight="400">3 personas</text><g role="button" tabindex="0" aria-label="Invitar personas" data-action="invite" style="cursor:pointer"><text x="298" y="249" fill="#526043" font-family="Inter" font-size="13" font-weight="600">Invitar</text></g><g role="button" tabindex="0" aria-label="Añadir restaurante" data-action="add" style="cursor:pointer"><rect x="24" y="281" width="342" height="52" rx="14" fill="#A6412B" stroke="none"/><text x="195" y="313" text-anchor="middle" fill="#FFFFFF" font-family="Inter" font-weight="600" font-size="14">Añadir restaurante</text></g><text x="24" y="372" fill="#2D3025" font-family="Inter" font-size="14" font-weight="600">Restaurantes</text><text x="178" y="372" fill="#6B6D60" font-family="Inter" font-size="14" font-weight="400">Miembros</text><text x="284" y="372" fill="#6B6D60" font-family="Inter" font-size="14" font-weight="400">Actividad</text><path d="M24 384H126" stroke="#A6412B" stroke-width="3"/><path d="M24 385H366" stroke="#E3E1D7"/><g transform="translate(109 411) scale(1.1)" aria-label="Ilustración de una mesa, no fotografía del local">
+    <path d="M27 121L149 99L169 130L50 150Z" fill="#DEC8AD"/>
+    <path d="M35 117L147 96L164 123L50 144Z" fill="#EEDBC0"/>
+    <ellipse cx="95" cy="98" rx="47" ry="31" fill="#FFF8EC"/>
+    <ellipse cx="95" cy="97" rx="34" ry="21" fill="none" stroke="#CFB79A" stroke-width="1.5"/>
+    <path d="M73 96Q87 78 117 99Q106 112 81 110Z" fill="#526043"/>
+    <path d="M88 101Q98 89 110 103" fill="none" stroke="#C7D2A9" stroke-width="3"/>
+    <circle cx="82" cy="99" r="5" fill="#CB6947"/><circle cx="110" cy="95" r="5" fill="#CB6947"/>
+    <path d="M37 78L39 120M29 72L31 88Q37 94 42 86L41 70M35 72L36 88" fill="none" stroke="#FFF8EC" stroke-width="3" stroke-linecap="round"/>
+    <path d="M155 65L151 113M155 66Q142 78 152 87" fill="none" stroke="#FFF8EC" stroke-width="3" stroke-linecap="round"/>
+    <path d="M105 41H132L128 67Q118 80 108 68Z" fill="#C99176" stroke="#FFF8EC" stroke-width="1.5"/>
+    <path d="M119 73V85M112 86H125" stroke="#FFF8EC" stroke-width="2"/>
+    <path d="M46 59Q52 39 76 49Q77 70 56 74Z" fill="#849160"/>
+    <path d="M51 68L69 50" stroke="#CCD5AE" stroke-width="2"/>
+    </g><text x="195" y="640" text-anchor="middle" font-family="Fraunces" font-size="25" fill="#2D3025">Vuestra lista empieza aquí.</text><text x="195" y="674" text-anchor="middle" font-family="Inter" font-size="14" fill="#6B6D60">Guardad ese sitio del que tanto habláis.</text><g role="button" tabindex="0" aria-label="Buscar vuestro primer sitio" data-action="add" style="cursor:pointer"><rect x="64" y="708" width="262" height="52" rx="14" fill="#A6412B" stroke="none"/><text x="195" y="740" text-anchor="middle" fill="#FFFFFF" font-family="Inter" font-weight="600" font-size="14">Buscar vuestro primer sitio</text></g><rect x="133" y="828" width="124" height="4" rx="2" fill="#2D3025" stroke="none"/></svg>

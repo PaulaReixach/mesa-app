@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="390" height="844" viewBox="0 0 390 844" aria-label="restaurante-sin-valoraciones"><title>restaurante-sin-valoraciones · MESA Sobremesa</title><rect x="0" y="0" width="390" height="844" rx="28" fill="#FAF7F0" stroke="none"/><text x="26" y="28" fill="#2D3025" font-family="Inter" font-size="13" font-weight="600">9:41</text><g fill="#2D3025"><rect x="310" y="17" width="3" height="4" rx="1"/><rect x="315" y="14" width="3" height="7" rx="1"/><rect x="320" y="11" width="3" height="10" rx="1"/><rect x="349" y="13" width="19" height="9" rx="2"/><rect x="370" y="15" width="2" height="5" rx="1"/></g><g role="button" tabindex="0" aria-label="Volver a Inicio" data-action="home" style="cursor:pointer"><g transform="translate(24 59) scale(1)">
+  <path fill="none" stroke="#2D3025" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m12 19-7-7 7-7" />
+  <path fill="none" stroke="#2D3025" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5" />
+
+</g></g><text x="195" y="77" text-anchor="middle" font-family="Inter" font-size="14" fill="#6B6D60">Los de siempre</text><g role="button" tabindex="0" aria-label="Favorito del grupo" data-action="favorite" style="cursor:pointer"><g transform="translate(334 59) scale(1)">
+  <path fill="none" stroke="#2D3025" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />
+
+</g></g><rect x="24" y="105" width="342" height="151" rx="20" fill="#E9EDDF" stroke="none"/><g transform="translate(103 91) scale(1.1)" aria-label="Ilustración de una mesa, no fotografía del local">
+    <path d="M27 121L149 99L169 130L50 150Z" fill="#DEC8AD"/>
+    <path d="M35 117L147 96L164 123L50 144Z" fill="#EEDBC0"/>
+    <ellipse cx="95" cy="98" rx="47" ry="31" fill="#FFF8EC"/>
+    <ellipse cx="95" cy="97" rx="34" ry="21" fill="none" stroke="#CFB79A" stroke-width="1.5"/>
+    <path d="M73 96Q87 78 117 99Q106 112 81 110Z" fill="#526043"/>
+    <path d="M88 101Q98 89 110 103" fill="none" stroke="#C7D2A9" stroke-width="3"/>
+    <circle cx="82" cy="99" r="5" fill="#CB6947"/><circle cx="110" cy="95" r="5" fill="#CB6947"/>
+    <path d="M37 78L39 120M29 72L31 88Q37 94 42 86L41 70M35 72L36 88" fill="none" stroke="#FFF8EC" stroke-width="3" stroke-linecap="round"/>
+    <path d="M155 65L151 113M155 66Q142 78 152 87" fill="none" stroke="#FFF8EC" stroke-width="3" stroke-linecap="round"/>
+    <path d="M105 41H132L128 67Q118 80 108 68Z" fill="#C99176" stroke="#FFF8EC" stroke-width="1.5"/>
+    <path d="M119 73V85M112 86H125" stroke="#FFF8EC" stroke-width="2"/>
+    <path d="M46 59Q52 39 76 49Q77 70 56 74Z" fill="#849160"/>
+    <path d="M51 68L69 50" stroke="#CCD5AE" stroke-width="2"/>
+    </g><text x="24" y="303" fill="#2D3025" font-family="Fraunces" font-size="32" font-weight="400">Casa Nona</text><text x="24" y="332" fill="#6B6D60" font-family="Inter" font-size="14" font-weight="400">Italiana · Girona</text><g role="button" tabindex="0" aria-label="Cambiar estado" data-action="status" style="cursor:pointer"><rect x="24" y="350" width="146" height="32" rx="16" fill="#E9EDDF" stroke="none"/><text x="97" y="371" text-anchor="middle" fill="#526043" font-family="Inter" font-size="12" font-weight="500">Queremos repetir</text></g><rect x="24" y="402" width="342" height="80" rx="16" fill="#FFFFFF" stroke="#E3E1D7"/><g transform="translate(43 425) scale(1.0833333333333333)">
+  <path fill="none" stroke="#526043" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
+
+</g><text x="86" y="436" fill="#2D3025" font-family="Inter" font-size="16" font-weight="600">Aún sin valoraciones</text><text x="86" y="459" fill="#6B6D60" font-family="Inter" font-size="12" font-weight="400">Vuestra primera opinión cuenta.</text><text x="24" y="523" fill="#2D3025" font-family="Fraunces" font-size="23" font-weight="400">Vuestras valoraciones</text><text x="24" y="560" fill="#6B6D60" font-family="Inter" font-size="14" font-weight="400">Aquí aparecerán las opiniones del grupo.</text><path d="M24 651H366" stroke="#E3E1D7"/><g transform="translate(24 675) scale(0.8333333333333334)">
+  <path fill="none" stroke="#526043" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+  <circle fill="none" stroke="#526043" stroke-width="1.8" cx="12" cy="10" r="3" />
+
+</g><text x="56" y="687" fill="#2D3025" font-family="Inter" font-size="14" font-weight="400">Carrer Nou, 12 · Girona</text><g role="button" tabindex="0" aria-label="Ver ubicación" data-action="map" style="cursor:pointer"><text x="56" y="714" fill="#526043" font-family="Inter" font-size="12" font-weight="600">Ver en mapa</text></g><g role="button" tabindex="0" aria-label="Añadir mi valoración" data-action="rate" style="cursor:pointer"><rect x="24" y="756" width="342" height="52" rx="14" fill="#A6412B" stroke="none"/><text x="195" y="788" text-anchor="middle" fill="#FFFFFF" font-family="Inter" font-weight="600" font-size="14">Añadir mi valoración</text></g><rect x="133" y="828" width="124" height="4" rx="2" fill="#2D3025" stroke="none"/></svg>

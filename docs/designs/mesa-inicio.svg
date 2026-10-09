@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="390" height="844" viewBox="0 0 390 844" aria-label="inicio"><title>inicio · MESA Sobremesa</title><rect x="0" y="0" width="390" height="844" rx="28" fill="#FAF7F0" stroke="none"/><text x="26" y="28" fill="#2D3025" font-family="Inter" font-size="13" font-weight="600">9:41</text><g fill="#2D3025"><rect x="310" y="17" width="3" height="4" rx="1"/><rect x="315" y="14" width="3" height="7" rx="1"/><rect x="320" y="11" width="3" height="10" rx="1"/><rect x="349" y="13" width="19" height="9" rx="2"/><rect x="370" y="15" width="2" height="5" rx="1"/></g><text x="24" y="83" fill="#2D3025" font-family="Fraunces" font-size="31" font-weight="400">mesa.</text><g role="button" tabindex="0" aria-label="Notificaciones" data-action="notifications" style="cursor:pointer"><g transform="translate(286 60) scale(0.9166666666666666)">
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10.268 21a2 2 0 0 0 3.464 0" />
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" />
+
+</g></g><g role="button" tabindex="0" aria-label="Perfil" data-action="profile" style="cursor:pointer"><rect x="332" y="57" width="30" height="30" rx="15" fill="#E9EDDF" stroke="none"/><text x="342" y="77" fill="#526043" font-family="Inter" font-size="12" font-weight="600">P</text></g><text x="24" y="128" fill="#6B6D60" font-family="Inter" font-size="15" font-weight="400">Hola, Paula</text><text x="24" y="168" fill="#2D3025" font-family="Fraunces" font-size="34" font-weight="400">La próxima mesa,</text><text x="24" y="208" fill="#2D3025" font-family="Fraunces" font-size="34" font-weight="400">con los tuyos.</text><g role="button" tabindex="0" aria-label="Ver restaurante recomendado" data-action="restaurant" style="cursor:pointer"><rect x="24" y="232" width="342" height="184" rx="22" fill="#A6412B" stroke="none"/><text x="44" y="260" fill="#FFF8EC" font-family="Inter" font-size="12" font-weight="400">Para vuestra próxima cena</text><text x="44" y="299" fill="#FFF8EC" font-family="Fraunces" font-size="26" font-weight="400">Casa Nona</text><text x="44" y="324" fill="#FFF8EC" font-family="Inter" font-size="12" font-weight="400">En Los de siempre</text><rect x="44" y="350" width="147" height="42" rx="12" fill="#FFF8EC" stroke="none"/><text x="59" y="377" fill="#A6412B" font-family="Inter" font-size="13" font-weight="600">Ver restaurante</text><g transform="translate(197 240) scale(0.95)" aria-label="Ilustración de una mesa, no fotografía del local">
+    <path d="M27 121L149 99L169 130L50 150Z" fill="#C16546"/>
+    <path d="M35 117L147 96L164 123L50 144Z" fill="#BD6247"/>
+    <ellipse cx="95" cy="98" rx="47" ry="31" fill="#FFF8EC"/>
+    <ellipse cx="95" cy="97" rx="34" ry="21" fill="none" stroke="#DBB395" stroke-width="1.5"/>
+    <path d="M73 96Q87 78 117 99Q106 112 81 110Z" fill="#526043"/>
+    <path d="M88 101Q98 89 110 103" fill="none" stroke="#C7D2A9" stroke-width="3"/>
+    <circle cx="82" cy="99" r="5" fill="#CB6947"/><circle cx="110" cy="95" r="5" fill="#CB6947"/>
+    <path d="M37 78L39 120M29 72L31 88Q37 94 42 86L41 70M35 72L36 88" fill="none" stroke="#FFF8EC" stroke-width="3" stroke-linecap="round"/>
+    <path d="M155 65L151 113M155 66Q142 78 152 87" fill="none" stroke="#FFF8EC" stroke-width="3" stroke-linecap="round"/>
+    <path d="M105 41H132L128 67Q118 80 108 68Z" fill="#C99176" stroke="#FFF8EC" stroke-width="1.5"/>
+    <path d="M119 73V85M112 86H125" stroke="#FFF8EC" stroke-width="2"/>
+    <path d="M46 59Q52 39 76 49Q77 70 56 74Z" fill="#849160"/>
+    <path d="M51 68L69 50" stroke="#CCD5AE" stroke-width="2"/>
+    </g></g><text x="24" y="460" fill="#2D3025" font-family="Fraunces" font-size="25" font-weight="400">Tus grupos</text><g role="button" tabindex="0" aria-label="Ver todos los grupos" data-action="group" style="cursor:pointer"><text x="292" y="459" fill="#526043" font-family="Inter" font-size="12" font-weight="600">Ver todos</text></g><g role="button" tabindex="0" aria-label="Abrir Los de siempre" data-action="group" style="cursor:pointer"><rect x="24" y="484" width="64" height="64" rx="18" fill="#F3E1D5" stroke="none"/><g transform="translate(44 504) scale(1)">
+  <path fill="none" stroke="#A6412B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+  <path fill="none" stroke="#A6412B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M7 2v20" />
+  <path fill="none" stroke="#A6412B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+
+</g><text x="106" y="510" fill="#2D3025" font-family="Inter" font-size="17" font-weight="600">Los de siempre</text><text x="106" y="532" fill="#6B6D60" font-family="Inter" font-size="12" font-weight="400">3 personas · 8 restaurantes</text><g transform="translate(342 507) scale(0.75)">
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6" />
+
+</g></g><path d="M24 565H366" stroke="#E3E1D7"/><g role="button" tabindex="0" aria-label="Abrir Escapadas" data-action="group" style="cursor:pointer"><rect x="24" y="582" width="64" height="64" rx="18" fill="#E9EDDF" stroke="none"/><g transform="translate(44 602) scale(1)">
+  <path fill="none" stroke="#A6412B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+  <path fill="none" stroke="#A6412B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M7 2v20" />
+  <path fill="none" stroke="#A6412B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+
+</g><text x="106" y="608" fill="#2D3025" font-family="Inter" font-size="17" font-weight="600">Escapadas</text><text x="106" y="630" fill="#6B6D60" font-family="Inter" font-size="12" font-weight="400">2 personas · 6 restaurantes</text><g transform="translate(342 605) scale(0.75)">
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6" />
+
+</g></g><text x="24" y="693" fill="#2D3025" font-family="Inter" font-size="17" font-weight="600">Última actividad</text><rect x="24" y="708" width="30" height="30" rx="15" fill="#E9EDDF" stroke="none"/><text x="34" y="728" fill="#526043" font-family="Inter" font-size="12" font-weight="600">M</text><text x="66" y="721" fill="#2D3025" font-family="Inter" font-size="13" font-weight="400">Mar ha añadido Can Bruc</text><text x="66" y="740" fill="#6B6D60" font-family="Inter" font-size="11" font-weight="400">En Los de siempre · Hace 2 h</text><rect x="0" y="756" width="390" height="88" rx="0" fill="#FFFFFF" stroke="none"/><path d="M0 756H390" stroke="#E3E1D7"/><g role="button" tabindex="0" aria-label="Inicio" data-action="home" style="cursor:pointer"><rect x="13" y="769" width="61" height="44" rx="16" fill="#E9EDDF" stroke="none"/><g transform="translate(31 777) scale(1)">
+  <path fill="none" stroke="#526043" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+  <path fill="none" stroke="#526043" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+
+</g><text x="43" y="816" text-anchor="middle" fill="#526043" font-family="Inter" font-size="11" font-weight="600">Inicio</text></g><g role="button" tabindex="0" aria-label="Grupos" data-action="group" style="cursor:pointer"><g transform="translate(107 777) scale(1)">
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M18 21a8 8 0 0 0-16 0" />
+  <circle fill="none" stroke="#6B6D60" stroke-width="1.8" cx="10" cy="8" r="5" />
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3" />
+
+</g><text x="119" y="816" text-anchor="middle" fill="#6B6D60" font-family="Inter" font-size="11" font-weight="400">Grupos</text></g><g role="button" tabindex="0" aria-label="Añadir" data-action="add" style="cursor:pointer"><rect x="174" y="765" width="42" height="42" rx="15" fill="#A6412B" stroke="none"/><g transform="translate(183 774) scale(1)">
+  <path fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+  <path fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14" />
+
+</g><text x="195" y="820" text-anchor="middle" fill="#6B6D60" font-family="Inter" font-size="11" font-weight="400">Añadir</text></g><g role="button" tabindex="0" aria-label="Mapa" data-action="map" style="cursor:pointer"><g transform="translate(259 777) scale(1)">
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z" />
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M15 5.764v15" />
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M9 3.236v15" />
+
+</g><text x="271" y="816" text-anchor="middle" fill="#6B6D60" font-family="Inter" font-size="11" font-weight="400">Mapa</text></g><g role="button" tabindex="0" aria-label="Perfil" data-action="profile" style="cursor:pointer"><g transform="translate(335 777) scale(1)">
+  <circle fill="none" stroke="#6B6D60" stroke-width="1.8" cx="12" cy="8" r="5" />
+  <path fill="none" stroke="#6B6D60" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20 21a8 8 0 0 0-16 0" />
+
+</g><text x="347" y="816" text-anchor="middle" fill="#6B6D60" font-family="Inter" font-size="11" font-weight="400">Perfil</text></g><rect x="133" y="828" width="124" height="4" rx="2" fill="#2D3025" stroke="none"/></svg>

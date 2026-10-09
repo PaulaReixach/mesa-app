@@ -27,3 +27,17 @@ export const colors = {
   overlay: 'rgba(35, 30, 27, 0.42)',
   white: '#FFFFFF',
 } as const;
+
+// Palette for the approved login design; other screens keep their current theme.
+export const loginColors = {
+  hero: '#B34D32',
+  cream: '#FFF5E7',
+  surface: '#FAF7F2',
+  primary: '#A6412B',
+  primaryPressed: '#873421',
+  inputBorder: '#918579',
+  inputDisabled: '#E8E1D9',
+  inputBackground: colors.white,
+  text: '#28251F',
+  muted: '#696159',
+} as const;

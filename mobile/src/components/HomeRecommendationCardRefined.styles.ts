@@ -1,75 +1,58 @@
 import { StyleSheet } from 'react-native';
-
-import { colors } from '../theme/colors';
+import { colors, loginColors as homeColors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
+import { radii, spacing } from '../theme/layout';
 
 export const recommendationStyles = StyleSheet.create({
   card: {
-    height: 84,
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: radii.lg,
+    backgroundColor: colors.white
+  },
+  main: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 13,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#E2D7D1',
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    gap: spacing.sm
   },
   artwork: {
-    width: 91,
-    height: 68,
-    overflow: 'hidden',
-    borderRadius: 12,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
+    width: 72,
+    height: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.md,
+    backgroundColor: colors.primarySoft
   },
   copy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
-  },
-  eyebrow: {
-    color: '#D34A2B',
-    fontFamily: fonts.medium,
-    fontSize: 9,
-    lineHeight: 12,
+    gap: spacing.xxs
   },
   title: {
-    color: colors.text,
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    lineHeight: 20,
+    color: homeColors.text,
+    fontFamily: fonts.semiBold,
+    fontSize: 18,
+    lineHeight: 25
   },
   location: {
-    color: colors.text,
-    fontFamily: fonts.medium,
-    fontSize: 10,
-    lineHeight: 13,
+    color: homeColors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    lineHeight: 20
   },
   description: {
-    color: colors.muted,
+    color: homeColors.muted,
     fontFamily: fonts.regular,
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 14,
+    lineHeight: 21
   },
-  trailing: {
-    alignItems: 'flex-end',
+  rating: {
+    color: homeColors.primary,
+    fontFamily: fonts.semiBold,
+    fontSize: 14,
+    lineHeight: 21
   },
-  statusPill: {
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: '#E8EEDC',
-  },
-  statusText: {
-    color: '#5E714A',
-    fontFamily: fonts.medium,
-    fontSize: 8,
-  },
-  pressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.992 }],
-  },
+  pressed: { backgroundColor: homeColors.surface },
 });

@@ -104,9 +104,6 @@ export function GroupStat({
       <View style={styles.copy}>
         <Text style={styles.value}>{value}</Text>
         <Text
-          adjustsFontSizeToFit
-          minimumFontScale={0.72}
-          numberOfLines={1}
           style={styles.label}
         >
           {label}
@@ -120,7 +117,7 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     minWidth: 0,
-    minHeight: 48,
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
@@ -137,14 +134,14 @@ const styles = StyleSheet.create({
   },
   value: {
     color: colors.text,
-    fontSize: 13,
-    lineHeight: 15,
+    fontSize: 16,
+    lineHeight: 20,
     fontFamily: fonts.bold,
   },
   label: {
     color: colors.muted,
-    fontSize: 8,
-    lineHeight: 10,
+    fontSize: 12,
+    lineHeight: 18,
     fontFamily: fonts.semiBold,
   },
 });

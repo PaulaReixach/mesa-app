@@ -1,135 +1,90 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SymbolView } from 'expo-symbols';
+import { useEffect, useRef, useState } from 'react';
 import {
-  useRef,
-  useState,
-} from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
+  Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable,
+  ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FormField } from '../../components/FormField';
+import { PrimaryButton } from '../../components/PrimaryButton';
 import { useAuth } from '../../contexts/auth-context';
 import { getErrorMessage } from '../../lib/api';
-import { colors } from '../../theme/colors';
+import { colors, loginColors } from '../../theme/colors';
 import { fonts } from '../../theme/fonts';
+import { radii, spacing } from '../../theme/layout';
 
 const MAX_SCREEN_WIDTH = 430;
-
-const registerColors = {
-  heroStart: '#C74A2D',
-  heroEnd: '#B83C25',
-  cardTop: '#FAF7F4',
-  cardMiddle: '#FFFCF9',
-  cardBottom: '#FFFFFF',
-  primary: '#C7482B',
-  primaryEnd: '#D55636',
-  primaryPressed: '#A93B25',
-  inputBorder: '#C8BBB3',
-  inputBorderFocused: '#C9684E',
-  inputBackground: 'rgba(255, 255, 255, 0.64)',
-  text: '#2A211D',
-  muted: '#756A65',
-  cream: '#FFF8F2',
-  success: '#78896F',
-  errorBackground: colors.dangerSoft,
-  errorBorder: '#E7B7AE',
-};
-
-const serifFont = Platform.select({
-  ios: 'Georgia',
-  android: 'serif',
-  default: 'serif',
-});
-
-type FocusedField = 'name' | 'username' | 'email' | 'password' | null;
+const serifFont = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' });
+type FieldName = 'name' | 'username' | 'email' | 'password';
+type FieldErrors = Partial<Record<FieldName, string>>;
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
   const insets = useSafeAreaInsets();
-  const {
-    height: windowHeight,
-    width: windowWidth,
-  } = useWindowDimensions();
-
+  const { width } = useWindowDimensions();
+  const horizontalPadding = width - insets.left - insets.right < 360 ? spacing.lg : spacing.xl;
+  const nameInputRef = useRef<TextInput>(null);
   const usernameInputRef = useRef<TextInput>(null);
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
-
+  const scrollRef = useRef<ScrollView>(null);
+  const requestInFlight = useRef(false);
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<FocusedField>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [usernameFocused, setUsernameFocused] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [termsError, setTermsError] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const contentWidth = Math.min(windowWidth, MAX_SCREEN_WIDTH);
-  const widthScale = contentWidth / MAX_SCREEN_WIDTH;
-  const heroHeight = Math.max(
-    177 * widthScale,
-    insets.top + 153 * widthScale,
-  );
-  const cardRadius = 34 * widthScale;
-  const horizontalPadding = Math.max(29, 36 * widthScale);
-  const fieldHeight = Math.max(52, 56 * widthScale);
-  const cardMinHeight = Math.max(
-    windowHeight - heroHeight,
-    584 * widthScale,
-  );
-  const cardBottomPadding = Math.max(insets.bottom + 8, 18);
+  useEffect(() => {
+    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKeyboardVisible(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
-  const normalizedUsername = username.trim();
-  const usernameHasValidLength = normalizedUsername.length >= 3
-    && normalizedUsername.length <= 50;
+  function clearFieldError(field: FieldName) {
+    setFieldErrors(current => ({ ...current, [field]: undefined }));
+    setRequestError(null);
+  }
 
   async function handleRegister() {
+    // Prevent simultaneous submissions from the keyboard and the button.
+    if (requestInFlight.current) return;
     setRequestError(null);
-
-    if (
-      !name.trim()
-      || !username.trim()
-      || !email.trim()
-      || !password
-    ) {
-      setRequestError('Completa todos los campos para crear tu cuenta.');
-      return;
+    const errors: FieldErrors = {};
+    if (!name.trim()) errors.name = 'Introduce tu nombre.';
+    if (!username.trim()) errors.username = 'Introduce un nombre de usuario.';
+    else if (username.trim().length < 3 || username.trim().length > 50) {
+      errors.username = 'El nombre de usuario debe tener entre 3 y 50 caracteres.';
     }
+    if (!email.trim()) errors.email = 'Introduce tu email.';
+    if (!password) errors.password = 'Introduce una contraseña.';
+    else if (password.length < 8) errors.password = 'La contraseña debe tener al menos 8 caracteres.';
+    setFieldErrors(errors);
+    setTermsError(acceptedTerms ? null : 'Acepta los términos de uso y la política de privacidad para continuar.');
 
-    if (!usernameHasValidLength) {
-      setRequestError('El nombre de usuario debe tener entre 3 y 50 caracteres.');
-      return;
-    }
-
-    if (password.length < 8) {
-      setRequestError('La contraseña debe tener al menos 8 caracteres.');
-      return;
-    }
-
+    if (errors.name) { nameInputRef.current?.focus(); return; }
+    if (errors.username) { usernameInputRef.current?.focus(); return; }
+    if (errors.email) { emailInputRef.current?.focus(); return; }
+    if (errors.password) { passwordInputRef.current?.focus(); return; }
     if (!acceptedTerms) {
-      setRequestError(
-        'Acepta los términos de uso y la política de privacidad para continuar.',
-      );
+      Keyboard.dismiss();
+      scrollRef.current?.scrollToEnd({ animated: false });
       return;
     }
 
+    requestInFlight.current = true;
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-
       await signUp({
         name: name.trim(),
         username: username.trim(),
@@ -137,11 +92,11 @@ export default function RegisterScreen() {
         password,
         avatarUrl: null,
       });
-
       router.replace('/home');
     } catch (error) {
       setRequestError(getErrorMessage(error));
     } finally {
+      requestInFlight.current = false;
       setIsSubmitting(false);
     }
   }
@@ -150,910 +105,198 @@ export default function RegisterScreen() {
     Alert.alert(
       documentName,
       `El documento de ${documentName.toLowerCase()} estará disponible próximamente.`,
-      [
-        {
-          text: 'Entendido',
-        },
-      ],
+      [{ text: 'Entendido' }],
     );
   }
 
   function handleBack() {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
+    if (router.canGoBack()) { router.back(); return; }
     router.replace('/login');
   }
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.screen}>
       <StatusBar style="light" />
-
-      <View
-        pointerEvents="box-none"
-        style={[
-          styles.hero,
-          {
-            height: heroHeight + 1,
-            left: (windowWidth - contentWidth) / 2,
-            width: contentWidth,
-          },
-        ]}
-      >
-        <LinearGradient
-          colors={[
-            registerColors.heroStart,
-            registerColors.heroEnd,
-          ]}
-          end={{
-            x: 0.95,
-            y: 1,
-          }}
-          pointerEvents="none"
-          start={{
-            x: 0.08,
-            y: 0,
-          }}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <Pressable
-          accessibilityLabel="Volver"
-          accessibilityRole="button"
-          hitSlop={8}
-          onPress={handleBack}
-          style={({ pressed }) => [
-            styles.backButton,
-            {
-              height: 34 * widthScale,
-              left: 23 * widthScale,
-              top: insets.top + 18 * widthScale,
-              width: 34 * widthScale,
-            },
-            pressed ? styles.heroControlPressed : null,
-          ]}
-        >
-          <SymbolView
-            name={{
-              android: 'arrow_back',
-              ios: 'arrow.left',
-              web: 'arrow_back',
-            }}
-            size={22 * widthScale}
-            tintColor={registerColors.cream}
-          />
-        </Pressable>
-
-        <View
-          accessibilityLabel="Mesa"
-          accessibilityRole="image"
-          pointerEvents="none"
-          style={[
-            styles.brand,
-            {
-              top: insets.top + 20 * widthScale,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.brandIcon,
-              {
-                borderRadius: 7 * widthScale,
-                height: 22 * widthScale,
-                width: 22 * widthScale,
-              },
-            ]}
-          >
-            <Text
-              allowFontScaling={false}
-              style={[
-                styles.brandLetter,
-                {
-                  fontSize: 16 * widthScale,
-                  lineHeight: 19 * widthScale,
-                },
-              ]}
-            >
-              M
-            </Text>
-          </View>
-
-          <Text
-            allowFontScaling={false}
-            style={[
-              styles.wordmark,
-              {
-                fontSize: 21 * widthScale,
-                lineHeight: 25 * widthScale,
-              },
-            ]}
-          >
-            Mesa
-          </Text>
-        </View>
-
-        <View
-          pointerEvents="none"
-          style={[
-            styles.heroHeading,
-            {
-              bottom: 23 * widthScale,
-              paddingHorizontal: 26 * widthScale,
-            },
-          ]}
-        >
-          <Text
-            allowFontScaling={false}
-            style={[
-              styles.title,
-              {
-                fontSize: 29 * widthScale,
-                lineHeight: 35 * widthScale,
-              },
-            ]}
-          >
-            Crea tu cuenta
-          </Text>
-
-          <Text
-            allowFontScaling={false}
-            style={[
-              styles.subtitle,
-              {
-                fontSize: 15 * widthScale,
-                lineHeight: 20 * widthScale,
-              },
-            ]}
-          >
-            Tu próxima mesa está a un minuto.
-          </Text>
-        </View>
-      </View>
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboardView}
-      >
+      <View style={[styles.statusBarInset, { height: insets.top }]} />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
         <ScrollView
+          ref={scrollRef}
           bounces={false}
-          contentContainerStyle={[
-            styles.scrollContent,
-            {
-              paddingTop: heroHeight,
-            },
-          ]}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            if (requestError || (termsError && Object.values(fieldErrors).every(error => !error))) {
+              scrollRef.current?.scrollToEnd({ animated: false });
+            }
+          }}
         >
-          <View
-            style={[
-              styles.card,
-              {
-                borderTopLeftRadius: cardRadius,
-                borderTopRightRadius: cardRadius,
-                minHeight: cardMinHeight,
-                width: contentWidth,
-              },
-            ]}
-          >
-            <LinearGradient
-              colors={[
-                registerColors.cardTop,
-                registerColors.cardMiddle,
-                registerColors.cardBottom,
-              ]}
-              end={{
-                x: 0.78,
-                y: 1,
-              }}
-              pointerEvents="none"
-              start={{
-                x: 0.18,
-                y: 0,
-              }}
-              style={StyleSheet.absoluteFill}
-            />
-
-            <View
-              style={[
-                styles.formContent,
-                {
-                  paddingBottom: cardBottomPadding,
-                  paddingHorizontal: horizontalPadding,
-                  paddingTop: 30,
-                },
-              ]}
-            >
-              <View style={styles.fields}>
-                <View style={styles.field}>
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.label}
-                  >
-                    Nombre
-                  </Text>
-
-                  <View
-                    style={[
-                      styles.inputContainer,
-                      {
-                        height: fieldHeight,
-                      },
-                      focusedField === 'name'
-                        ? styles.inputContainerFocused
-                        : null,
-                    ]}
-                  >
-                    <View style={styles.leadingIcon}>
-                      <SymbolView
-                        name={{
-                          android: 'person',
-                          ios: 'person',
-                          web: 'person',
-                        }}
-                        size={24}
-                        tintColor={registerColors.text}
-                      />
-                    </View>
-
-                    <TextInput
-                      allowFontScaling={false}
-                      autoCapitalize="words"
-                      autoComplete="name"
-                      onBlur={() => {
-                        setFocusedField(null);
-                      }}
-                      onChangeText={setName}
-                      onFocus={() => {
-                        setFocusedField('name');
-                      }}
-                      onSubmitEditing={() => {
-                        usernameInputRef.current?.focus();
-                      }}
-                      placeholder="Paula García"
-                      placeholderTextColor={registerColors.muted}
-                      returnKeyType="next"
-                      style={styles.input}
-                      value={name}
-                    />
+          <View style={styles.content}>
+            <View style={[styles.hero, { paddingHorizontal: horizontalPadding }]}>
+              <View style={styles.navigation}>
+                <Pressable
+                  accessibilityRole="button" accessibilityLabel="Volver"
+                  accessibilityState={{ disabled: isSubmitting }} disabled={isSubmitting}
+                  onPress={handleBack}
+                  style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+                >
+                  <View style={styles.backCircle}>
+                    <SymbolView name={{ android: 'arrow_back', ios: 'arrow.left', web: 'arrow_back' }} size={22} tintColor={loginColors.cream} />
                   </View>
+                </Pressable>
+                <View accessible accessibilityLabel="Mesa" style={styles.brand}>
+                  <View style={styles.brandIcon}><Text maxFontSizeMultiplier={1} style={styles.brandLetter}>M</Text></View>
+                  <Text maxFontSizeMultiplier={1.2} style={styles.wordmark}>Mesa</Text>
                 </View>
+                <View style={styles.navigationSpacer} />
+              </View>
+              <View style={styles.heading}>
+                <Text accessibilityRole="header" style={styles.title}>Crea tu cuenta</Text>
+                {!keyboardVisible && <Text style={styles.subtitle}>Guarda restaurantes y comparte planes.</Text>}
+              </View>
+            </View>
 
-                <View style={styles.field}>
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.label}
-                  >
-                    Nombre de usuario
-                  </Text>
-
-                  <View
-                    style={[
-                      styles.inputContainer,
-                      {
-                        height: fieldHeight,
-                      },
-                      focusedField === 'username'
-                        ? styles.inputContainerFocused
-                        : null,
-                    ]}
-                  >
-                    <View style={styles.leadingIcon}>
-                      <SymbolView
-                        name={{
-                          android: 'alternate_email',
-                          ios: 'at',
-                          web: 'alternate_email',
-                        }}
-                        size={25}
-                        tintColor={registerColors.text}
-                      />
-                    </View>
-
-                    <TextInput
-                      ref={usernameInputRef}
-                      allowFontScaling={false}
-                      autoCapitalize="none"
-                      autoComplete="username"
-                      autoCorrect={false}
-                      maxLength={50}
-                      onBlur={() => {
-                        setFocusedField(null);
-                      }}
-                      onChangeText={setUsername}
-                      onFocus={() => {
-                        setFocusedField('username');
-                      }}
-                      onSubmitEditing={() => {
-                        emailInputRef.current?.focus();
-                      }}
-                      placeholder="paulagarcia"
-                      placeholderTextColor={registerColors.muted}
-                      returnKeyType="next"
-                      style={styles.input}
-                      value={username}
-                    />
-
-                    {usernameHasValidLength ? (
-                      <View
-                        accessibilityLabel="Nombre de usuario con formato disponible"
-                        style={styles.usernameCheck}
+            <View style={[styles.form, { paddingHorizontal: horizontalPadding }]}>
+              <View style={styles.fields}>
+                <FormField
+                  variant="login" label="Nombre" inputRef={nameInputRef}
+                  value={name} error={fieldErrors.name} placeholder="Tu nombre"
+                  editable={!isSubmitting} autoCapitalize="words" autoComplete="name"
+                  importantForAutofill="yes" returnKeyType="next" submitBehavior="submit"
+                  onChangeText={value => { setName(value); clearFieldError('name'); }}
+                  onSubmitEditing={() => usernameInputRef.current?.focus()}
+                />
+                <View>
+                  <FormField
+                    variant="login" label="Nombre de usuario" inputRef={usernameInputRef}
+                    value={username} error={fieldErrors.username} placeholder="Elige un nombre de usuario"
+                    accessibilityHint="Entre 3 y 50 caracteres"
+                    editable={!isSubmitting} autoCapitalize="none" autoComplete="username"
+                    autoCorrect={false} maxLength={50} importantForAutofill="yes"
+                    returnKeyType="next" submitBehavior="submit"
+                    onFocus={() => setUsernameFocused(true)} onBlur={() => setUsernameFocused(false)}
+                    onChangeText={value => { setUsername(value); clearFieldError('username'); }}
+                    onSubmitEditing={() => emailInputRef.current?.focus()}
+                  />
+                  {usernameFocused && !fieldErrors.username && <Text style={styles.hint}>Entre 3 y 50 caracteres</Text>}
+                </View>
+                <FormField
+                  variant="login" label="Email" inputRef={emailInputRef}
+                  value={email} error={fieldErrors.email} placeholder="tu@email.com"
+                  editable={!isSubmitting} autoCapitalize="none" autoComplete="email"
+                  autoCorrect={false} keyboardType="email-address" importantForAutofill="yes"
+                  returnKeyType="next" submitBehavior="submit"
+                  onChangeText={value => { setEmail(value); clearFieldError('email'); }}
+                  onSubmitEditing={() => passwordInputRef.current?.focus()}
+                />
+                <View>
+                  <FormField
+                    variant="login" label="Contraseña" inputRef={passwordInputRef}
+                    value={password} error={fieldErrors.password} placeholder="Crea una contraseña"
+                    accessibilityHint="Mínimo 8 caracteres"
+                    editable={!isSubmitting} autoCapitalize="none" autoComplete="new-password"
+                    autoCorrect={false} importantForAutofill="yes" secureTextEntry={!showPassword}
+                    returnKeyType="go" submitBehavior="submit"
+                    onChangeText={value => { setPassword(value); clearFieldError('password'); }}
+                    onSubmitEditing={() => void handleRegister()}
+                    rightAccessory={(
+                      <Pressable
+                        accessibilityRole="button" accessibilityLabel={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                        accessibilityState={{ disabled: isSubmitting }} disabled={isSubmitting}
+                        onPress={() => setShowPassword(current => !current)}
+                        style={({ pressed }) => [styles.eyeButton, pressed && styles.pressed]}
                       >
                         <SymbolView
-                          name={{
-                            android: 'check',
-                            ios: 'checkmark',
-                            web: 'check',
-                          }}
-                          size={18}
-                          tintColor={colors.white}
+                          name={{ android: showPassword ? 'visibility_off' : 'visibility', ios: showPassword ? 'eye.slash' : 'eye', web: showPassword ? 'visibility_off' : 'visibility' }}
+                          size={24} tintColor={loginColors.text}
                         />
-                      </View>
-                    ) : null}
-                  </View>
-
-                  <View style={styles.usernameStatusRow}>
-                    {usernameHasValidLength ? (
-                      <Text
-                        allowFontScaling={false}
-                        style={styles.usernameStatus}
-                      >
-                        Disponible
-                      </Text>
-                    ) : null}
-                  </View>
-                </View>
-
-                <View style={styles.field}>
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.label}
-                  >
-                    Email
-                  </Text>
-
-                  <View
-                    style={[
-                      styles.inputContainer,
-                      {
-                        height: fieldHeight,
-                      },
-                      focusedField === 'email'
-                        ? styles.inputContainerFocused
-                        : null,
-                    ]}
-                  >
-                    <View style={styles.leadingIcon}>
-                      <SymbolView
-                        name={{
-                          android: 'mail',
-                          ios: 'envelope',
-                          web: 'mail',
-                        }}
-                        size={23}
-                        tintColor={registerColors.text}
-                      />
-                    </View>
-
-                    <TextInput
-                      ref={emailInputRef}
-                      allowFontScaling={false}
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      autoCorrect={false}
-                      keyboardType="email-address"
-                      onBlur={() => {
-                        setFocusedField(null);
-                      }}
-                      onChangeText={setEmail}
-                      onFocus={() => {
-                        setFocusedField('email');
-                      }}
-                      onSubmitEditing={() => {
-                        passwordInputRef.current?.focus();
-                      }}
-                      placeholder="paula@email.com"
-                      placeholderTextColor={registerColors.muted}
-                      returnKeyType="next"
-                      style={styles.input}
-                      value={email}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.field}>
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.label}
-                  >
-                    Contraseña
-                  </Text>
-
-                  <View
-                    style={[
-                      styles.inputContainer,
-                      {
-                        height: fieldHeight,
-                      },
-                      focusedField === 'password'
-                        ? styles.inputContainerFocused
-                        : null,
-                    ]}
-                  >
-                    <View style={styles.leadingIcon}>
-                      <SymbolView
-                        name={{
-                          android: 'lock',
-                          ios: 'lock',
-                          web: 'lock',
-                        }}
-                        size={23}
-                        tintColor={registerColors.text}
-                      />
-                    </View>
-
-                    <TextInput
-                      ref={passwordInputRef}
-                      allowFontScaling={false}
-                      autoCapitalize="none"
-                      autoComplete="new-password"
-                      onBlur={() => {
-                        setFocusedField(null);
-                      }}
-                      onChangeText={setPassword}
-                      onFocus={() => {
-                        setFocusedField('password');
-                      }}
-                      onSubmitEditing={() => {
-                        void handleRegister();
-                      }}
-                      placeholder="••••••••"
-                      placeholderTextColor={registerColors.text}
-                      returnKeyType="done"
-                      secureTextEntry={!showPassword}
-                      style={styles.input}
-                      value={password}
-                    />
-
-                    <Pressable
-                      accessibilityLabel={
-                        showPassword
-                          ? 'Ocultar contraseña'
-                          : 'Mostrar contraseña'
-                      }
-                      accessibilityRole="button"
-                      hitSlop={8}
-                      onPress={() => {
-                        setShowPassword((currentValue) => !currentValue);
-                      }}
-                      style={({ pressed }) => [
-                        styles.eyeButton,
-                        pressed ? styles.controlPressed : null,
-                      ]}
-                    >
-                      <SymbolView
-                        name={{
-                          android: showPassword
-                            ? 'visibility'
-                            : 'visibility_off',
-                          ios: showPassword
-                            ? 'eye'
-                            : 'eye.slash',
-                          web: showPassword
-                            ? 'visibility'
-                            : 'visibility_off',
-                        }}
-                        size={24}
-                        tintColor={registerColors.muted}
-                      />
-                    </Pressable>
-                  </View>
-
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.passwordHint}
-                  >
-                    Mínimo 8 caracteres
-                  </Text>
+                      </Pressable>
+                    )}
+                  />
+                  {!fieldErrors.password && <Text style={styles.hint}>Mínimo 8 caracteres</Text>}
                 </View>
               </View>
 
               <View style={styles.termsRow}>
                 <Pressable
-                  accessibilityRole="checkbox"
-                  accessibilityState={{
-                    checked: acceptedTerms,
-                  }}
-                  hitSlop={8}
-                  onPress={() => {
-                    setAcceptedTerms((currentValue) => !currentValue);
-                  }}
-                  style={({ pressed }) => [
-                    styles.checkbox,
-                    acceptedTerms ? styles.checkboxSelected : null,
-                    pressed ? styles.controlPressed : null,
-                  ]}
+                  accessibilityRole="checkbox" accessibilityLabel="Aceptar los términos de uso y la política de privacidad"
+                  accessibilityState={{ checked: acceptedTerms, disabled: isSubmitting }}
+                  accessibilityHint={termsError ?? undefined} aria-checked={acceptedTerms}
+                  disabled={isSubmitting}
+                  onPress={() => { setAcceptedTerms(current => !current); setTermsError(null); }}
+                  style={({ pressed }) => [styles.checkboxTarget, pressed && styles.pressed]}
                 >
-                  {acceptedTerms ? (
-                    <Text
-                      allowFontScaling={false}
-                      style={styles.checkmark}
-                    >
-                      ✓
-                    </Text>
-                  ) : null}
+                  <View style={[styles.checkbox, acceptedTerms && styles.checkboxSelected, !!termsError && styles.checkboxError]}>
+                    {acceptedTerms && <SymbolView name={{ android: 'check', ios: 'checkmark', web: 'check' }} size={18} tintColor={colors.white} />}
+                  </View>
                 </Pressable>
-
-                <Text
-                  allowFontScaling={false}
-                  style={styles.termsText}
-                >
+                <Text style={styles.termsText}>
                   Acepto los{' '}
-                  <Text
-                    accessibilityRole="link"
-                    onPress={() => {
-                      handleLegalPress('Términos de uso');
-                    }}
-                    style={styles.termsLink}
-                  >
-                    Términos de uso
-                  </Text>
+                  <Text accessibilityRole="link" accessibilityState={{ disabled: isSubmitting }} disabled={isSubmitting} onPress={() => handleLegalPress('Términos de uso')} style={styles.termsLink}>Términos de uso</Text>
                   {' '}y la{' '}
-                  <Text
-                    accessibilityRole="link"
-                    onPress={() => {
-                      handleLegalPress('Política de privacidad');
-                    }}
-                    style={styles.termsLink}
-                  >
-                    Política de privacidad
-                  </Text>
-                  .
+                  <Text accessibilityRole="link" accessibilityState={{ disabled: isSubmitting }} disabled={isSubmitting} onPress={() => handleLegalPress('Política de privacidad')} style={styles.termsLink}>Política de privacidad</Text>.
                 </Text>
               </View>
-
-              {requestError ? (
-                <View
-                  accessibilityLiveRegion="polite"
-                  style={styles.errorContainer}
-                >
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.errorText}
-                  >
-                    {requestError}
-                  </Text>
+              {termsError && <Text accessibilityLiveRegion="polite" style={styles.fieldError}>{termsError}</Text>}
+              {requestError && (
+                <View style={styles.errorContainer}>
+                  <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.fieldError}>{requestError}</Text>
                 </View>
-              ) : null}
-
+              )}
+              <View style={styles.submit}>
+                <PrimaryButton variant="login" title="Crear mi cuenta" loadingTitle="Creando cuenta…" loading={isSubmitting} onPress={() => void handleRegister()} />
+              </View>
               <Pressable
-                accessibilityRole="button"
-                disabled={isSubmitting}
-                onPress={() => {
-                  void handleRegister();
-                }}
-                style={({ pressed }) => [
-                  styles.registerButton,
-                  pressed && !isSubmitting
-                    ? styles.registerButtonPressed
-                    : null,
-                  isSubmitting ? styles.registerButtonDisabled : null,
-                ]}
+                accessibilityRole="button" accessibilityLabel="¿Ya tienes cuenta? Inicia sesión"
+                accessibilityState={{ disabled: isSubmitting }} disabled={isSubmitting}
+                onPress={() => router.replace('/login')}
+                style={({ pressed }) => [styles.loginButton, pressed && styles.pressed]}
               >
-                <LinearGradient
-                  colors={[
-                    registerColors.primary,
-                    registerColors.primaryEnd,
-                  ]}
-                  end={{
-                    x: 1,
-                    y: 0.7,
-                  }}
-                  pointerEvents="none"
-                  start={{
-                    x: 0,
-                    y: 0.2,
-                  }}
-                  style={StyleSheet.absoluteFill}
-                />
-
-                {isSubmitting ? (
-                  <ActivityIndicator
-                    color={colors.white}
-                    size="small"
-                  />
-                ) : (
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.registerButtonText}
-                  >
-                    Crear mi cuenta
-                  </Text>
-                )}
-              </Pressable>
-
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  router.replace('/login');
-                }}
-                style={({ pressed }) => [
-                  styles.loginButton,
-                  pressed ? styles.controlPressed : null,
-                ]}
-              >
-                <Text
-                  allowFontScaling={false}
-                  style={styles.loginText}
-                >
-                  ¿Ya tienes cuenta?{' '}
-                  <Text style={styles.loginStrong}>
-                    Inicia sesión
-                  </Text>
-                </Text>
+                <Text style={styles.loginText}>¿Ya tienes cuenta? <Text style={styles.loginStrong}>Inicia sesión</Text></Text>
               </Pressable>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    overflow: 'hidden',
-    backgroundColor: registerColors.heroStart,
-  },
-  hero: {
-    position: 'absolute',
-    top: 0,
-    overflow: 'hidden',
-  },
-  backButton: {
-    position: 'absolute',
-    zIndex: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: registerColors.cream,
-    borderRadius: 999,
-  },
-  heroControlPressed: {
-    opacity: 0.62,
-  },
-  brand: {
-    position: 'absolute',
-    right: 0,
-    left: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  brandIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: registerColors.cream,
-  },
-  brandLetter: {
-    marginTop: -1,
-    color: registerColors.primary,
-    fontFamily: serifFont,
-    fontStyle: 'italic',
-    fontWeight: '500',
-  },
-  wordmark: {
-    color: registerColors.cream,
-    fontFamily: serifFont,
-    fontWeight: '400',
-    letterSpacing: -0.7,
-  },
-  heroHeading: {
-    position: 'absolute',
-    right: 0,
-    left: 0,
-  },
-  title: {
-    color: registerColors.cream,
-    fontFamily: fonts.bold,
-    letterSpacing: -0.8,
-  },
-  subtitle: {
-    marginTop: 4,
-    color: '#FFD9CB',
-    fontFamily: fonts.medium,
-    letterSpacing: -0.15,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    alignItems: 'center',
-  },
-  card: {
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  formContent: {
-    flexGrow: 1,
-  },
-  fields: {
-    gap: 13,
-  },
-  field: {
-    width: '100%',
-  },
-  label: {
-    marginBottom: 0,
-    paddingLeft: 14,
-    color: registerColors.text,
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    lineHeight: 16,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: registerColors.inputBorder,
-    borderRadius: 10,
-    backgroundColor: registerColors.inputBackground,
-  },
-  inputContainerFocused: {
-    borderWidth: 1.4,
-    borderColor: registerColors.inputBorderFocused,
-  },
-  leadingIcon: {
-    width: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  input: {
-    flex: 1,
-    height: '100%',
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    color: registerColors.text,
-    fontFamily: fonts.regular,
-    fontSize: 16,
-  },
-  eyeButton: {
-    width: 50,
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  usernameCheck: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 13,
-    borderRadius: 12,
-    backgroundColor: registerColors.success,
-  },
-  usernameStatusRow: {
-    height: 19,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    paddingTop: 2,
-    paddingRight: 8,
-  },
-  usernameStatus: {
-    color: registerColors.success,
-    fontFamily: fonts.semiBold,
-    fontSize: 12.5,
-    lineHeight: 16,
-  },
-  passwordHint: {
-    marginTop: 5,
-    paddingLeft: 14,
-    color: registerColors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 12.5,
-    lineHeight: 17,
-  },
-  termsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 13,
-    marginTop: 9,
-    paddingHorizontal: 8,
-  },
-  checkbox: {
-    width: 25,
-    height: 25,
-    flexShrink: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 1,
-    borderWidth: 1.2,
-    borderColor: registerColors.inputBorder,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.74)',
-  },
-  checkboxSelected: {
-    borderColor: registerColors.primary,
-    backgroundColor: registerColors.primary,
-  },
-  checkmark: {
-    marginTop: -1,
-    color: colors.white,
-    fontFamily: fonts.semiBold,
-    fontSize: 18,
-    lineHeight: 20,
-  },
-  termsText: {
-    flex: 1,
-    color: registerColors.text,
-    fontFamily: fonts.regular,
-    fontSize: 14.5,
-    lineHeight: 20,
-  },
-  termsLink: {
-    color: registerColors.primary,
-    fontFamily: fonts.medium,
-    textDecorationLine: 'underline',
-  },
-  controlPressed: {
-    opacity: 0.58,
-  },
-  errorContainer: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: registerColors.errorBorder,
-    borderRadius: 9,
-    backgroundColor: registerColors.errorBackground,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  errorText: {
-    color: colors.danger,
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  registerButton: {
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 14,
-    overflow: 'hidden',
-    borderRadius: 8,
-  },
-  registerButtonPressed: {
-    opacity: 0.86,
-  },
-  registerButtonDisabled: {
-    opacity: 0.64,
-  },
-  registerButtonText: {
-    color: colors.white,
-    fontFamily: fonts.semiBold,
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  loginButton: {
-    alignItems: 'center',
-    marginTop: 13,
-    paddingVertical: 1,
-  },
-  loginText: {
-    color: registerColors.text,
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    lineHeight: 21,
-    textAlign: 'center',
-  },
-  loginStrong: {
-    color: registerColors.primary,
-    fontFamily: fonts.semiBold,
-  },
+  screen: { flex: 1, backgroundColor: loginColors.surface },
+  statusBarInset: { backgroundColor: loginColors.hero },
+  keyboardView: { flex: 1 },
+  scrollContent: { flexGrow: 1, alignItems: 'center' },
+  content: { flexGrow: 1, width: '100%', maxWidth: MAX_SCREEN_WIDTH },
+  hero: { paddingTop: spacing.xs, paddingBottom: spacing.section, backgroundColor: loginColors.hero },
+  navigation: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backButton: { width: 48, height: 48, justifyContent: 'center', alignItems: 'flex-start' },
+  backCircle: { width: 34, height: 34, borderWidth: 1, borderColor: loginColors.cream, borderRadius: radii.round, alignItems: 'center', justifyContent: 'center' },
+  navigationSpacer: { width: 48 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  brandIcon: { width: 24, height: 24, borderRadius: 7, backgroundColor: loginColors.cream, alignItems: 'center', justifyContent: 'center' },
+  brandLetter: { fontFamily: serifFont, fontSize: 20, lineHeight: 24, fontStyle: 'italic', color: loginColors.primary, includeFontPadding: false },
+  wordmark: { fontFamily: serifFont, fontSize: 25, color: loginColors.cream },
+  heading: { marginTop: spacing.sm, gap: 6 },
+  title: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34, letterSpacing: -0.5, color: loginColors.cream },
+  subtitle: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: loginColors.cream },
+  form: { flexGrow: 1, marginTop: -24, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, backgroundColor: loginColors.surface, paddingTop: spacing.xl, paddingBottom: spacing.xl },
+  fields: { gap: spacing.md },
+  hint: { marginTop: spacing.xs, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: loginColors.muted },
+  eyeButton: { width: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs, marginTop: spacing.md },
+  checkboxTarget: { width: 48, minHeight: 48, alignItems: 'flex-start', justifyContent: 'flex-start', paddingTop: spacing.sm },
+  checkbox: { width: 24, height: 24, borderWidth: 1, borderColor: loginColors.inputBorder, borderRadius: 6, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
+  checkboxSelected: { backgroundColor: loginColors.primary, borderColor: loginColors.primary },
+  checkboxError: { borderColor: colors.danger },
+  termsText: { flex: 1, paddingVertical: spacing.sm, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: loginColors.muted },
+  termsLink: { fontFamily: fonts.medium, color: loginColors.primary, textDecorationLine: 'underline' },
+  fieldError: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.danger },
+  errorContainer: { marginTop: spacing.sm, padding: spacing.sm, borderWidth: 1, borderColor: colors.danger, borderRadius: radii.sm, backgroundColor: colors.dangerSoft },
+  submit: { marginTop: spacing.md },
+  loginButton: { minHeight: 48, marginTop: spacing.sm, paddingVertical: spacing.sm, justifyContent: 'center' },
+  loginText: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 22, color: loginColors.muted, textAlign: 'center' },
+  loginStrong: { fontFamily: fonts.semiBold, color: loginColors.primary },
+  pressed: { opacity: 0.7 },
 });

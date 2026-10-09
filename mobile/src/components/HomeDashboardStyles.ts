@@ -1,274 +1,269 @@
 import { Platform, StyleSheet } from 'react-native';
-
-import { colors } from '../theme/colors';
+import { colors, loginColors as homeColors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
-import { shadows } from '../theme/layout';
+import { radii, spacing } from '../theme/layout';
 
 export const homeBrandFont = Platform.select({
-  ios: 'Georgia-Bold',
+  ios: 'Georgia',
   android: 'serif',
-  default: 'serif',
+  default: 'serif'
 });
+export const homeFocusStyle = {
+  outlineColor: homeColors.primary,
+  outlineWidth: 2,
+  outlineOffset: 3
+} as const;
 
 export const homeStyles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FCF9F7',
+    backgroundColor: homeColors.hero
   },
   content: {
     flexGrow: 1,
-    backgroundColor: '#FCF9F7',
+    backgroundColor: homeColors.surface
   },
-  header: {
-    width: '100%',
-  },
+  header: { width: '100%' },
   heroBackground: {
-    position: 'relative',
-    overflow: 'hidden',
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 17,
-    borderBottomRightRadius: 17,
+    overflow: 'hidden', backgroundColor: homeColors.hero, paddingBottom: 48,
+    borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl,
   },
   topBar: {
-    minHeight: 40,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: spacing.md
   },
   brand: {
-    color: '#FFF9F4',
+    color: homeColors.cream,
     fontFamily: homeBrandFont,
-    fontSize: 35,
-    fontWeight: '800',
-    lineHeight: 42,
-    letterSpacing: -1.1,
+    fontSize: 32,
+    lineHeight: 40
   },
   topActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.xs
   },
   avatarButton: {
-    width: 36,
-    height: 36,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    borderRadius: 18,
-    backgroundColor: '#FFF9F3',
+    borderRadius: radii.round
   },
   avatarImage: {
-    width: '100%',
-    height: '100%',
+    width: 40,
+    height: 40,
+    borderRadius: 20
   },
   avatarInitial: {
-    color: '#C4492D',
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
+    width: 40, height: 40, borderRadius: 20, overflow: 'hidden', textAlign: 'center', lineHeight: 40,
+    backgroundColor: homeColors.cream, color: homeColors.primary, fontFamily: fonts.semiBold, fontSize: 16,
   },
   heroCopy: {
     zIndex: 2,
-    marginTop: 16,
+    marginTop: spacing.md
   },
   greeting: {
-    color: '#F8DCCC',
+    color: homeColors.cream,
     fontFamily: fonts.medium,
     fontSize: 14,
-    lineHeight: 19,
+    lineHeight: 20
   },
   title: {
-    marginTop: 5,
-    color: '#FFFFFF',
+    marginTop: spacing.xs,
+    color: homeColors.cream,
     fontFamily: fonts.bold,
-    fontSize: 28,
-    lineHeight: 35,
-    letterSpacing: -0.85,
+    fontSize: 27,
+    lineHeight: 34,
+    letterSpacing: -0.5
   },
   subtitle: {
-    marginTop: 3,
-    color: '#FFE6D7',
+    marginTop: spacing.xs,
+    color: homeColors.cream,
     fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 21
   },
   illustration: {
     position: 'absolute',
-    right: -51,
-    bottom: -40,
-    width: 176,
-    height: 180,
+    right: -56,
+    bottom: -58,
+    width: 150,
+    height: 154,
+    opacity: 0.6
   },
-  headerControls: {
-    zIndex: 4,
-    marginTop: -28,
-    paddingHorizontal: 20,
-  },
+  headerControls: { marginTop: -26 },
   searchBar: {
-    height: 46,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
-    paddingHorizontal: 17,
-    borderRadius: 17,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#5E3A2D',
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.17,
-    shadowRadius: 12,
-    elevation: 7,
+    minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm, borderRadius: radii.md, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.white,
   },
   searchText: {
     flex: 1,
-    color: '#766F6B',
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    lineHeight: 19,
+    color: homeColors.text,
+    fontFamily: fonts.medium,
+    fontSize: 16,
+    lineHeight: 24
   },
   quickActions: {
     flexDirection: 'row',
-    gap: 13,
-    marginTop: 14,
-    paddingHorizontal: 3,
+    alignItems: 'stretch',
+    gap: spacing.sm,
+    marginTop: spacing.md
   },
+  stacked: { flexDirection: 'column' },
   dashboard: {
-    gap: 14,
-    paddingHorizontal: 22,
-    paddingTop: 12,
+    gap: spacing.xl,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl
   },
-  section: {
-    gap: 5,
-  },
+  section: { gap: spacing.sm },
   sectionHeader: {
-    minHeight: 24,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: spacing.xs
   },
   sectionTitle: {
-    color: '#29221F',
+    flexShrink: 1,
+    color: homeColors.text,
     fontFamily: fonts.bold,
-    fontSize: 18,
-    lineHeight: 24,
-    letterSpacing: -0.35,
+    fontSize: 20,
+    lineHeight: 28
   },
   sectionAction: {
-    minHeight: 28,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingLeft: 8,
+    gap: spacing.xxs,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radii.sm
   },
   sectionActionText: {
-    color: colors.olive,
+    color: homeColors.primary,
     fontFamily: fonts.semiBold,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20
   },
-  groupGrid: {
-    gap: 12,
-  },
+  groupGrid: { gap: spacing.sm },
   activityList: {
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E2D7D1',
-    borderRadius: 17,
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.white
   },
   emptyCard: {
-    minHeight: 84,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 13,
-    borderWidth: 1,
-    borderColor: '#E2D7D1',
-    borderRadius: 17,
-    backgroundColor: '#FFFFFF',
-  },
-  emptyIcon: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: colors.primarySoft,
-  },
-  emptyCopy: {
-    flex: 1,
-    gap: 3,
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-  },
-  emptySubtitle: {
-    color: colors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 14,
-  },
-  loadingCard: {
-    minHeight: 188,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    marginHorizontal: 22,
-    marginTop: 22,
+    gap: spacing.md,
+    padding: spacing.xl,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    ...shadows.card,
+    borderRadius: radii.lg,
+    backgroundColor: colors.white
+  },
+  emptyIcon: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.md,
+    backgroundColor: colors.primarySoft
+  },
+  emptyCopy: { gap: spacing.xs },
+  emptyTitle: {
+    color: homeColors.text,
+    fontFamily: fonts.semiBold,
+    fontSize: 22,
+    lineHeight: 29
+  },
+  emptySubtitle: {
+    color: homeColors.muted,
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    lineHeight: 23
+  },
+  secondaryAction: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xs,
+    borderRadius: radii.sm
+  },
+  secondaryText: {
+    color: homeColors.primary,
+    fontFamily: fonts.semiBold,
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center'
+  },
+  loadingCard: {
+    gap: spacing.md,
+    margin: spacing.xl
   },
   loadingText: {
-    color: colors.muted,
+    color: homeColors.muted,
     fontFamily: fonts.regular,
-    fontSize: 12,
+    fontSize: 14,
+    lineHeight: 21
+  },
+  skeletonTitle: {
+    width: '42%',
+    height: 24,
+    borderRadius: radii.sm,
+    backgroundColor: colors.border
+  },
+  skeletonCard: {
+    height: 152,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surfaceMuted
   },
   errorCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
-    marginHorizontal: 22,
-    marginTop: 22,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#F0C7BF',
-    borderRadius: 18,
-    backgroundColor: colors.dangerSoft,
+    gap: spacing.sm,
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.xl,
+    padding: spacing.md,
+    borderRadius: radii.md,
+    backgroundColor: colors.dangerSoft
   },
   errorIcon: {
-    width: 42,
-    height: 42,
+    width: 32,
+    height: 32,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: '#FBE2DD',
+    justifyContent: 'center'
   },
   errorCopy: {
     flex: 1,
-    gap: 5,
+    gap: spacing.xs
   },
   errorTitle: {
     color: colors.danger,
     fontFamily: fonts.semiBold,
-    fontSize: 13,
+    fontSize: 16,
+    lineHeight: 24
   },
   errorText: {
-    color: colors.mutedStrong,
+    color: homeColors.muted,
     fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: 14,
+    lineHeight: 21
+  },
+  retryButton: {
+    minHeight: 48,
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs,
+    borderRadius: radii.sm
   },
   retryText: {
-    marginTop: 3,
-    color: colors.primary,
+    color: homeColors.primary,
     fontFamily: fonts.semiBold,
-    fontSize: 10,
+    fontSize: 15,
+    lineHeight: 22
   },
-  pressed: {
-    opacity: 0.78,
-  },
+  pressed: { opacity: 0.78 },
 });

@@ -1,64 +1,43 @@
 import { SymbolView } from 'expo-symbols';
-import { Image, Pressable, Text, View } from 'react-native';
-
+import { useState } from 'react';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { recommendationStyles as styles } from './HomeRecommendationCardRefined.styles';
-import { getRestaurantFallbackImage } from '../lib/restaurant-images';
+import { homeFocusStyle } from './HomeDashboardStyles';
+import { loginColors } from '../theme/colors';
 import type { RestaurantGroup } from '../types/group';
 import type { GroupRestaurant } from '../types/restaurant';
 
-export type HomeRecommendation = {
-  group: RestaurantGroup;
-  restaurant: GroupRestaurant;
-};
+export type HomeRecommendation = { group: RestaurantGroup; restaurant: GroupRestaurant };
 
-export function HomeRecommendationCardRefined({
-  recommendation,
-  onPress,
-}: {
-  recommendation: HomeRecommendation;
-  onPress: () => void;
+export function HomeRecommendationCardRefined({ recommendation, onPress }: {
+  recommendation: HomeRecommendation; onPress: () => void;
 }) {
   const { group, restaurant: groupRestaurant } = recommendation;
-  const restaurant = groupRestaurant.restaurant;
-  const imageUri = getRestaurantFallbackImage(restaurant.name);
-  const location = restaurant.city ?? group.city ?? 'Sin ciudad';
+  const { restaurant, averageScore, ratingsCount } = groupRestaurant;
+  const location = restaurant.city ?? group.city;
+  const { width, fontScale } = useWindowDimensions();
+  const [focused, setFocused] = useState(false);
+  const rating = averageScore != null && ratingsCount > 0
+    ? `${averageScore.toFixed(1).replace('.', ',')} · ${ratingsCount} ${ratingsCount === 1 ? 'valoración' : 'valoraciones'}`
+    : 'Aún sin valoraciones';
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
-    >
-      <View style={styles.artwork}>
-        <Image source={{ uri: imageUri }} style={styles.image} />
-      </View>
-
-      <View style={styles.copy}>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.eyebrow}>
-          Recomendación para ti
-        </Text>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.title}>
-          {restaurant.name}
-        </Text>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.location}>
-          {location}
-        </Text>
-        <Text allowFontScaling={false} numberOfLines={1} style={styles.description}>
-          La mejor valorada en {group.name}
-        </Text>
-      </View>
-
-      <View style={styles.trailing}>
-        <View style={styles.statusPill}>
-          <Text allowFontScaling={false} style={styles.statusText}>Para descubrir</Text>
+    <Pressable accessibilityRole="button"
+      accessibilityLabel={`${restaurant.name}${location ? `, ${location}` : ''}. Guardado en ${group.name}. ${rating}`}
+      onPress={onPress} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed, focused && homeFocusStyle]}>
+      <View style={styles.main}>
+        {width >= 350 && fontScale <= 1.3 && <View style={styles.artwork} accessible={false} importantForAccessibility="no-hide-descendants">
+          <SymbolView name={{ ios: 'fork.knife', android: 'restaurant', web: 'restaurant' }} size={28} tintColor={loginColors.primary} />
+        </View>}
+        <View style={styles.copy}>
+          <Text style={styles.title}>{restaurant.name}</Text>
+          {location && <Text style={styles.location}>{location}</Text>}
         </View>
+        <SymbolView accessible={false} name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={20} tintColor={loginColors.text} />
       </View>
-
-      <SymbolView
-        name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-        size={18}
-        tintColor="#2A231F"
-      />
+      <Text style={styles.description}>Guardado en {group.name}</Text>
+      <Text style={styles.rating}>{rating}</Text>
     </Pressable>
   );
 }

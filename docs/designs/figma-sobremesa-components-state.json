@@ -1,0 +1,245 @@
+{
+  "components": {
+    "Icon/map-pin": "4:2",
+    "Icon/bell": "4:6",
+    "Icon/arrow-left": "4:10",
+    "Icon/search": "4:14",
+    "Icon/heart": "4:18",
+    "Icon/user-round": "4:21",
+    "Icon/utensils": "4:25",
+    "Icon/check": "4:30",
+    "Icon/map": "4:33",
+    "Icon/chevron-right": "4:38",
+    "Icon/users-round": "4:41",
+    "Icon/arrow-right": "4:46",
+    "Icon/house": "4:50",
+    "Icon/ellipsis": "4:54",
+    "Icon/lock-keyhole": "4:59",
+    "Icon/star": "4:64",
+    "Icon/sliders-horizontal": "4:67",
+    "Icon/plus": "4:78",
+    "button-Primary-Default": "4:82",
+    "button-Primary-Loading": "4:84",
+    "button-Primary-Disabled": "4:86",
+    "button-Secondary-Default": "4:88",
+    "button-Secondary-Loading": "4:90",
+    "button-Secondary-Disabled": "4:92",
+    "Button": "4:94",
+    "Button/Primary": "4:82",
+    "Button/Secondary": "4:88",
+    "IconButton": "4:95",
+    "Avatar": "4:100",
+    "Chip/Default": "4:102",
+    "Chip/Active": "4:104",
+    "RestaurantRow": "4:106",
+    "GroupRow": "4:121",
+    "SearchInput": "4:134",
+    "Navigation": "4:140"
+  },
+  "properties": {
+    "Icon/map-pin": {},
+    "Icon/bell": {},
+    "Icon/arrow-left": {},
+    "Icon/search": {},
+    "Icon/heart": {},
+    "Icon/user-round": {},
+    "Icon/utensils": {},
+    "Icon/check": {},
+    "Icon/map": {},
+    "Icon/chevron-right": {},
+    "Icon/users-round": {},
+    "Icon/arrow-right": {},
+    "Icon/house": {},
+    "Icon/ellipsis": {},
+    "Icon/lock-keyhole": {},
+    "Icon/star": {},
+    "Icon/sliders-horizontal": {},
+    "Icon/plus": {},
+    "button-Primary-Default": {
+      "Label": "Label#4:0"
+    },
+    "button-Primary-Loading": {
+      "Label": "Label#4:1"
+    },
+    "button-Primary-Disabled": {
+      "Label": "Label#4:2"
+    },
+    "button-Secondary-Default": {
+      "Label": "Label#4:3"
+    },
+    "button-Secondary-Loading": {
+      "Label": "Label#4:4"
+    },
+    "button-Secondary-Disabled": {
+      "Label": "Label#4:5"
+    },
+    "IconButton": {
+      "Icon": "Icon#4:7"
+    },
+    "Avatar": {
+      "Initial": "Initial#4:8"
+    },
+    "Chip/Default": {
+      "Label": "Label#4:9"
+    },
+    "Chip/Active": {
+      "Label": "Label#4:10"
+    },
+    "RestaurantRow": {
+      "Initial": "Initial#4:11",
+      "Name": "Name#4:12",
+      "Meta": "Meta#4:13",
+      "Status": "Status#4:14",
+      "Rating": "Rating#4:15",
+      "Favorite": "Favorite#4:16"
+    },
+    "GroupRow": {
+      "Name": "Name#4:17",
+      "Meta": "Meta#4:18"
+    },
+    "SearchInput": {
+      "Placeholder": "Placeholder#4:19"
+    },
+    "Navigation": {}
+  },
+  "createdNodeIds": [
+    "4:2",
+    "4:3",
+    "4:6",
+    "4:7",
+    "4:10",
+    "4:11",
+    "4:14",
+    "4:15",
+    "4:18",
+    "4:19",
+    "4:21",
+    "4:22",
+    "4:25",
+    "4:26",
+    "4:30",
+    "4:31",
+    "4:33",
+    "4:34",
+    "4:38",
+    "4:39",
+    "4:41",
+    "4:42",
+    "4:46",
+    "4:47",
+    "4:50",
+    "4:51",
+    "4:54",
+    "4:55",
+    "4:59",
+    "4:60",
+    "4:64",
+    "4:65",
+    "4:67",
+    "4:68",
+    "4:78",
+    "4:79",
+    "4:82",
+    "4:83",
+    "4:84",
+    "4:85",
+    "4:86",
+    "4:87",
+    "4:88",
+    "4:89",
+    "4:90",
+    "4:91",
+    "4:92",
+    "4:93",
+    "4:94",
+    "4:95",
+    "4:96",
+    "4:100",
+    "4:101",
+    "4:102",
+    "4:103",
+    "4:104",
+    "4:105",
+    "4:106",
+    "4:107",
+    "4:108",
+    "4:109",
+    "4:110",
+    "4:111",
+    "4:112",
+    "4:113",
+    "4:114",
+    "4:115",
+    "4:118",
+    "4:121",
+    "4:122",
+    "4:123",
+    "4:128",
+    "4:129",
+    "4:130",
+    "4:131",
+    "4:134",
+    "4:135",
+    "4:139",
+    "4:140",
+    "4:141",
+    "4:142",
+    "4:146",
+    "4:147",
+    "4:148",
+    "4:153",
+    "4:154",
+    "4:155",
+    "4:159",
+    "4:160",
+    "4:161",
+    "4:166",
+    "4:167",
+    "4:168",
+    "4:172"
+  ],
+  "componentCount": 32,
+  "buttonVariants": [
+    {
+      "id": "4:82",
+      "name": "Style=Primary, State=Default",
+      "width": 159,
+      "height": 100
+    },
+    {
+      "id": "4:84",
+      "name": "Style=Primary, State=Loading",
+      "width": 119,
+      "height": 100
+    },
+    {
+      "id": "4:86",
+      "name": "Style=Primary, State=Disabled",
+      "width": 159,
+      "height": 100
+    },
+    {
+      "id": "4:88",
+      "name": "Style=Secondary, State=Default",
+      "width": 159,
+      "height": 100
+    },
+    {
+      "id": "4:90",
+      "name": "Style=Secondary, State=Loading",
+      "width": 119,
+      "height": 100
+    },
+    {
+      "id": "4:92",
+      "name": "Style=Secondary, State=Disabled",
+      "width": 159,
+      "height": 100
+    }
+  ],
+  "fonts": [
+    "Inter",
+    "Fraunces"
+  ],
+  "pageId": "3:49"
+}

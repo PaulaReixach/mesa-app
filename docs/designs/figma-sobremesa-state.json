@@ -1,0 +1,83 @@
+{
+  "fileKey": "VyXRQ0CWShGEjkACvUPYD0",
+  "fileUrl": "https://www.figma.com/design/VyXRQ0CWShGEjkACvUPYD0",
+  "phase": "foundations",
+  "pages": {
+    "design": "0:1",
+    "library": "3:49"
+  },
+  "boardId": "3:50",
+  "rowId": "3:51",
+  "screens": [
+    {
+      "id": "3:52",
+      "name": "01 · Inicio",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "3:53",
+      "name": "02 · Grupo privado",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "3:54",
+      "name": "03 · Restaurante",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "colors": {
+    "background": "VariableID:2:3",
+    "surface": "VariableID:2:4",
+    "text": "VariableID:2:5",
+    "secondary": "VariableID:2:6",
+    "action": "VariableID:2:7",
+    "olive": "VariableID:2:8",
+    "sage": "VariableID:2:9",
+    "border": "VariableID:2:10",
+    "peach": "VariableID:3:13",
+    "sand": "VariableID:3:15",
+    "dark": "VariableID:3:17",
+    "cream": "VariableID:3:19"
+  },
+  "layout": {
+    "0": "VariableID:3:21",
+    "4": "VariableID:3:23",
+    "8": "VariableID:3:25",
+    "12": "VariableID:3:27",
+    "16": "VariableID:3:29",
+    "20": "VariableID:3:31",
+    "24": "VariableID:3:33",
+    "32": "VariableID:3:35",
+    "40": "VariableID:3:37",
+    "48": "VariableID:3:39",
+    "56": "VariableID:3:41"
+  },
+  "styles": {
+    "Display": "S:e8322bdb1d77dc49b6c407f8e05ec7cbd45f5594,",
+    "Heading": "S:792cd79dc4c4fba61e6481d1ea1e36b5d340f2f1,",
+    "Title": "S:2a9c177ca87bf34ab4bc7e77ab4d1f43551d8f57,",
+    "Body": "S:5eced46dbffa4c105445196fab862a7eb2a31616,",
+    "Label": "S:abc29fa84153c00ead2f50526c188883ecb41d08,",
+    "Caption": "S:b6f21a4833eb9518cf0ff6e024a4e721ba02d273,",
+    "Eyebrow": "S:f6853bcaef37793c8dede2c420e8703b63948d4a,"
+  },
+  "collections": [
+    "VariableCollectionId:3:2",
+    "VariableCollectionId:2:2",
+    "VariableCollectionId:3:3"
+  ],
+  "createdOrUpdatedNodeIds": [
+    "0:1",
+    "3:49",
+    "3:50",
+    "3:51",
+    "3:52",
+    "3:53",
+    "3:54"
+  ],
+  "variableCount": 46,
+  "textStyleCount": 7
+}

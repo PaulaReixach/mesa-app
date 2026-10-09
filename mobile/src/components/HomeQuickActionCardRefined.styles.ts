@@ -1,66 +1,48 @@
 import { StyleSheet } from 'react-native';
-
-import { colors } from '../theme/colors';
+import { colors, loginColors as homeColors } from '../theme/colors';
 import { fonts } from '../theme/fonts';
+import { radii, spacing } from '../theme/layout';
 
 export const quickActionStyles = StyleSheet.create({
+  stacked: {
+    flexBasis: 'auto',
+    flexGrow: 0
+  },
   card: {
-    position: 'relative',
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 0,
     minWidth: 0,
-    height: 58,
+    minHeight: 80,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 11,
-    paddingHorizontal: 13,
+    gap: spacing.xs,
+    padding: spacing.sm,
     borderWidth: 1,
-    borderColor: '#E2D7D1',
-    borderRadius: 15,
-    backgroundColor: '#FFFCFA',
+    borderColor: colors.borderStrong,
+    borderRadius: radii.md,
+    backgroundColor: colors.white
   },
   iconWrap: {
-    width: 34,
-    height: 38,
+    width: 24,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
-  iconWrapSage: {},
   copy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
-  },
-  badge: {
-    position: 'absolute',
-    top: 7,
-    right: 8,
-    minWidth: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    borderRadius: 8,
-    backgroundColor: colors.primary,
-  },
-  badgeText: {
-    color: colors.white,
-    fontFamily: fonts.bold,
-    fontSize: 7,
+    gap: spacing.xxs
   },
   title: {
-    color: '#29221F',
+    color: homeColors.text,
     fontFamily: fonts.semiBold,
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 14,
+    lineHeight: 20
   },
   subtitle: {
-    color: colors.muted,
+    color: homeColors.muted,
     fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 18
   },
-  pressed: {
-    opacity: 0.76,
-    transform: [{ scale: 0.985 }],
-  },
+  pressed: { backgroundColor: homeColors.surface },
 });

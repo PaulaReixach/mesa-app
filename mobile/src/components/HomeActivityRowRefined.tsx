@@ -33,19 +33,19 @@ function ActivityText({ entry }: { entry: HomeActivityEntry }) {
 
   switch (activity.type) {
     case 'MEMBER_INVITED':
-      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>invitó a <Text style={styles.strong}>{subject}</Text> a <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>invitó a <Text style={styles.strong}>{subject}</Text> a <Text style={styles.group}>{groupName}</Text></Text>;
     case 'RESTAURANT_ADDED':
-      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>añadió <Text style={styles.strong}>“{restaurant}”</Text> a <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>añadió <Text style={styles.strong}>“{restaurant}”</Text> a <Text style={styles.group}>{groupName}</Text></Text>;
     case 'RESTAURANT_RATED':
-      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>valoró <Text style={styles.strong}>“{restaurant}”</Text> con <Text style={styles.strong}>{activity.score?.toFixed(1).replace('.', ',') ?? '—'}</Text></Text>;
+      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>valoró <Text style={styles.strong}>“{restaurant}”</Text> con <Text style={styles.strong}>{activity.score?.toFixed(1).replace('.', ',') ?? '—'}</Text></Text>;
     case 'RESTAURANT_STATUS_CHANGED':
-      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>actualizó <Text style={styles.strong}>“{restaurant}”</Text></Text>;
+      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>actualizó <Text style={styles.strong}>“{restaurant}”</Text></Text>;
     case 'MEMBER_JOINED':
-      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>se unió a <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>se unió a <Text style={styles.group}>{groupName}</Text></Text>;
     case 'MEMBER_LEFT':
-      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>salió de <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>salió de <Text style={styles.group}>{groupName}</Text></Text>;
     case 'GROUP_CREATED':
-      return <Text allowFontScaling={false} style={styles.sentence}><Text style={styles.actor}>{actor} </Text>creó <Text style={styles.group}>{groupName}</Text></Text>;
+      return <Text style={styles.sentence}><Text style={styles.actor}>{actor} </Text>creó <Text style={styles.group}>{groupName}</Text></Text>;
   }
 }
 
@@ -57,11 +57,11 @@ export function HomeActivityRowRefined({ entry }: { entry: HomeActivityEntry }) 
 
   return (
     <View style={styles.row}>
-      <View style={styles.avatar}>
+      <View style={styles.avatar} accessible={false} importantForAccessibility="no-hide-descendants">
         {avatar ? (
           <Image source={{ uri: avatar }} style={styles.avatarImage} />
         ) : (
-          <Text allowFontScaling={false} style={styles.avatarInitial}>
+          <Text style={styles.avatarInitial}>
             {displayName.charAt(0).toUpperCase()}
           </Text>
         )}
@@ -69,11 +69,11 @@ export function HomeActivityRowRefined({ entry }: { entry: HomeActivityEntry }) 
 
       <View style={styles.copy}>
         <ActivityText entry={entry} />
+        <Text style={styles.time}>
+          {(activity.type === 'RESTAURANT_RATED' || activity.type === 'RESTAURANT_STATUS_CHANGED') ? `${entry.groupName} · ` : ''}
+          {timeLabel(activity.createdAt)}
+        </Text>
       </View>
-
-      <Text allowFontScaling={false} style={styles.time}>
-        {timeLabel(activity.createdAt)}
-      </Text>
     </View>
   );
 }

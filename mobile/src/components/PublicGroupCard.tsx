@@ -1,230 +1,47 @@
 import { SymbolView } from 'expo-symbols';
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 
-import { resolveApiUrl } from '../lib/api';
-import { colors } from '../theme/colors';
+import { colors, loginColors as palette } from '../theme/colors';
 import type { PublicGroupSummary } from '../types/group';
-import { fonts } from '../theme/fonts';
-import { radii, shadows } from '../theme/layout';
+import { GroupArtwork } from './GroupArtwork';
+import { groupListStyles as styles } from './GroupList.styles';
+import { groupFocusStyle } from './GroupsPrimitives';
 
-type PublicGroupCardProps = {
-  group: PublicGroupSummary;
-  onPress: () => void;
-};
-
-export function PublicGroupCard({
-  group,
-  onPress,
-}: PublicGroupCardProps) {
-  const imageUri = group.imageUrl
-    ? resolveApiUrl(group.imageUrl)
-    : null;
-
+export function PublicGroupCard({ group, onPress }: { group: PublicGroupSummary; onPress: () => void }) {
+  const [focused, setFocused] = useState(false);
+  const { fontScale } = useWindowDimensions();
+  const stacked = fontScale > 1.3;
+  const restaurantLabel = `${group.restaurantCount} ${group.restaurantCount === 1 ? 'restaurante' : 'restaurantes'}`;
+  const followerLabel = `${group.followerCount} ${group.followerCount === 1 ? 'seguidor' : 'seguidores'}`;
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        pressed ? styles.cardPressed : null,
-      ]}
-    >
-      <View style={styles.imageContainer}>
-        {imageUri ? (
-          <Image
-            source={{ uri: imageUri }}
-            style={styles.image}
-          />
-        ) : (
-          <View style={styles.imageFallback}>
-            <Text style={styles.imageInitial}>
-              {group.name.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.titleRow}>
-          <Text
-            numberOfLines={2}
-            style={styles.title}
-          >
-            {group.name}
-          </Text>
-
-          {group.following ? (
-            <View style={styles.followingBadge}>
-              <SymbolView
-                name={{
-                  ios: 'checkmark',
-                  android: 'check',
-                  web: 'check',
-                }}
-                size={12}
-                tintColor="#607349"
-              />
-              <Text style={styles.followingText}>
-                Siguiendo
-              </Text>
+    <View style={styles.wrapper}>
+      <Pressable accessibilityRole="button"
+        accessibilityLabel={`Abrir ${group.name}, por @${group.owner.username}. ${restaurantLabel}, ${followerLabel}${group.city ? '. ' + group.city : ''}${group.following ? '. Siguiendo' : ''}`}
+        onPress={onPress} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        style={({ pressed }) => [styles.card, stacked && styles.stackedCard, pressed && styles.pressed, focused && groupFocusStyle]}>
+        <GroupArtwork imageUrl={group.imageUrl} name={group.name} />
+        <View style={[styles.content, stacked && styles.stackedContent]}>
+          <Text style={styles.title}>{group.name}</Text>
+          <Text style={styles.owner}>Por @{group.owner.username}</Text>
+          <Text style={styles.meta}>{restaurantLabel} · {followerLabel}</Text>
+          {group.city && (
+            <View style={styles.location}>
+              <SymbolView accessible={false} name={{ ios: 'mappin', android: 'location_on', web: 'location_on' }} size={16} tintColor={palette.muted} />
+              <Text style={styles.locationText}>{group.city}</Text>
             </View>
-          ) : null}
+          )}
+          {group.following && (
+            <View style={[styles.badge, styles.publicBadge]}>
+              <SymbolView accessible={false} name={{ ios: 'checkmark', android: 'check', web: 'check' }} size={14} tintColor={colors.olivePressed} />
+              <Text style={[styles.badgeText, styles.publicText]}>Siguiendo</Text>
+            </View>
+          )}
         </View>
-
-        <Text style={styles.owner}>
-          por @{group.owner.username}
-        </Text>
-
-        <View style={styles.metaRow}>
-          <Text style={styles.metaText}>
-            {group.restaurantCount}{' '}
-            {group.restaurantCount === 1
-              ? 'restaurante'
-              : 'restaurantes'}
-          </Text>
-
-          <View style={styles.metaDot} />
-
-          <Text style={styles.metaText}>
-            {group.followerCount}{' '}
-            {group.followerCount === 1
-              ? 'seguidor'
-              : 'seguidores'}
-          </Text>
+        <View style={stacked && styles.stackedChevron}>
+          <SymbolView accessible={false} name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={20} tintColor={palette.muted} />
         </View>
-
-        <View style={styles.locationRow}>
-          <SymbolView
-            name={{
-              ios: 'mappin',
-              android: 'location_on',
-              web: 'location_on',
-            }}
-            size={13}
-            tintColor={colors.primary}
-          />
-          <Text style={styles.locationText}>
-            {group.city ?? 'Sin ciudad'}
-          </Text>
-        </View>
-      </View>
-
-      <SymbolView
-        name={{
-          ios: 'chevron.right',
-          android: 'chevron_right',
-          web: 'chevron_right',
-        }}
-        size={20}
-        tintColor={colors.muted}
-      />
-    </Pressable>
+      </Pressable>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    minHeight: 116,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.xl,
-    backgroundColor: colors.surface,
-    ...shadows.card,
-  },
-  cardPressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.995 }],
-  },
-  imageContainer: {
-    width: 88,
-    height: 88,
-    overflow: 'hidden',
-    borderRadius: radii.lg,
-    backgroundColor: colors.primarySoft,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  imageFallback: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  imageInitial: {
-    color: colors.primary,
-    fontSize: 30,
-    fontFamily: fonts.bold,
-  },
-  content: {
-    flex: 1,
-    gap: 5,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-  },
-  title: {
-    flex: 1,
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 19,
-    fontFamily: fonts.bold,
-  },
-  owner: {
-    color: colors.primary,
-    fontSize: 9,
-    fontFamily: fonts.semiBold,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  metaDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-  },
-  metaText: {
-    color: colors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 8,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  locationText: {
-    color: colors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 8,
-  },
-  followingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: colors.oliveSoft,
-  },
-  followingText: {
-    color: '#607349',
-    fontSize: 8,
-    fontFamily: fonts.bold,
-  },
-});
