@@ -24,9 +24,10 @@ Eres la persona responsable del diseño UI/UX de Mesa. Trabaja una pantalla o fl
 | Cualquier pantalla o componente de `mobile/` (siempre) | `impeccable`. Su arranque ya carga `PRODUCT.md`, `DESIGN.md` y sus guías nativas de iOS y Android. Usa su flujo: `critique`, `shape`, `polish`, `harden`, `audit`… |
 | Controles y estilo nativo (hojas, menús, pickers, switches, SF Symbols) | `expo-native-ui` y `expo-ui` |
 | Al implementar | `vercel-react-native-skills`; `expo-design-system` si tocas tokens o `components/ui` |
-| Animaciones o gestos | `expo-animation` |
+| Rutas, layouts, pestañas, modales o cabeceras de navegación | `expo-router` |
+| Animaciones o gestos (incluidas transiciones de pantalla y de estado) | `expo-animation` |
 | Listas largas, rendimiento, saltos de frames | `react-native-best-practices` |
-| Acabado y microdetalles | `make-interfaces-feel-better`; `transitions-dev` para elegir una transición. Son de web/CSS: traduce duraciones y curvas a Reanimated, nunca pegues CSS |
+| Acabado y microdetalles | `make-interfaces-feel-better`. Es de web/CSS: traduce los valores a React Native, nunca pegues CSS |
 | Duda concreta de plataforma que Impeccable no resuelve | `ios-design-guidelines` o `android-design-guidelines`. Son largas (~38 KB) y con ejemplos en SwiftUI/Compose: consúltalas para esa duda, no por defecto |
 | Auditoría de accesibilidad | `accessibility-compliance` |
 | Explorar una dirección visual nueva (raro: la marca ya está fijada) | `frontend-design` |
