@@ -7,12 +7,13 @@ export const useAppTabsStyles = createThemedStyles(({ colors }) => ({
     justifyContent: 'center',
   },
   primaryTabIcon: {
-    width: 62,
+    width: 56,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 10,
+    borderRadius: 16,
   },
+  addIcon: { height: 32, alignItems: 'center', justifyContent: 'center' },
   primaryTabIconActive: {
     backgroundColor: colors.secondarySoft,
   },
@@ -21,7 +22,7 @@ export const useAppTabsStyles = createThemedStyles(({ colors }) => ({
     height: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 4,
     overflow: 'visible',
   },
   addCircleFramePressed: {

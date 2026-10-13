@@ -1,391 +1,195 @@
-import { SymbolView } from 'expo-symbols';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { ComponentProps, useMemo, useRef, useState } from 'react';
-import {
-  FlatList,
-  ListRenderItemInfo,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SymbolView } from 'expo-symbols';
+import type { ReactNode } from 'react';
+import { Alert, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '../../components/ui/AppText';
 import { completeOnboarding } from '../../lib/onboarding';
-import { colors } from '../../theme/colors';
-import { fonts } from '../../theme/fonts';
-import { radii, shadows } from '../../theme/layout';
+import { createThemedStyles, fonts, radius, space, useTheme } from '../../theme';
 
-type OnboardingSlide = {
-  id: string;
-  eyebrow: string;
-  title: string;
-  description: string;
-  icon: ComponentProps<typeof SymbolView>['name'];
-  accent: string;
-  accentSoft: string;
-};
+const tablePhoto = require('../../../assets/images/welcome-table.webp');
+const logoWhite = require('../../../assets/images/brand/logo-white.svg');
+const appleLogo = require('../../../assets/images/brand/apple.svg');
+const googleG = require('../../../assets/images/brand/google-g.svg');
 
-const slides: OnboardingSlide[] = [
-  {
-    id: 'save',
-    eyebrow: 'Todo en un mismo lugar',
-    title: 'Guarda los sitios que no quieres perder',
-    description: 'Reúne recomendaciones, restaurantes pendientes y favoritos en listas que siempre sabrás dónde encontrar.',
-    icon: { ios: 'bookmark.fill', android: 'bookmark', web: 'bookmark' },
-    accent: colors.primary,
-    accentSoft: colors.primarySoft,
-  },
-  {
-    id: 'share',
-    eyebrow: 'Pensado para compartir',
-    title: 'Decidir en grupo vuelve a ser fácil',
-    description: 'Crea espacios privados o públicos, invita a tu gente y deja que cada persona participe a su manera.',
-    icon: { ios: 'person.3.fill', android: 'groups', web: 'groups' },
-    accent: colors.olive,
-    accentSoft: colors.oliveSoft,
-  },
-  {
-    id: 'plan',
-    eyebrow: 'Menos debate, más mesa',
-    title: 'Convierte pendientes en planes reales',
-    description: 'Compara opiniones, consulta el mapa y encuentra el sitio que mejor encaja con vuestro próximo plan.',
-    icon: { ios: 'map.fill', android: 'map', web: 'map' },
-    accent: colors.amber,
-    accentSoft: colors.amberSoft,
-  },
-];
+const MAX_PHOTO_HEIGHT = 476;
+const MIN_PHOTO_HEIGHT = 260;
+/** Card and title overlap the bottom of the photo (artboard: 476 → card 380, title 456). */
+const CARD_OVERLAP = 96;
+const TITLE_OVERLAP = 20;
+/** Title block + its gap to the buttons, and the three buttons with the legal line. */
+const COPY_HEIGHT = 150;
+const ACTIONS_HEIGHT = 230;
+const SIDE = 24;
 
-export default function OnboardingScreen() {
-  const { width } = useWindowDimensions();
-  const listRef = useRef<FlatList<OnboardingSlide>>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const pageWidth = useMemo(() => Math.max(width, 320), [width]);
-  const isLast = activeIndex === slides.length - 1;
+// Apple and Google sign-in are pending on the backend (DESIGN.md › Entrar).
+function socialPending() {
+  Alert.alert('Muy pronto', 'De momento, entra con tu correo.');
+}
 
-  function updateActiveIndex(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / pageWidth);
-    setActiveIndex(Math.min(Math.max(nextIndex, 0), slides.length - 1));
-  }
+// Legal texts are not written yet (DESIGN.md › Entrar › Backend).
+function legalPending() {
+  Alert.alert('Muy pronto', 'Estamos terminando las condiciones y la política de privacidad.');
+}
 
-  async function finish(destination: '/login' | '/register') {
-    await completeOnboarding();
-    router.replace(destination);
-  }
+/** «Entrar» 1 · Bienvenida «La mesa compartida»: one door with Apple, Google or email. */
+export default function WelcomeScreen() {
+  const styles = useStyles();
+  const { colors, scheme } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  // The photo gives way so the whole welcome fits on screen without scrolling.
+  const photoHeight = Math.max(MIN_PHOTO_HEIGHT, Math.min(MAX_PHOTO_HEIGHT,
+    height - COPY_HEIGHT - ACTIONS_HEIGHT - Math.max(insets.bottom, space.s5) + TITLE_OVERLAP));
+  const dark = scheme === 'dark';
 
-  function handlePrimaryAction() {
-    if (isLast) {
-      void finish('/register');
-      return;
-    }
-
-    listRef.current?.scrollToIndex({ index: activeIndex + 1, animated: true });
-    setActiveIndex(current => Math.min(current + 1, slides.length - 1));
-  }
-
-  function renderSlide({ item }: ListRenderItemInfo<OnboardingSlide>) {
-    return (
-      <View style={[styles.slide, { width: pageWidth }]}>
-        <View style={[styles.visual, { backgroundColor: item.accentSoft }]}>
-          <View style={[styles.orbit, styles.orbitOne]} />
-          <View style={[styles.orbit, styles.orbitTwo]} />
-          <View style={[styles.iconCircle, { backgroundColor: item.accent }]}>
-            <SymbolView name={item.icon} size={46} tintColor={colors.white} />
-          </View>
-          <View style={styles.previewCard}>
-            <View style={[styles.previewAvatar, { backgroundColor: item.accentSoft }]} />
-            <View style={styles.previewCopy}>
-              <View style={styles.previewLineStrong} />
-              <View style={styles.previewLine} />
-            </View>
-            <View style={[styles.previewDot, { backgroundColor: item.accent }]} />
-          </View>
-        </View>
-
-        <View style={styles.copy}>
-          <Text style={[styles.eyebrow, { color: item.accent }]}>{item.eyebrow}</Text>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.description}>{item.description}</Text>
-        </View>
-      </View>
-    );
-  }
+  const continueWithEmail = () => {
+    void completeOnboarding();
+    router.push('/login');
+  };
 
   return (
-    <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <View accessibilityLabel="Mesa" accessibilityRole="image" style={styles.brand}>
-          <View style={styles.brandMark}>
-            <Text style={styles.brandMarkText}>M</Text>
-          </View>
-          <Text style={styles.brandName}>Mesa</Text>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => void finish('/login')}
-          style={({ pressed }) => [styles.skipButton, pressed ? styles.pressed : null]}
-        >
-          <Text style={styles.skipText}>Saltar</Text>
-        </Pressable>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content} bounces={false}>
+      <View style={[styles.photo, { height: photoHeight }]} accessible={false} importantForAccessibility="no-hide-descendants">
+        <Image source={tablePhoto} style={styles.fill} contentFit="cover" contentPosition={{ left: '50%', top: '40%' }} />
+        <LinearGradient
+          colors={[
+            'rgba(30, 22, 18, 0.66)', 'rgba(30, 22, 18, 0.34)', 'rgba(30, 22, 18, 0)',
+            `${colors.background}00`, `${colors.background}DB`, colors.background,
+          ]}
+          locations={[0, 0.15, 0.32, 0.56, 0.82, 0.93]}
+          style={styles.veil}
+        />
+      </View>
+      <Image source={logoWhite} style={[styles.logo, { top: insets.top + 19 }]} contentFit="contain"
+        accessibilityRole="image" accessibilityLabel="Mesa" />
+      <ExampleCard top={photoHeight - CARD_OVERLAP} />
+
+      <View style={[styles.copy, { marginTop: photoHeight - TITLE_OVERLAP }]}>
+        <AppText accessibilityRole="header" style={styles.title}>Los buenos sitios se comparten.</AppText>
+        <AppText style={styles.lead}>Guarda, decide y valora con tu gente.</AppText>
       </View>
 
-      <FlatList
-        data={slides}
-        decelerationRate="fast"
-        horizontal
-        keyExtractor={item => item.id}
-        onMomentumScrollEnd={updateActiveIndex}
-        pagingEnabled
-        ref={listRef}
-        renderItem={renderSlide}
-        showsHorizontalScrollIndicator={false}
-      />
-
-      <View style={styles.footer}>
-        <View accessibilityLabel={`Paso ${activeIndex + 1} de ${slides.length}`} style={styles.dots}>
-          {slides.map((slide, index) => (
-            <View
-              key={slide.id}
-              style={[styles.dot, index === activeIndex ? styles.dotActive : null]}
-            />
-          ))}
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={handlePrimaryAction}
-          style={({ pressed }) => [styles.primaryButton, pressed ? styles.primaryButtonPressed : null]}
-        >
-          <Text style={styles.primaryButtonText}>
-            {isLast ? 'Crear mi primera mesa' : 'Siguiente'}
-          </Text>
-          <SymbolView
-            name={{ ios: 'arrow.right', android: 'arrow_forward', web: 'arrow_forward' }}
-            size={20}
-            tintColor={colors.white}
-          />
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => void finish('/login')}
-          style={({ pressed }) => [styles.loginButton, pressed ? styles.pressed : null]}
-        >
-          <Text style={styles.loginText}>Ya tengo cuenta</Text>
-        </Pressable>
+      <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, space.s5) }]}>
+        <SsoButton label="Continuar con Apple" onPress={socialPending}
+          style={{ backgroundColor: dark ? '#FFFFFF' : '#000000' }} color={dark ? '#000000' : '#FFFFFF'}
+          icon={<Image source={appleLogo} style={styles.apple} tintColor={dark ? '#000000' : '#FFFFFF'} />} />
+        <SsoButton label="Continuar con Google" onPress={socialPending}
+          style={styles.google} color={colors.textPrimary}
+          icon={<Image source={googleG} style={styles.gIcon} />} />
+        <SsoButton label="Continuar con correo" onPress={continueWithEmail}
+          style={{ backgroundColor: colors.secondarySoft }} color={colors.onSecondarySoft}
+          icon={<SymbolView name={{ ios: 'envelope', android: 'mail', web: 'mail' }} size={19}
+            tintColor={colors.onSecondarySoft} />} />
+        <AppText style={styles.legal}>
+          Al continuar aceptas las{' '}
+          <AppText style={styles.link} accessibilityRole="link" onPress={legalPending}>Condiciones</AppText>
+          {' '}y la{' '}
+          <AppText style={styles.link} accessibilityRole="link" onPress={legalPending}>Privacidad</AppText>.
+        </AppText>
       </View>
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  topBar: {
-    minHeight: 78,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  brand: {
+function SsoButton({ label, onPress, style, color, icon }: {
+  label: string;
+  onPress: () => void;
+  style: object;
+  color: string;
+  icon: ReactNode;
+}) {
+  const styles = useStyles();
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}
+      style={({ pressed }) => [styles.sso, style, pressed && styles.pressed]}>
+      <View accessible={false}>{icon}</View>
+      <AppText style={[styles.ssoText, { color }]}>{label}</AppText>
+    </Pressable>
+  );
+}
+
+/** Decorative sample of a group over the photo, hidden from screen readers. */
+function ExampleCard({ top }: { top: number }) {
+  const styles = useStyles();
+  const { colors, cover } = useTheme();
+  const faces = [
+    { initial: 'P', tone: cover[2] },
+    { initial: 'A', tone: cover[0] },
+    { initial: 'L', tone: cover[1] },
+  ];
+  return (
+    <View style={[styles.card, { top }]} accessible={false} importantForAccessibility="no-hide-descendants">
+      <View style={styles.cardIcon}>
+        <SymbolView name={{ ios: 'fork.knife', android: 'restaurant', web: 'restaurant' }} size={18}
+          tintColor={colors.accent} />
+      </View>
+      <View>
+        <AppText style={styles.cardTitle} numberOfLines={1}>Cenas de los viernes</AppText>
+        <AppText style={styles.cardMeta} numberOfLines={1}>Tú, Ana y Lucas · 12 sitios</AppText>
+      </View>
+      <View style={styles.faces}>
+        {faces.map((face, index) => (
+          <View key={face.initial} style={[styles.face, { backgroundColor: face.tone.background, marginLeft: index ? -7 : 0 }]}>
+            <AppText style={[styles.faceText, { color: face.tone.ink }]}>{face.initial}</AppText>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const useStyles = createThemedStyles(({ colors }) => ({
+  screen: { flex: 1, backgroundColor: colors.background },
+  content: { flexGrow: 1 },
+  photo: { position: 'absolute', top: 0, left: 0, right: 0, overflow: 'hidden' },
+  fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  veil: { position: 'absolute', top: -2, left: 0, right: 0, bottom: -2 },
+  logo: { position: 'absolute', left: SIDE, width: 116, height: 33 },
+  card: {
+    position: 'absolute',
+    left: SIDE,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-  },
-  brandMark: {
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-  },
-  brandMarkText: {
-    color: colors.white,
-    fontFamily: fonts.bold,
-    fontSize: 20,
-  },
-  brandName: {
-    color: colors.text,
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    letterSpacing: -0.5,
-  },
-  skipButton: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-  skipText: {
-    color: colors.mutedStrong,
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-  },
-  slide: {
-    paddingHorizontal: 22,
-    paddingTop: 18,
-  },
-  visual: {
-    minHeight: 290,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    borderRadius: radii.xxl,
-  },
-  orbit: {
-    position: 'absolute',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.68)',
-    borderRadius: 999,
-  },
-  orbitOne: {
-    width: 260,
-    height: 260,
-  },
-  orbitTwo: {
-    width: 190,
-    height: 190,
-  },
-  iconCircle: {
-    width: 104,
-    height: 104,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 8,
-    borderColor: 'rgba(255,255,255,0.72)',
-    borderRadius: 52,
-  },
-  previewCard: {
-    position: 'absolute',
-    right: 18,
-    bottom: 18,
-    left: 18,
-    minHeight: 72,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    paddingHorizontal: 13,
-    borderRadius: radii.lg,
+    paddingLeft: space.s2,
+    paddingRight: 14,
+    borderRadius: 20,
+    borderCurve: 'continuous',
     backgroundColor: colors.surface,
-    ...shadows.card,
+    boxShadow: '0 1px 2px rgba(39, 41, 36, 0.08), 0 10px 24px -10px rgba(39, 41, 36, 0.35)',
   },
-  previewAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
+  cardIcon: {
+    width: 40, height: 40, borderRadius: radius.md, borderCurve: 'continuous',
+    alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft,
   },
-  previewCopy: {
-    flex: 1,
-    gap: 7,
+  cardTitle: { fontFamily: fonts.semiBold, fontSize: 14.5, lineHeight: 19, color: colors.textPrimary },
+  cardMeta: { fontFamily: fonts.regular, fontSize: 12.5, lineHeight: 17, color: colors.textSecondary },
+  faces: { flexDirection: 'row', marginLeft: 6 },
+  face: {
+    width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: colors.surface,
+    alignItems: 'center', justifyContent: 'center',
   },
-  previewLineStrong: {
-    width: '72%',
-    height: 7,
-    borderRadius: 7,
-    backgroundColor: colors.text,
-    opacity: 0.78,
+  faceText: { fontFamily: fonts.display, fontSize: 11, lineHeight: 13 },
+  copy: { paddingHorizontal: SIDE, gap: space.s3 },
+  title: { fontFamily: fonts.display, fontSize: 30, lineHeight: 34, letterSpacing: -0.9, color: colors.textPrimary },
+  lead: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textSecondary },
+  actions: { marginTop: 'auto', paddingTop: 40, paddingHorizontal: space.s5, gap: 10 },
+  sso: {
+    height: 50, borderRadius: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
   },
-  previewLine: {
-    width: '52%',
-    height: 6,
-    borderRadius: 6,
-    backgroundColor: colors.borderStrong,
+  pressed: { transform: [{ scale: 0.97 }] },
+  ssoText: { fontFamily: fonts.semiBold, fontSize: 15, lineHeight: 20 },
+  google: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  apple: { width: 16, height: 16 },
+  gIcon: { width: 18, height: 18 },
+  legal: {
+    marginTop: space.s1, marginHorizontal: space.s3, textAlign: 'center',
+    fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, color: colors.textSecondary,
   },
-  previewDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-  },
-  copy: {
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingTop: 31,
-  },
-  eyebrow: {
-    fontFamily: fonts.bold,
-    fontSize: 11,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
-  title: {
-    maxWidth: 340,
-    marginTop: 11,
-    color: colors.text,
-    fontFamily: fonts.bold,
-    fontSize: 30,
-    letterSpacing: -0.8,
-    lineHeight: 36,
-    textAlign: 'center',
-  },
-  description: {
-    maxWidth: 340,
-    marginTop: 13,
-    color: colors.muted,
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    lineHeight: 21,
-    textAlign: 'center',
-  },
-  footer: {
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  dots: {
-    minHeight: 28,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    marginBottom: 10,
-  },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: colors.borderStrong,
-  },
-  dotActive: {
-    width: 24,
-    backgroundColor: colors.primary,
-  },
-  primaryButton: {
-    minHeight: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    ...shadows.card,
-  },
-  primaryButtonPressed: {
-    backgroundColor: colors.primaryPressed,
-    transform: [{ scale: 0.992 }],
-  },
-  primaryButtonText: {
-    color: colors.white,
-    fontFamily: fonts.bold,
-    fontSize: 15,
-  },
-  loginButton: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loginText: {
-    color: colors.primary,
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-  },
-  pressed: {
-    opacity: 0.68,
-  },
-});
+  link: { fontFamily: fonts.semiBold, color: colors.secondary },
+}));

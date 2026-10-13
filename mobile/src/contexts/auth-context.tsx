@@ -48,6 +48,15 @@ type AuthProviderProps = {
   children: ReactNode;
 };
 
+// SecureStore cannot delete on web; a missing token there is already the goal.
+async function deleteStoredItem(key: string): Promise<void> {
+  try {
+    await SecureStore.deleteItemAsync(key);
+  } catch {
+    // Nothing stored to remove.
+  }
+}
+
 export function AuthProvider({
   children,
 }: AuthProviderProps) {
@@ -86,7 +95,7 @@ export function AuthProvider({
         setAccessToken(storedToken);
         setUser(currentUser);
       } catch {
-        await SecureStore.deleteItemAsync(
+        await deleteStoredItem(
           ACCESS_TOKEN_KEY,
         );
 
@@ -112,7 +121,7 @@ export function AuthProvider({
           token,
         );
       } else {
-        await SecureStore.deleteItemAsync(
+        await deleteStoredItem(
           ACCESS_TOKEN_KEY,
         );
       }
@@ -169,7 +178,7 @@ export function AuthProvider({
         }
       }
 
-      await SecureStore.deleteItemAsync(
+      await deleteStoredItem(
         ACCESS_TOKEN_KEY,
       );
 

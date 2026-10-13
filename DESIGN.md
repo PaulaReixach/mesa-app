@@ -476,7 +476,7 @@ nunca flotante. Cinco pestañas iguales (icono 22–24 + etiqueta `tab`): Inicio
 Añadir · Mapa · Perfil. Inactivas en `textSecondary`; la seleccionada en oliva con icono
 relleno sobre pastilla salvia 56×32 (radio 16). «Añadir» no sobresale ni cambia de tamaño:
 icono de cuadrado redondeado 26 (radio 8,5) relleno de `accent` con el «+» en `onAccent` y
-etiqueta en `accent` 600. En oscuro, los mismos roles.
+etiqueta en `accent` 600. En oscuro, los mismos roles. Iconos SVG del lienzo en `assets/images/icons` pintados con `expo-image` (`components/ui/MesaIcons`; sin `react-native-svg`, que no está en el build de desarrollo).
 
 ### Entrar («Una sola puerta», aprobado en oct. 2026)
 - **Idea.** No se elige entre «Crear cuenta» e «Iniciar sesión»: se entra con Apple, Google o
@@ -486,7 +486,7 @@ etiqueta en `accent` 600. En oscuro, los mismos roles.
   8–72) e inicio de sesión (correo o usuario + contraseña). **Pendiente antes de publicar:** Apple
   y Google (van juntos: la App Store exige Apple si se ofrece Google), comprobar si un correo
   tiene cuenta, comprobar si un usuario está libre, recuperar contraseña y los textos legales.
-- **Rutas.** Pila `(auth)`: `welcome` → `email` → `password` (ya tiene cuenta) o `register`
+- **Rutas.** Pila `(auth)`: `onboarding` (bienvenida) → `login` (correo; `GET /auth/lookup`) → `password` (ya tiene cuenta) o `register` (`GET /auth/username-availability`)
   (cuenta nueva); Apple/Google nuevos → `username`. Al terminar, `replace` a «Tu primer grupo»
   (sin vuelta atrás) o a Inicio si ya tenía cuenta.
 - **1 · Bienvenida.** Foto propia de una mesa compartida (cenital, sin caras posando; nunca stock)
@@ -544,14 +544,21 @@ etiqueta en `accent` 600. En oscuro, los mismos roles.
   `StatusChip`; abajo, barrio/categoría, nombre, avatares de quien quiere ir, «Ver restaurante»
   (`accent`, píldora de 52) y «Otro sitio» (translúcido).
 - **Tus grupos**: fila horizontal de círculos de 72 (portada, caras o monograma). Aro `accent` +
-  contador = novedades sin ver; nombre en 2 líneas como máximo; al final, «Nuevo grupo» con borde
+  contador = novedades sin ver (`unseenCount` de `GET /groups`): lo que otras personas han hecho desde la
+  última vez que abriste el grupo (añadir, valorar o cambiar el estado de un sitio, y que entre alguien);
+  no cuentan lo tuyo, las salidas ni las invitaciones. Abrir el grupo lo pone a cero
+  (`POST /groups/{id}/seen`); a partir de 10 se muestra «9+». Sin novedades, nombre en `textSecondary`; nombre en 2 líneas como máximo; al final, «Nuevo grupo» con borde
   discontinuo.
-- **Valorar después de ir**: tarjeta con miniatura, «¿Qué tal en …?», 5 estrellas de 48 y «Guardar».
+- **Valorar después de ir**: tarjeta con miniatura, «¿Qué tal en …?», 5 estrellas de 48 (SVG del lienzo, `StarIcon`) y «Guardar»; una «×» la oculta hasta la próxima vez que se abre la app.
 - **Lo último de tu gente**: un solo bloque `surface` (radio 24) con filas: miniatura de 60 del sitio
   con la cara de la persona superpuesta (28), frase «**Persona** acción **Sitio**», grupo y tiempo, y a
   la derecha nota, estado o favorito. Separadores de 1 px con sangría.
 - **Sin grupos**: tarjeta `accent` «Monta tu primera mesa» (`emptyTitle`) con «Crear un grupo» y
   «Tengo un enlace de invitación», y debajo «Así funciona Mesa» en 3 pasos.
+- **Oscuro**: las tarjetas terracota (Sitio del día, Monta tu primera mesa) usan el terracota profundo
+  `#873421` con texto blanco; el `accent` claro del modo oscuro no da contraste con blanco.
+- **Pendiente de backend**: foto de los sitios (la tarjeta va siempre en terracota con el símbolo),
+  y quién quiere ir (se muestra quién lo guardó).
 
 ### Cabecera al deslizar (todas las pestañas)
 En reposo, sin línea ni fondo: se funde con `background`. Al deslizar queda fija con fondo

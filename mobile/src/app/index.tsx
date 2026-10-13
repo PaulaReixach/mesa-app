@@ -22,7 +22,7 @@ export default function IndexScreen() {
 
   return (
     <Redirect
-      href={isAuthenticated ? '/home' : onboardingCompleted ? '/login' : '/onboarding'}
+      href={isAuthenticated ? '/home' : '/onboarding'}
     />
   );
 }

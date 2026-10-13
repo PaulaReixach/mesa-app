@@ -19,7 +19,9 @@ public record GroupResponse(
         long followerCount,
         UUID ownerUserId,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        /** News by others since the current member last opened the group. */
+        long unseenCount
 ) {
 
     public static GroupResponse from(RestaurantGroup restaurantGroup) {
@@ -38,6 +40,15 @@ public record GroupResponse(
             GroupRole currentUserRole,
             long followerCount
     ) {
+        return from(restaurantGroup, currentUserRole, followerCount, 0);
+    }
+
+    public static GroupResponse from(
+            RestaurantGroup restaurantGroup,
+            GroupRole currentUserRole,
+            long followerCount,
+            long unseenCount
+    ) {
         return new GroupResponse(
                 restaurantGroup.getId(),
                 restaurantGroup.getName(),
@@ -50,7 +61,8 @@ public record GroupResponse(
                 followerCount,
                 restaurantGroup.getOwnerUserId(),
                 restaurantGroup.getCreatedAt(),
-                restaurantGroup.getUpdatedAt()
+                restaurantGroup.getUpdatedAt(),
+                unseenCount
         );
     }
 }

@@ -39,7 +39,7 @@ import {
   getGroupMembers,
   removeGroupMember,
 } from '../services/group-member-service';
-import { getGroup } from '../services/group-service';
+import { getGroup, markGroupSeen } from '../services/group-service';
 import { getRestaurantProposalPendingCount } from '../services/restaurant-proposal-service';
 import { getGroupRestaurants } from '../services/restaurant-service';
 import { colors } from '../theme/colors';
@@ -104,6 +104,8 @@ export default function PrivateGroupDetailScreen() {
       setError(null);
       setManagementError(null);
       isRefresh ? setRefreshing(true) : setLoading(true);
+      // Best effort: a failed «seen» only leaves the Home counter until the next visit.
+      markGroupSeen(groupId, accessToken).catch(() => undefined);
 
       const [groupResponse, memberResponse, restaurantResponse] =
         await Promise.all([

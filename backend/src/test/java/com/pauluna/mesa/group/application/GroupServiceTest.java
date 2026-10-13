@@ -2,10 +2,14 @@ package com.pauluna.mesa.group.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +31,7 @@ import com.pauluna.mesa.group.domain.GroupRole;
 import com.pauluna.mesa.group.domain.RestaurantGroup;
 import com.pauluna.mesa.group.infrastructure.GroupCollaborationRequestRepository;
 import com.pauluna.mesa.group.infrastructure.GroupFollowerRepository;
+import com.pauluna.mesa.group.infrastructure.GroupActivityEventRepository;
 import com.pauluna.mesa.group.infrastructure.GroupMemberRepository;
 import com.pauluna.mesa.group.infrastructure.RestaurantGroupRepository;
 import com.pauluna.mesa.restaurant.domain.RestaurantProposal;
@@ -59,6 +64,9 @@ class GroupServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private GroupActivityEventRepository activityEventRepository;
+
     private GroupService service;
 
     @BeforeEach
@@ -69,7 +77,8 @@ class GroupServiceTest {
                 followerRepository,
                 collaborationRequestRepository,
                 restaurantProposalRepository,
-                userRepository
+                userRepository,
+                activityEventRepository
         );
     }
 
@@ -192,6 +201,42 @@ class GroupServiceTest {
 
         verify(groupRepository).deleteById(GROUP_ID);
         verify(groupRepository).flush();
+    }
+
+    @Test
+    void groupListCountsNewsByOthersSinceLastSeen() {
+        RestaurantGroup group = mock(RestaurantGroup.class);
+        GroupMember membership = mock(GroupMember.class);
+        Instant lastSeen = Instant.parse("2026-10-10T10:00:00Z");
+
+        when(userRepository.existsById(MEMBER_ID)).thenReturn(true);
+        when(groupRepository.findAllByMemberUserId(MEMBER_ID)).thenReturn(List.of(group));
+        when(group.getId()).thenReturn(GROUP_ID);
+        when(memberRepository.findByGroupIdAndUserId(GROUP_ID, MEMBER_ID))
+                .thenReturn(Optional.of(membership));
+        when(membership.getRole()).thenReturn(GroupRole.MEMBER);
+        when(membership.getLastSeenAt()).thenReturn(lastSeen);
+        when(activityEventRepository.countUnseen(
+                eq(GROUP_ID), eq(lastSeen), anyCollection(), eq(MEMBER_ID)
+        )).thenReturn(3L);
+
+        assertEquals(3L, service.getGroups(MEMBER_ID).getFirst().unseenCount());
+    }
+
+    @Test
+    void openingTheGroupMarksItsNewsAsSeen() {
+        RestaurantGroup group = mock(RestaurantGroup.class);
+        GroupMember membership = mock(GroupMember.class);
+
+        when(userRepository.existsById(MEMBER_ID)).thenReturn(true);
+        when(groupRepository.findById(GROUP_ID)).thenReturn(Optional.of(group));
+        when(memberRepository.existsByGroupIdAndUserId(GROUP_ID, MEMBER_ID)).thenReturn(true);
+        when(memberRepository.findByGroupIdAndUserId(GROUP_ID, MEMBER_ID))
+                .thenReturn(Optional.of(membership));
+
+        service.markSeen(GROUP_ID, MEMBER_ID);
+
+        verify(membership).markSeen(any(Instant.class));
     }
 
     private void prepareOwnerAccess(

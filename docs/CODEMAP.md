@@ -10,7 +10,7 @@ Las rutas grandes reexportan una pantalla de `screens/`; el resto tiene la UI en
 
 | Ruta (`app/`) | Implementación |
 |---|---|
-| `(app)/home` | `screens/HomeScreen` + `components/Home*` |
+| `(app)/home` | `screens/HomeScreen` + `components/Home*` (`HomeTopBar`/`HomeSearchRow`, `HomeTodayCard`, `HomeGroupCircles`, `HomeRateCard`, `HomeActivityRow`, `HomeFirstTable`) |
 | `(app)/map` | `screens/MapScreen` → `screens/MapScreenPolished` (web: `MapScreen.web`) + `styles/map-*.styles.ts` |
 | `(app)/add` | en la ruta + `components/AddHubScreen.styles` |
 | `(app)/groups/index`, `create`, `explore` | en la ruta + `GroupsPrimitives`, `GroupCard`, `GroupList.styles` |
@@ -19,20 +19,20 @@ Las rutas grandes reexportan una pantalla de `screens/`; el resto tiene la UI en
 | `(app)/groups/public/[groupId]/collaborators` | `screens/PublicGroupCollaboratorsScreen` |
 | `(app)/groups/[groupId]/restaurants/*`, `restaurant-proposals/*`, `members/add`, `edit`, `collaboration*` | en la ruta + `Restaurant*`, `FormField`, `PrimaryButton` |
 | `(app)/profile`, `profile-edit`, ajustes (`*-settings`, `change-password`, `delete-account`, `help-support`, `support-request`, `about-mesa`), `notifications`, `group-invitations` | en la ruta |
-| `(auth)/login`, `register`, `onboarding` | en la ruta + `FormField`, `PrimaryButton` |
+| `(auth)/onboarding` (bienvenida), `login` (correo), `password`, `register` | en la ruta + `components/AuthStep`, `ui/TextField` (tema nuevo) |
 | Barra de pestañas | `navigation/AppTabsLayout` |
 
 ## Estado de la migración al sistema nuevo
 
 - **Ya en el tema nuevo** (`useTheme`, `theme/index.ts`, `components/ui/`): Inicio
-  (`HomeScreen`, `Home*`), `NotificationBellButton`, `navigation/AppTabsLayout`,
+  (`HomeScreen`, `Home*`), Entrar (`(auth)/*`), `NotificationBellButton`, `navigation/AppTabsLayout`,
   `MapScreen.web`.
 - **Aún en el tema antiguo** (`theme/colors.ts`, `theme/layout.ts`, `theme/fonts.ts`):
   todo lo demás. Al migrar una pantalla, pásala a `useTheme` + `components/ui` y
   sustituye `PrimaryButton`/`FormField` cuando haya equivalente en `ui/`.
 - Base nueva: `theme/tokens.ts`, `palette.ts`, `typography.ts`, `use-theme.ts`,
   `create-styles.ts`. Componentes: `ui/AppText, Avatar, Button, EmptyState,
-  ConfirmAlert, Cover, FilterChips, GroupedList (+ GroupedRow), InlineBanner, ModalSheet, PressableCard, RatingBadge, SearchField, SectionHeader, SegmentedControl, Skeleton, Toast,
+  ConfirmAlert, Cover, TextField, FilterChips, GroupedList (+ GroupedRow), InlineBanner, ModalSheet, PressableCard, RatingBadge, SearchField, SectionHeader, SegmentedControl, Skeleton, Toast,
   StatusChip`.
 
 ## Archivos grandes: busca con Grep antes de leerlos enteros
@@ -62,4 +62,5 @@ componentes desde «## Components»).
 | `support` | `SupportRequestController` |
 | `shared` | `health/HealthController` |
 
-Migraciones: la más alta es `V101` (ordenan por número: `V100` va después de `V21`).
+Migraciones: la más alta es `V104` (ordenan por número: `V100` va después de `V21`). `V102` y `V103` están ocupadas
+por otras ramas (fotos de restaurantes); no las reutilices.

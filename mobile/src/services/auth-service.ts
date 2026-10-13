@@ -35,3 +35,20 @@ export function getCurrentUser(
     accessToken,
   );
 }
+export type AccountLookup = { exists: boolean; name: string | null };
+
+export function lookupAccount(identifier: string): Promise<AccountLookup> {
+  return apiRequest<AccountLookup>(
+    `/auth/lookup?identifier=${encodeURIComponent(identifier)}`,
+    { method: 'GET' },
+  );
+}
+
+export type UsernameAvailability = { available: boolean; suggestions: string[] };
+
+export function checkUsername(username: string): Promise<UsernameAvailability> {
+  return apiRequest<UsernameAvailability>(
+    `/auth/username-availability?username=${encodeURIComponent(username)}`,
+    { method: 'GET' },
+  );
+}

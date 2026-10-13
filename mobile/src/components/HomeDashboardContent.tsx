@@ -1,35 +1,33 @@
-import { router, type Href } from 'expo-router';
-import { View } from 'react-native';
+import { router } from 'expo-router';
+import { Fragment } from 'react';
+import { Pressable, View } from 'react-native';
 
 import { HomeActivityRow, type HomeActivityEntry } from './HomeActivityRow';
-import { HomeGroupCard } from './HomeGroupCard';
-import { HomeRecommendationCard, type HomeRecommendation } from './HomeRecommendationCard';
+import { HomeGroupCircles, openGroup } from './HomeGroupCircles';
+import { HomeRateCard } from './HomeRateCard';
+import { HomeTodayCard } from './HomeTodayCard';
 import { AppText } from './ui/AppText';
 import { Button } from './ui/Button';
 import { EmptyState } from './ui/EmptyState';
-import { SectionHeader } from './ui/SectionHeader';
-import { createThemedStyles, space } from '../theme';
+import type { SavedPlace } from '../lib/home-recommendation';
+import { createThemedStyles, fonts, space, textActionHitSlop } from '../theme';
 import type { RestaurantGroup } from '../types/group';
 import type { GroupMember } from '../types/group-member';
-import type { GroupRestaurant } from '../types/restaurant';
+import type { RestaurantRatingsSummary } from '../types/restaurant-rating';
 
-const MAX_GROUPS = 2;
 const MAX_ACTIVITY = 3;
-
-function openGroup(group: RestaurantGroup): void {
-  if (group.privacy === 'PUBLIC') {
-    router.push(`/groups/public/${group.id}` as Href);
-    return;
-  }
-  router.push({ pathname: '/groups/[groupId]', params: { groupId: group.id } });
-}
+/** Side margins of the artboard: 20 for text, 16 for cards. */
+export const TEXT_GUTTER = 20;
+export const CARD_GUTTER = 16;
 
 export type RecommendationState =
-  | { kind: 'pick'; place: HomeRecommendation; canPickAnother: boolean }
+  | { kind: 'pick'; place: SavedPlace; canPickAnother: boolean }
   | { kind: 'no-places' }
   | { kind: 'none-in-city'; city: string }
   | { kind: 'none-eligible' }
   | { kind: 'unavailable' };
+
+export type PendingRating = { place: SavedPlace; summary: RestaurantRatingsSummary };
 
 function RecommendationEmpty({ state, onRetry }: { state: Exclude<RecommendationState, { kind: 'pick' }>; onRetry: () => void }) {
   switch (state.kind) {
@@ -50,7 +48,7 @@ function RecommendationEmpty({ state, onRetry }: { state: Exclude<Recommendation
       return (
         <EmptyState compact icon={{ ios: 'fork.knife', android: 'restaurant', web: 'restaurant' }}
           title="Nada pendiente por ahora"
-          message="Los sitios que tenéis guardados están archivados o marcados como «No repetir»." />
+          message="Los sitios que tenéis guardados ya están archivados." />
       );
     case 'unavailable':
       return (
@@ -62,104 +60,126 @@ function RecommendationEmpty({ state, onRetry }: { state: Exclude<Recommendation
   }
 }
 
+function SectionTitle({ title, link, onLink, linkLabel }: {
+  title: string;
+  link?: string;
+  onLink?: () => void;
+  linkLabel?: string;
+}) {
+  const styles = useStyles();
+  return (
+    <View style={styles.sectionTitle}>
+      <AppText accessibilityRole="header" style={styles.h2} maxFontSizeMultiplier={1.6}>{title}</AppText>
+      {link && onLink && (
+        <Pressable onPress={onLink} hitSlop={textActionHitSlop} accessibilityRole="link" accessibilityLabel={linkLabel ?? link}>
+          <AppText style={styles.link}>{link}</AppText>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
 export function HomeDashboardContent({
-  groups,
-  membersByGroup,
-  restaurantsByGroup,
-  recommendation,
-  onPickAnother,
-  activity,
-  activityUnavailable,
-  onRetry,
+  groups, membersByGroup, recommendation, onPickAnother, pendingRating, onSaveRating, onDismissRating,
+  activity, activityUnavailable, onRetry,
 }: {
   groups: RestaurantGroup[];
   membersByGroup: Record<string, GroupMember[]>;
-  /** Only groups whose restaurants loaded have an entry. */
-  restaurantsByGroup: Record<string, GroupRestaurant[]>;
   recommendation: RecommendationState;
   onPickAnother: () => void;
+  pendingRating: PendingRating | null;
+  onSaveRating: (score: number) => Promise<void>;
+  onDismissRating: () => void;
   activity: HomeActivityEntry[];
   activityUnavailable: boolean;
   onRetry: () => void;
 }) {
   const styles = useStyles();
+  const shownActivity = activity.slice(0, MAX_ACTIVITY);
 
   return (
-    <View style={styles.dashboard}>
-      <View>
-        <SectionHeader title="Tus grupos" caption="Vuestros restaurantes, en un mismo sitio."
-          action={{ label: 'Crear', tone: 'accent', accessibilityLabel: 'Crear grupo', onPress: () => router.push('/groups/create') }} />
-        <View style={styles.cards}>
-          {groups.slice(0, MAX_GROUPS).map(group => {
-            const restaurants = restaurantsByGroup[group.id];
-            return (
-              <HomeGroupCard key={group.id} group={group} members={membersByGroup[group.id] ?? []}
-                restaurantCount={restaurants ? restaurants.length : null}
-                pendingCount={restaurants ? restaurants.filter(item => item.status === 'WANT_TO_GO').length : null}
-                onPress={() => openGroup(group)} />
-            );
-          })}
-        </View>
-        {groups.length > MAX_GROUPS && (
-          <Button variant="text" tone="olive" title="Ver todos los grupos" onPress={() => router.push('/groups')}
-            style={styles.allGroups} />
+    <View>
+      <View style={styles.cardGutter}>
+        {recommendation.kind === 'pick' ? (
+          <HomeTodayCard place={recommendation.place} members={membersByGroup[recommendation.place.group.id] ?? []}
+            canPickAnother={recommendation.canPickAnother} onPickAnother={onPickAnother}
+            onOpen={() => router.push({
+              pathname: '/groups/[groupId]/restaurants/[groupRestaurantId]',
+              params: { groupId: recommendation.place.group.id, groupRestaurantId: recommendation.place.restaurant.id },
+            })} />
+        ) : (
+          <View style={styles.emptyCard}><RecommendationEmpty state={recommendation} onRetry={onRetry} /></View>
         )}
       </View>
 
-      <View>
-        <SectionHeader title="Un sitio para hoy"
-          action={recommendation.kind === 'pick' ? {
-            label: 'Otro sitio', tone: 'accent', onPress: onPickAnother, disabled: !recommendation.canPickAnother,
-            accessibilityLabel: recommendation.canPickAnother ? 'Proponer otro sitio' : 'No hay otro sitio para proponer',
-          } : undefined} />
-        <View style={styles.sectionBody}>
-          {recommendation.kind === 'pick' ? (
-            <>
-              <HomeRecommendationCard recommendation={recommendation.place}
-                members={membersByGroup[recommendation.place.group.id] ?? []}
-                onOpen={() => router.push({
-                  pathname: '/groups/[groupId]/restaurants/[groupRestaurantId]',
-                  params: { groupId: recommendation.place.group.id, groupRestaurantId: recommendation.place.restaurant.id },
-                })} />
-              <AppText variant="caption" tone="muted" style={styles.source}>
-                De vuestras listas, para vuestro próximo plan
-              </AppText>
-            </>
-          ) : (
-            <RecommendationEmpty state={recommendation} onRetry={onRetry} />
-          )}
+      <View style={styles.section}>
+        <View style={styles.textGutter}>
+          <SectionTitle title="Tus grupos" link={`Ver los ${groups.length}`} linkLabel="Ver todos tus grupos"
+            onLink={() => router.push('/groups')} />
         </View>
+        <View style={styles.circles}><HomeGroupCircles groups={groups} membersByGroup={membersByGroup} /></View>
       </View>
 
-      <View>
-        <SectionHeader title="Actividad reciente" caption="Lo que está compartiendo tu gente." />
-        <View style={styles.sectionBody}>
-          {activity.length > 0 ? (
-            activity.slice(0, MAX_ACTIVITY).map((entry, index, shown) => (
-              <HomeActivityRow key={entry.activity.id} entry={entry} isLast={index === shown.length - 1} />
-            ))
-          ) : activityUnavailable ? (
-            <EmptyState compact icon={{ ios: 'exclamationmark.circle', android: 'error', web: 'error' }}
-              title="No hemos podido cargar la actividad" message="Vuelve a intentarlo en un momento."
-              actions={<Button variant="text" tone="accent" title="Reintentar" onPress={onRetry} />} />
-          ) : (
-            <EmptyState compact icon={{ ios: 'person.2', android: 'group', web: 'group' }}
-              title="Todavía no hay actividad" message="Las aportaciones de tu gente aparecerán aquí." />
-          )}
-          {activityUnavailable && activity.length > 0 && (
-            <AppText variant="caption" tone="muted">No se ha podido actualizar la actividad de todos los grupos.</AppText>
-          )}
+      {pendingRating && (
+        <View style={[styles.cardGutter, styles.rate]}>
+          <HomeRateCard key={pendingRating.place.restaurant.id} place={pendingRating.place}
+            summary={pendingRating.summary} onSave={onSaveRating} onDismiss={onDismissRating} />
         </View>
+      )}
+
+      <View style={[styles.section, styles.cardGutter]}>
+        <View style={styles.titleInset}>
+          <SectionTitle title="Lo último de tu gente" link={shownActivity.length > 0 ? 'Ver todo' : undefined}
+            linkLabel="Ver toda la actividad" onLink={() => router.push('/notifications')} />
+        </View>
+        {shownActivity.length > 0 ? (
+          <View style={styles.block}>
+            {shownActivity.map((entry, index) => (
+              <Fragment key={entry.activity.id}>
+                {index > 0 && <View style={styles.separator} />}
+                <HomeActivityRow entry={entry} onPress={() => {
+                  const group = groups.find(item => item.id === entry.groupId);
+                  if (group) openGroup(group);
+                }} />
+              </Fragment>
+            ))}
+          </View>
+        ) : activityUnavailable ? (
+          <EmptyState compact icon={{ ios: 'exclamationmark.circle', android: 'error', web: 'error' }}
+            title="No hemos podido cargar la actividad" message="Vuelve a intentarlo en un momento."
+            actions={<Button variant="text" tone="accent" title="Reintentar" onPress={onRetry} />} />
+        ) : (
+          <EmptyState compact icon={{ ios: 'person.2', android: 'group', web: 'group' }}
+            title="Todavía no hay actividad" message="Lo que guarde y valore tu gente aparecerá aquí." />
+        )}
+        {activityUnavailable && shownActivity.length > 0 && (
+          <AppText variant="caption" tone="muted" style={styles.note}>
+            No se ha podido actualizar la actividad de todos los grupos.
+          </AppText>
+        )}
       </View>
     </View>
   );
 }
 
-// Rhythm from the prototype (DESIGN.md › Layout): 28 between sections, 12 to content.
-const useStyles = createThemedStyles(() => ({
-  dashboard: { gap: 28 },
-  cards: { gap: space.s2, marginTop: space.s3 },
-  allGroups: { marginTop: space.s3 },
-  sectionBody: { marginTop: space.s3 },
-  source: { marginTop: 10 },
+const useStyles = createThemedStyles(({ colors }) => ({
+  textGutter: { paddingHorizontal: TEXT_GUTTER },
+  cardGutter: { paddingHorizontal: CARD_GUTTER },
+  titleInset: { paddingHorizontal: space.s1 },
+  section: { marginTop: 40 },
+  rate: { marginTop: 36 },
+  circles: { marginTop: space.s3 },
+  emptyCard: {
+    padding: space.s5, borderRadius: 24, borderCurve: 'continuous', backgroundColor: colors.surface,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  sectionTitle: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: space.s3 },
+  h2: { flexShrink: 1, fontFamily: fonts.display, fontSize: 19, lineHeight: 24, letterSpacing: -0.4, color: colors.textPrimary },
+  link: { fontFamily: fonts.semiBold, fontSize: 13, color: colors.accent },
+  block: {
+    marginTop: 14, paddingVertical: space.s1, borderRadius: 24, borderCurve: 'continuous', overflow: 'hidden',
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+  },
+  separator: { height: 1, marginLeft: 90, backgroundColor: colors.separator },
+  note: { marginTop: space.s2, paddingHorizontal: space.s1 },
 }));

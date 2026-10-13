@@ -1,5 +1,11 @@
 package com.pauluna.mesa.group.application;
 
+import java.time.Instant;
+import java.util.EnumSet;
+import java.util.Set;
+import com.pauluna.mesa.group.domain.GroupActivityType;
+import com.pauluna.mesa.group.infrastructure.GroupActivityEventRepository;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +43,15 @@ public class GroupService {
     private final GroupCollaborationRequestRepository collaborationRequestRepository;
     private final RestaurantProposalRepository restaurantProposalRepository;
     private final UserRepository userRepository;
+    private final GroupActivityEventRepository activityEventRepository;
+
+    /** What counts as news on the Home group circles (DESIGN.md › Inicio v2). */
+    private static final Set<GroupActivityType> NEWS_TYPES = EnumSet.of(
+            GroupActivityType.RESTAURANT_ADDED,
+            GroupActivityType.RESTAURANT_RATED,
+            GroupActivityType.RESTAURANT_STATUS_CHANGED,
+            GroupActivityType.MEMBER_JOINED
+    );
 
     public GroupService(
             RestaurantGroupRepository restaurantGroupRepository,
@@ -44,7 +59,8 @@ public class GroupService {
             GroupFollowerRepository groupFollowerRepository,
             GroupCollaborationRequestRepository collaborationRequestRepository,
             RestaurantProposalRepository restaurantProposalRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            GroupActivityEventRepository activityEventRepository
     ) {
         this.restaurantGroupRepository = restaurantGroupRepository;
         this.groupMemberRepository = groupMemberRepository;
@@ -52,6 +68,7 @@ public class GroupService {
         this.collaborationRequestRepository = collaborationRequestRepository;
         this.restaurantProposalRepository = restaurantProposalRepository;
         this.userRepository = userRepository;
+        this.activityEventRepository = activityEventRepository;
     }
 
     public GroupResponse createGroup(
@@ -159,12 +176,24 @@ public class GroupService {
         return restaurantGroupRepository
                 .findAllByMemberUserId(userId)
                 .stream()
-                .map(group -> GroupResponse.from(
-                        group,
-                        getMembership(group.getId(), userId).getRole(),
-                        getFollowerCount(group)
-                ))
+                .map(group -> {
+                    GroupMember membership = getMembership(group.getId(), userId);
+                    return GroupResponse.from(
+                            group,
+                            membership.getRole(),
+                            getFollowerCount(group),
+                            activityEventRepository.countUnseen(
+                                    group.getId(), membership.getLastSeenAt(), NEWS_TYPES, userId
+                            )
+                    );
+                })
                 .toList();
+    }
+
+    /** The member opened the group: its news are no longer unseen. */
+    public void markSeen(UUID groupId, UUID userId) {
+        getAccessibleGroup(groupId, userId);
+        getMembership(groupId, userId).markSeen(Instant.now());
     }
 
     @Transactional(readOnly = true)

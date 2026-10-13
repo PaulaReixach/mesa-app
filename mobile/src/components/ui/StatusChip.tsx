@@ -9,7 +9,7 @@ import type { GroupRestaurantStatus } from '../../types/restaurant';
 type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
 // Labels match the rest of the app ("Queremos ir"); see pending decision in DESIGN.md › Migración pendiente.
-const statusMeta: Record<GroupRestaurantStatus, { label: string; icon: SymbolName }> = {
+export const statusMeta: Record<GroupRestaurantStatus, { label: string; icon: SymbolName }> = {
   WANT_TO_GO: { label: 'Queremos ir', icon: { ios: 'fork.knife', android: 'restaurant', web: 'restaurant' } },
   VISITED: { label: 'Visitado', icon: { ios: 'checkmark', android: 'check', web: 'check' } },
   FAVORITE: { label: 'Favorito', icon: { ios: 'heart.fill', android: 'favorite', web: 'favorite' } },

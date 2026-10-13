@@ -2,14 +2,16 @@ import { useBottomTabBarHeight } from 'expo-router/js-tabs';
 import { useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, RefreshControl, ScrollView, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { HomeActivityEntry } from '../components/HomeActivityRow';
 import { HomeCityPicker } from '../components/HomeCityPicker';
-import { HomeDashboardContent, type RecommendationState } from '../components/HomeDashboardContent';
+import {
+  CARD_GUTTER, HomeDashboardContent, TEXT_GUTTER, type PendingRating, type RecommendationState,
+} from '../components/HomeDashboardContent';
 import { HomeFirstTable } from '../components/HomeFirstTable';
-import { HomeCityLine, HomeSearchTrigger, HomeTopBar } from '../components/HomeHeader';
+import { HomeSearchRow, HomeTopBar } from '../components/HomeHeader';
 import { HomeInvitationMessage } from '../components/HomeInvitationMessage';
 import { AppText } from '../components/ui/AppText';
 import { Button } from '../components/ui/Button';
@@ -26,12 +28,19 @@ import { getGroupActivity } from '../services/group-activity-service';
 import { getMyGroupInvitations } from '../services/group-invitation-service';
 import { getGroupMembers } from '../services/group-member-service';
 import { getGroups } from '../services/group-service';
+import { getRestaurantRatings, saveRestaurantRating } from '../services/restaurant-rating-service';
 import { getGroupRestaurants } from '../services/restaurant-service';
-import { createThemedStyles, radius, screenGutter, space, useTheme } from '../theme';
+import { createThemedStyles, fonts, radius, space, useTheme } from '../theme';
 import type { RestaurantGroup } from '../types/group';
 import type { GroupInvitation } from '../types/group-invitation';
 import type { GroupMember } from '../types/group-member';
 import type { GroupRestaurant } from '../types/restaurant';
+
+/** Places whose rating card was closed with «×»; they stay hidden until the app restarts. */
+const dismissedRatings = new Set<string>();
+
+/** Visited places checked for «Valorar después de ir». */
+const RATING_CANDIDATES = 3;
 
 /** Groups whose members, activity and restaurants are loaded for Home. */
 const DETAILED_GROUPS = 4;
@@ -63,8 +72,6 @@ export default function HomeScreen() {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
-  const { width } = useWindowDimensions();
-  const gutter = screenGutter(width - insets.left - insets.right);
   const hasLoaded = useRef(false);
   const requestInFlight = useRef(false);
   const [groups, setGroups] = useState<RestaurantGroup[]>([]);
@@ -79,6 +86,7 @@ export default function HomeScreen() {
   const [chosenCity, setChosenCity] = useState<string | null>(null);
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
+  const [pendingRating, setPendingRating] = useState<PendingRating | null>(null);
 
   const loadHome = useCallback(async (): Promise<void> => {
     if (!accessToken) {
@@ -133,6 +141,8 @@ export default function HomeScreen() {
       setPendingInvitations(invitationsResult.status === 'fulfilled'
         ? invitationsResult.value.filter(invitation => invitation.status === 'PENDING') : []);
       setUnavailable(failures);
+      setPendingRating(await findPendingRating(detailed.flatMap(item => (item.restaurants ?? [])
+        .map(restaurant => ({ group: item.group, restaurant }))), accessToken));
       hasLoaded.current = true;
     } catch {
       setLoadError(true);
@@ -145,6 +155,18 @@ export default function HomeScreen() {
 
   useFocusEffect(useCallback(() => { void loadHome(); }, [loadHome]));
   const retry = () => void loadHome();
+
+  async function saveRating(score: number): Promise<void> {
+    if (!pendingRating || !accessToken) return;
+    const { group, restaurant } = pendingRating.place;
+    await saveRestaurantRating(group.id, restaurant.id, { score }, accessToken);
+    setPendingRating(null);
+  }
+
+  function dismissRating(): void {
+    if (pendingRating) dismissedRatings.add(pendingRating.place.restaurant.id);
+    setPendingRating(null);
+  }
 
   // Saved places of the loaded groups drive the city line and "Un sitio para hoy".
   const places = useMemo<SavedPlace[]>(() => groups.flatMap(group =>
@@ -192,29 +214,27 @@ export default function HomeScreen() {
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <ScrollView
         contentContainerStyle={{
-          paddingTop: insets.top,
+          paddingTop: insets.top + space.s2,
           paddingBottom: tabBarHeight + space.s6,
-          paddingLeft: insets.left + gutter,
-          paddingRight: insets.right + gutter,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
         }}
         refreshControl={<RefreshControl onRefresh={retry} refreshing={isRefreshing}
           tintColor={colors.accent} colors={[colors.accent]} progressBackgroundColor={colors.surfaceElevated} />}
         showsVerticalScrollIndicator={false}>
-        <HomeTopBar avatarUri={avatarUri} userName={user?.name ?? ''} />
-
-        <AppText accessibilityRole="header" variant="screenTitle" maxFontSizeMultiplier={1.6} style={styles.title}>
-          Hola, {userFirstName}
-        </AppText>
-
-        {!isLoading && hasLoaded.current && !hasGroups ? (
-          <AppText variant="body" tone="muted" style={styles.subtitle}>Tus sitios, con los tuyos.</AppText>
-        ) : city ? (
-          <HomeCityLine city={city} canChange={cities.length > 1} onPress={() => setCityPickerOpen(true)} />
-        ) : null}
-
-        {(isLoading || hasGroups || loadError) && (
-          <View style={styles.search}><HomeSearchTrigger /></View>
-        )}
+        <View style={styles.header}>
+          <HomeTopBar avatarUri={avatarUri} userName={user?.name ?? ''} />
+          <AppText accessibilityRole="header" maxFontSizeMultiplier={1.6} style={styles.title}>
+            Hola, {userFirstName}
+          </AppText>
+          {!isLoading && hasLoaded.current && !hasGroups ? (
+            <AppText variant="body" tone="muted" style={styles.subtitle}>Tus sitios, con los tuyos.</AppText>
+          ) : (
+            <View style={styles.search}>
+              <HomeSearchRow city={city} canChangeCity={cities.length > 1} onCityPress={() => setCityPickerOpen(true)} />
+            </View>
+          )}
+        </View>
 
         {invitation && !isLoading && (
           <View style={styles.invitation}>
@@ -223,17 +243,19 @@ export default function HomeScreen() {
         )}
 
         <View style={styles.body}>
-          {isLoading && <DashboardSkeleton />}
+          {isLoading && <View style={styles.gutter}><DashboardSkeleton /></View>}
 
           {!isLoading && loadError && !hasLoaded.current && (
-            <EmptyState icon={{ ios: 'exclamationmark.circle', android: 'error', web: 'error' }}
-              title="No hemos podido cargar esta pantalla"
-              message="Comprueba tu conexión y vuelve a intentarlo."
-              actions={<Button size="lg" title="Reintentar" loading={isRefreshing} onPress={retry} />} />
+            <View style={styles.gutter}>
+              <EmptyState icon={{ ios: 'exclamationmark.circle', android: 'error', web: 'error' }}
+                title="No hemos podido cargar esta pantalla"
+                message="Comprueba tu conexión y vuelve a intentarlo."
+                actions={<Button size="lg" title="Reintentar" loading={isRefreshing} onPress={retry} />} />
+            </View>
           )}
 
           {!isLoading && loadError && hasLoaded.current && (
-            <View style={styles.banner}>
+            <View style={[styles.gutter, styles.banner]}>
               <InlineBanner title="No hemos podido actualizar tu inicio"
                 message="Conservamos el contenido anterior. Puedes volver a intentarlo."
                 actionLabel="Reintentar" actionLoading={isRefreshing} onAction={retry} />
@@ -241,11 +263,12 @@ export default function HomeScreen() {
           )}
 
           {!isLoading && hasLoaded.current && (hasGroups ? (
-            <HomeDashboardContent groups={groups} membersByGroup={membersByGroup} restaurantsByGroup={restaurantsByGroup}
+            <HomeDashboardContent groups={groups} membersByGroup={membersByGroup}
               recommendation={recommendation} onPickAnother={pickAnotherPlace}
+              pendingRating={pendingRating} onSaveRating={saveRating} onDismissRating={dismissRating}
               activity={activity} activityUnavailable={unavailable.activity} onRetry={retry} />
           ) : (
-            <HomeFirstTable />
+            <View style={styles.gutter}><HomeFirstTable /></View>
           ))}
         </View>
       </ScrollView>
@@ -258,13 +281,35 @@ export default function HomeScreen() {
   );
 }
 
-// Vertical rhythm from the prototype (DESIGN.md › Layout).
+/** First recently visited place the current user has not rated yet. */
+async function findPendingRating(places: SavedPlace[], accessToken: string): Promise<PendingRating | null> {
+  const visited = places
+    .filter(place => place.restaurant.status === 'VISITED' && !dismissedRatings.has(place.restaurant.id))
+    .sort((left, right) => new Date(right.restaurant.updatedAt).getTime() - new Date(left.restaurant.updatedAt).getTime())
+    .slice(0, RATING_CANDIDATES);
+  for (const place of visited) {
+    try {
+      const summary = await getRestaurantRatings(place.group.id, place.restaurant.id, accessToken);
+      if (summary.currentUserScore === null) return { place, summary };
+    } catch {
+      // Without ratings the card cannot explain the group average; skip it.
+    }
+  }
+  return null;
+}
+
+// Vertical rhythm from the artboard: 20 for text, 16 for cards, 30 between sections.
 const useStyles = createThemedStyles(({ colors }) => ({
   screen: { flex: 1, backgroundColor: colors.background },
-  title: { marginTop: 6 },
-  subtitle: { marginTop: 6 },
-  search: { marginTop: space.s2 },
-  invitation: { marginTop: space.s4 },
-  body: { marginTop: 28 },
-  banner: { marginBottom: 28 },
+  header: { paddingLeft: TEXT_GUTTER, paddingRight: 12 },
+  title: {
+    marginTop: space.s4, fontFamily: fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.8,
+    color: colors.textPrimary,
+  },
+  subtitle: { marginTop: 6, fontSize: 15, lineHeight: 22 },
+  search: { marginTop: space.s4, marginRight: space.s2 },
+  invitation: { marginTop: space.s4, paddingHorizontal: CARD_GUTTER },
+  gutter: { paddingHorizontal: CARD_GUTTER },
+  body: { marginTop: space.s6 },
+  banner: { marginBottom: space.s5 },
 }));

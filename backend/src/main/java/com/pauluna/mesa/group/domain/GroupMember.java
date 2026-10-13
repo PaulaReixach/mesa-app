@@ -43,6 +43,9 @@ public class GroupMember {
     @Column(name = "joined_at", nullable = false, updatable = false)
     private Instant joinedAt;
 
+    @Column(name = "last_seen_at", nullable = false)
+    private Instant lastSeenAt;
+
     protected GroupMember() {
         // Constructor requerido por JPA.
     }
@@ -55,6 +58,11 @@ public class GroupMember {
         this.groupId = groupId;
         this.userId = userId;
         this.role = role;
+    }
+
+    /** The member opened the group: news before this moment are no longer unseen. */
+    public void markSeen(Instant seenAt) {
+        this.lastSeenAt = seenAt;
     }
 
     public void becomeMember() {
@@ -72,6 +80,7 @@ public class GroupMember {
     @PrePersist
     void onCreate() {
         this.joinedAt = Instant.now();
+        this.lastSeenAt = this.joinedAt;
     }
 
     public UUID getId() {
@@ -88,6 +97,10 @@ public class GroupMember {
 
     public GroupRole getRole() {
         return role;
+    }
+
+    public Instant getLastSeenAt() {
+        return lastSeenAt;
     }
 
     public Instant getJoinedAt() {

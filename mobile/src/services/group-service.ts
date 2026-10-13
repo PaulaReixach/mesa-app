@@ -18,6 +18,11 @@ export function getGroups(accessToken: string): Promise<RestaurantGroup[]> {
   return apiRequest<RestaurantGroup[]>('/groups', { method: 'GET' }, accessToken);
 }
 
+/** Opening a group clears its news counter. */
+export function markGroupSeen(groupId: string, accessToken: string): Promise<void> {
+  return apiRequest<void>(`/groups/${groupId}/seen`, { method: 'POST' }, accessToken);
+}
+
 export function getGroup(
   groupId: string,
   accessToken: string,

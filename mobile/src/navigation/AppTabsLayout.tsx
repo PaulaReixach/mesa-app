@@ -1,12 +1,14 @@
-import { SymbolView } from 'expo-symbols';
 import { router, Tabs, usePathname } from 'expo-router';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import type { ColorValue, StyleProp, ViewStyle } from 'react-native';
+import { Animated, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppTabsStyles } from './AppTabsLayout.styles';
+import {
+  AddTabIcon, GroupsTabIcon, HomeTabIcon, MapTabIcon, ProfileTabIcon,
+} from '../components/ui/MesaIcons';
 import { fonts, useTheme } from '../theme';
 
 const hiddenScreenOptions = {
@@ -19,7 +21,6 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 type PrimaryTabButtonProps = Omit<ComponentProps<typeof Pressable>, 'style'> & {
   style?: StyleProp<ViewStyle>;
 };
-type SymbolName = ComponentProps<typeof SymbolView>['name'];
 
 function PrimaryTabButton({
   onPressIn,
@@ -72,17 +73,8 @@ function PrimaryTabButton({
   );
 }
 
-function PrimaryTabIcon({
-  color,
-  focused,
-  name,
-  size,
-}: {
-  color: ColorValue;
-  focused: boolean;
-  name: SymbolName;
-  size: number;
-}) {
+/** Tab icon from the artboard; the selected tab sits on a 56×32 sage pill. */
+function PrimaryTabIcon({ focused, children }: { focused: boolean; children: ReactNode }) {
   const styles = useAppTabsStyles();
   return (
     <View
@@ -91,7 +83,7 @@ function PrimaryTabIcon({
         focused ? styles.primaryTabIconActive : null,
       ]}
     >
-      <SymbolView name={name} size={size} tintColor={color} />
+      {children}
     </View>
   );
 }
@@ -119,7 +111,7 @@ export default function AppTabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.secondary,
-        tabBarInactiveTintColor: colors.textTertiary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarHideOnKeyboard: true,
         tabBarAllowFontScaling: true,
         tabBarLabel: ({ children, color, focused }) => (
@@ -168,13 +160,13 @@ export default function AppTabsLayout() {
           right: 0,
           bottom: 0,
           left: 0,
-          height: 66 + bottomInset + labelExtraHeight,
-          paddingHorizontal: 8,
-          paddingTop: 6,
+          height: 60 + bottomInset + labelExtraHeight,
+          paddingHorizontal: 6,
+          paddingTop: 0,
           paddingBottom: bottomInset,
           overflow: 'visible',
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: colors.separator,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
           backgroundColor: colors.surface,
           elevation: 0,
         } : { display: 'none' },
@@ -186,12 +178,7 @@ export default function AppTabsLayout() {
           title: 'Inicio',
           tabBarAccessibilityLabel: 'Inicio',
           tabBarIcon: ({ focused, color }) => (
-            <PrimaryTabIcon
-              color={color}
-              focused={focused}
-              name={{ ios: focused ? 'house.fill' : 'house', android: 'home', web: 'home' }}
-              size={23}
-            />
+            <PrimaryTabIcon focused={focused}><HomeTabIcon color={String(color)} focused={focused} /></PrimaryTabIcon>
           ),
         }}
       />
@@ -209,16 +196,7 @@ export default function AppTabsLayout() {
           tabBarAccessibilityLabel: 'Grupos',
           popToTopOnBlur: true,
           tabBarIcon: ({ focused, color }) => (
-            <PrimaryTabIcon
-              color={color}
-              focused={focused}
-              name={{
-                ios: focused ? 'person.2.fill' : 'person.2',
-                android: 'group',
-                web: 'group',
-              }}
-              size={24}
-            />
+            <PrimaryTabIcon focused={focused}><GroupsTabIcon color={String(color)} focused={focused} /></PrimaryTabIcon>
           ),
         }}
       />
@@ -246,14 +224,10 @@ export default function AppTabsLayout() {
             >
               {({ pressed }) => (
                 <>
-                  <View style={[styles.addCircle, pressed && styles.addCircleFramePressed]}>
-                    <SymbolView
-                      name={{ ios: 'plus', android: 'add', web: 'add' }}
-                      size={24}
-                      tintColor={colors.onAccent}
-                    />
+                  <View style={styles.addIcon}>
+                    <AddTabIcon color={pressed ? colors.accentPressed : colors.accent} plusColor={colors.onAccent} />
                   </View>
-                  <Text maxFontSizeMultiplier={1.3} style={[styles.tabLabel, { color: colors.textTertiary }]}>Añadir</Text>
+                  <Text maxFontSizeMultiplier={1.3} style={[styles.tabLabel, styles.tabLabelSelected, { color: colors.accent }]}>Añadir</Text>
                 </>
               )}
             </Pressable>
@@ -267,12 +241,7 @@ export default function AppTabsLayout() {
           title: 'Mapa',
           tabBarAccessibilityLabel: 'Mapa',
           tabBarIcon: ({ focused, color }) => (
-            <PrimaryTabIcon
-              color={color}
-              focused={focused}
-              name={{ ios: focused ? 'map.fill' : 'map', android: 'map', web: 'map' }}
-              size={23}
-            />
+            <PrimaryTabIcon focused={focused}><MapTabIcon color={String(color)} focused={focused} /></PrimaryTabIcon>
           ),
         }}
       />
@@ -283,12 +252,7 @@ export default function AppTabsLayout() {
           title: 'Perfil',
           tabBarAccessibilityLabel: 'Perfil',
           tabBarIcon: ({ focused, color }) => (
-            <PrimaryTabIcon
-              color={color}
-              focused={focused}
-              name={{ ios: focused ? 'person.fill' : 'person', android: 'person', web: 'person' }}
-              size={23}
-            />
+            <PrimaryTabIcon focused={focused}><ProfileTabIcon color={String(color)} focused={focused} /></PrimaryTabIcon>
           ),
         }}
       />

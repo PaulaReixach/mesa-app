@@ -1,45 +1,53 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { AppText } from './ui/AppText';
-import { Button } from './ui/Button';
-import { createThemedStyles, fonts, radius, space } from '../theme';
+import { createThemedStyles, fonts, space } from '../theme';
 
-const firstTablePhoto = require('../../assets/images/home-first-table.webp');
+const symbol = require('../../assets/images/brand/symbol.svg');
+// Texture of a shared table under the terracotta, as in the artboard (opacity 22 %, blurred).
+const texture = require('../../assets/images/first-table-texture.webp');
 
-const steps = [
-  { title: 'Reúne a tu gente', text: 'Crea un grupo e invita a tus amigos.' },
-  { title: 'Guardad los sitios que os gustan', text: 'Vuestros favoritos, en una misma lista.' },
-  { title: 'Compartid cómo fue', text: 'Opiniones para decidir dónde volver.' },
+const WHITE = 'rgb(255, 255, 255)';
+/** Dark mode keeps white text on the deep brand terracotta (the light accent of dark mode lacks contrast). */
+const DEEP_TERRACOTTA = 'rgb(135, 52, 33)';
+const STEPS = [
+  { title: 'Junta a tu gente', text: 'Pareja, amigas, un viaje o el equipo.' },
+  { title: 'Guardad sitios', text: 'Los que os recomiendan y los que veis.' },
+  { title: 'Id y valorad', text: 'Cada uno pone su nota y veis la media.' },
 ];
 
-/** First-use Home (prototype `emptyHome`): photo card with one action and three steps. */
+/** Inicio without groups: «Monta tu primera mesa» and «Así funciona Mesa» in three steps. */
 export function HomeFirstTable() {
   const styles = useStyles();
-
   return (
     <View style={styles.wrapper}>
       <View style={styles.card}>
-        <Image source={firstTablePhoto} contentFit="cover" contentPosition={{ left: '64%', top: '42%' }}
-          accessibilityLabel="Amigos compartiendo una comida en un restaurante" style={styles.photo} />
-        <View style={styles.copy}>
-          <AppText accessibilityRole="header" variant="emptyTitle">Un grupo para tu gente.</AppText>
-          <AppText variant="body" tone="muted" style={styles.text}>
-            Guardad restaurantes, compartid opiniones y elegid vuestro próximo plan.
-          </AppText>
-          <Button size="lg" title="Crear mi primer grupo" onPress={() => router.push('/groups/create')} />
+        <Image source={texture} style={styles.texture} contentFit="cover" blurRadius={2} accessible={false} />
+        <Image source={symbol} style={styles.symbol} contentFit="contain" tintColor="rgb(252, 250, 247)" accessible={false} />
+        <AppText accessibilityRole="header" style={styles.title}>Monta tu primera mesa</AppText>
+        <AppText style={styles.lead}>Crea un grupo con tu gente y guardad juntos los sitios que os apetece probar.</AppText>
+        <View style={styles.buttons}>
+          <Pressable onPress={() => router.push('/groups/create')} accessibilityRole="button"
+            style={({ pressed }) => [styles.primary, pressed && styles.pressed]}>
+            <AppText style={styles.primaryText}>Crear un grupo</AppText>
+          </Pressable>
+          <Pressable onPress={() => router.push('/group-invitations')} accessibilityRole="button"
+            style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}>
+            <AppText style={styles.secondaryText}>Tengo un enlace de invitación</AppText>
+          </Pressable>
         </View>
       </View>
 
-      <View style={styles.steps}>
-        <AppText accessibilityRole="header" variant="bodyStrong">Así empieza vuestra lista</AppText>
-        {steps.map((step, index) => (
-          <View key={step.title} style={[styles.step, index < steps.length - 1 && styles.stepSeparated]}>
-            <AppText variant="label" tone="olive" style={styles.stepNumber}>{String(index + 1).padStart(2, '0')}</AppText>
-            <View style={styles.stepCopy}>
-              <AppText variant="body" style={styles.stepTitle}>{step.title}</AppText>
-              <AppText variant="secondary" tone="muted">{step.text}</AppText>
+      <View style={styles.how}>
+        <AppText accessibilityRole="header" style={styles.howTitle}>Así funciona Mesa</AppText>
+        {STEPS.map((step, index) => (
+          <View key={step.title} style={styles.step}>
+            <View style={styles.number}><AppText style={styles.numberText}>{index + 1}</AppText></View>
+            <View style={styles.stepText}>
+              <AppText variant="bodyStrong">{step.title}</AppText>
+              <AppText variant="body" tone="muted">{step.text}</AppText>
             </View>
           </View>
         ))}
@@ -48,21 +56,32 @@ export function HomeFirstTable() {
   );
 }
 
-const useStyles = createThemedStyles(({ colors }) => ({
-  wrapper: { gap: 20 },
+const useStyles = createThemedStyles(({ colors, scheme }) => ({
+  wrapper: { gap: 40 },
   card: {
-    overflow: 'hidden',
-    borderRadius: radius.xl - 2,
-    borderCurve: 'continuous',
-    backgroundColor: colors.surface,
+    borderRadius: 30, borderCurve: 'continuous', overflow: 'hidden', backgroundColor: scheme === 'dark' ? DEEP_TERRACOTTA : colors.accent,
+    paddingTop: 22, paddingHorizontal: space.s5, paddingBottom: space.s5,
+    boxShadow: scheme === 'dark' ? undefined : '0 1px 2px rgba(39, 41, 36, 0.08), 0 12px 32px rgba(166, 65, 43, 0.22)',
   },
-  photo: { width: '100%', height: 144 },
-  copy: { paddingHorizontal: 20, paddingVertical: 18, gap: space.s2 },
-  text: { marginBottom: space.s2 },
-  steps: { gap: 0 },
-  step: { flexDirection: 'row', alignItems: 'flex-start', gap: 13, paddingVertical: 9 },
-  stepSeparated: { borderBottomWidth: 1, borderBottomColor: colors.separator },
-  stepNumber: { width: 26, paddingTop: 3 },
-  stepCopy: { flex: 1, gap: 3 },
-  stepTitle: { fontFamily: fonts.medium },
+  texture: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.22 },
+  symbol: { width: 44, height: 48 },
+  title: { marginTop: 40, fontFamily: fonts.display, fontSize: 27, lineHeight: 31, letterSpacing: -1, color: WHITE },
+  lead: { marginTop: 10, fontFamily: fonts.regular, fontSize: 14, lineHeight: 21, color: 'rgb(251, 227, 217)' },
+  buttons: { marginTop: 22, gap: space.s2 },
+  primary: { height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  primaryText: { fontFamily: fonts.semiBold, fontSize: 14, color: scheme === 'dark' ? colors.textPrimary : colors.accentPressed },
+  secondary: {
+    height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(252, 250, 247, 0.14)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.35)',
+  },
+  secondaryText: { fontFamily: fonts.semiBold, fontSize: 14, color: WHITE },
+  pressed: { transform: [{ scale: 0.97 }] },
+  how: { gap: space.s4 },
+  howTitle: { fontFamily: fonts.display, fontSize: 19, lineHeight: 24, letterSpacing: -0.5, color: colors.textPrimary },
+  step: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  number: {
+    width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.secondarySoft,
+  },
+  numberText: { fontFamily: fonts.display, fontSize: 14, color: colors.onSecondarySoft },
+  stepText: { flex: 1 },
 }));

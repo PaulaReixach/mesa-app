@@ -97,6 +97,15 @@ public class GroupController {
         );
     }
 
+    @PostMapping("/{groupId}/seen")
+    public ResponseEntity<Void> markSeen(
+            @PathVariable UUID groupId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        groupService.markSeen(groupId, UUID.fromString(jwt.getSubject()));
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{groupId}")
     public ResponseEntity<GroupResponse>
     getGroup(

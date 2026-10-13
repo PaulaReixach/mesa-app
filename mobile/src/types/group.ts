@@ -23,6 +23,8 @@ export type RestaurantGroup = {
   ownerUserId: string;
   createdAt: string;
   updatedAt: string;
+  /** News by others since you last opened the group (DESIGN.md › Inicio v2). */
+  unseenCount: number;
 };
 
 export type CreateGroupPayload = {

@@ -158,7 +158,8 @@ class GroupMemberServiceTest {
                 0,
                 OWNER_ID,
                 null,
-                null
+                null,
+                0
         );
     }
 }

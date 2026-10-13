@@ -86,7 +86,9 @@ public class SecurityConfig {
                                 HttpMethod.GET,
                                 "/health",
                                 "/users/*/avatar",
-                                "/groups/*/image"
+                                "/groups/*/image",
+                                "/auth/lookup",
+                                "/auth/username-availability"
                         ).permitAll()
                         .requestMatchers(
                                 HttpMethod.POST,
