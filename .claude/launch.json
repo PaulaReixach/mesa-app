@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mobile-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8081"],
+      "cwd": "mobile",
+      "port": 8081
+    },
+    {
+      "name": "mobile-web-dark",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set EXPO_PUBLIC_COLOR_SCHEME=dark&& npx expo start --web --port 8082"],
+      "cwd": "mobile",
+      "port": 8082
+    }
+  ]
+}

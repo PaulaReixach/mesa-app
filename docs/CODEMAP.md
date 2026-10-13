@@ -32,7 +32,7 @@ Las rutas grandes reexportan una pantalla de `screens/`; el resto tiene la UI en
   sustituye `PrimaryButton`/`FormField` cuando haya equivalente en `ui/`.
 - Base nueva: `theme/tokens.ts`, `palette.ts`, `typography.ts`, `use-theme.ts`,
   `create-styles.ts`. Componentes: `ui/AppText, Avatar, Button, EmptyState,
-  InlineBanner, PressableCard, RatingBadge, RestaurantCover, SectionHeader, Skeleton,
+  ConfirmAlert, Cover, FilterChips, GroupedList (+ GroupedRow), InlineBanner, ModalSheet, PressableCard, RatingBadge, SearchField, SectionHeader, SegmentedControl, Skeleton, Toast,
   StatusChip`.
 
 ## Archivos grandes: busca con Grep antes de leerlos enteros

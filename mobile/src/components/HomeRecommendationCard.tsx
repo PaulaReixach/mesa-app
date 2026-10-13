@@ -6,7 +6,7 @@ import { AvatarStack } from './ui/Avatar';
 import { Button } from './ui/Button';
 import { PressableCard } from './ui/PressableCard';
 import { RatingBadge } from './ui/RatingBadge';
-import { RestaurantCover, restaurantCategoryLabel } from './ui/RestaurantCover';
+import { Cover, restaurantCategoryLabel } from './ui/Cover';
 import { resolveApiUrl } from '../lib/api';
 import type { SavedPlace } from '../lib/home-recommendation';
 import { createThemedStyles, fonts, formatScore, iconSize, space, useTheme } from '../theme';
@@ -44,7 +44,7 @@ export function HomeRecommendationCard({ recommendation, members, onOpen }: {
 
   return (
     <PressableCard feature>
-      <RestaurantCover name={restaurant.name} category={restaurant.category} />
+      <Cover name={restaurant.name} category={restaurant.category} />
       <View style={styles.body} accessible accessibilityLabel={`${restaurant.name}. ${subtitle}. ${rating}. De ${group.name}`}>
         <AppText variant="featureTitle">{restaurant.name}</AppText>
         {subtitle.length > 0 && <AppText variant="body" tone="muted" style={styles.subtitle}>{subtitle}</AppText>}
